@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-function createTwoPagePdf(): Buffer {
+function createTwoPagePdf(rotation = 0): Buffer {
   const pageTexts = [
     'PDF Utils browser test first page',
     'PDF Utils searchable needle on the second page'
@@ -12,7 +12,7 @@ function createTwoPagePdf(): Buffer {
     const pageObjectNumber = index + 3;
     const contentObjectNumber = firstContentObjectNumber + index;
     return (
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Rotate ${rotation} ` +
       `/Resources << /Font << /F1 ${fontObjectNumber} 0 R >> >> ` +
       `/Contents ${contentObjectNumber} 0 R >>`
     );
@@ -60,11 +60,11 @@ async function visitHome(page: Page) {
   await expect(page.locator('#file-input')).toHaveCount(1);
 }
 
-async function openTestPdf(page: Page) {
+async function openTestPdf(page: Page, rotation = 0) {
   await page.locator('#file-input').setInputFiles({
     name: 'pdf-utils-browser-test.pdf',
     mimeType: 'application/pdf',
-    buffer: createTwoPagePdf()
+    buffer: createTwoPagePdf(rotation)
   });
   await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
@@ -126,6 +126,55 @@ test('opens a PDF and supports page navigation, local search, and zoom', async (
   await page.getByRole('button', { name: 'Close document' }).click();
   await expect(page.locator('[aria-label="PDF viewer"]')).toBeHidden();
   await expect(page.getByRole('heading', { name: /Your documents/ })).toBeVisible();
+});
+
+test('keeps text highlights aligned on rotated pages and after zooming', async ({ page }) => {
+  await visitHome(page);
+  await openTestPdf(page, 90);
+
+  const textLayer = page.locator('.textLayer');
+  const selectionRect = await textLayer.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    const rect = range.getBoundingClientRect();
+    return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+  });
+  expect(selectionRect.width).toBeGreaterThan(0);
+  expect(selectionRect.height).toBeGreaterThan(0);
+  await textLayer.dispatchEvent('mouseup');
+  await page.getByRole('button', { name: 'Highlight selection' }).click();
+
+  const highlight = page.locator('[data-annotation-type="highlight"]').first();
+  await expect(highlight).toBeVisible();
+  const highlightBefore = await highlight.boundingBox();
+  const pageBefore = await page.locator('canvas[aria-label^="Page "]').boundingBox();
+  expect(highlightBefore).not.toBeNull();
+  expect(pageBefore).not.toBeNull();
+  expect(Math.abs(highlightBefore!.x - selectionRect.left)).toBeLessThan(3);
+  expect(Math.abs(highlightBefore!.y - selectionRect.top)).toBeLessThan(3);
+  expect(Math.abs(highlightBefore!.width - selectionRect.width)).toBeLessThan(3);
+  expect(Math.abs(highlightBefore!.height - selectionRect.height)).toBeLessThan(3);
+
+  const before = {
+    x: (highlightBefore!.x - pageBefore!.x) / pageBefore!.width,
+    y: (highlightBefore!.y - pageBefore!.y) / pageBefore!.height,
+    width: highlightBefore!.width / pageBefore!.width,
+    height: highlightBefore!.height / pageBefore!.height
+  };
+
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
+  const highlightAfter = await highlight.boundingBox();
+  const pageAfter = await page.locator('canvas[aria-label^="Page "]').boundingBox();
+  expect(highlightAfter).not.toBeNull();
+  expect(pageAfter).not.toBeNull();
+  expect(Math.abs((highlightAfter!.x - pageAfter!.x) / pageAfter!.width - before.x)).toBeLessThan(0.02);
+  expect(Math.abs((highlightAfter!.y - pageAfter!.y) / pageAfter!.height - before.y)).toBeLessThan(0.02);
+  expect(Math.abs(highlightAfter!.width / pageAfter!.width - before.width)).toBeLessThan(0.02);
+  expect(Math.abs(highlightAfter!.height / pageAfter!.height - before.height)).toBeLessThan(0.02);
 });
 
 test('opens the original local PDF in a new tab for native printing', async ({ page }) => {
