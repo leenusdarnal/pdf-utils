@@ -10,7 +10,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 | Priority | Capability | MVP decision | Notes |
 | --- | --- | --- | --- |
-| P0 | PDF viewer | Yes | Local rendering, continuous vertical scroll with lazy page rendering, scroll-aware page navigation, zoom, fit width, selectable text, virtualized thumbnails, mobile thumbnail toggle, local text search, read-only metadata, and native-browser printing are implemented; wider browser/accessibility QA remains |
+| P0 | Appearance | Yes | Light/dark theme toggle, follows system preference until the user chooses, and saves the preference locally |\n| P0 | PDF viewer | Yes | Local rendering, continuous vertical scroll with lazy page rendering, scroll-aware page navigation, zoom, fit width, selectable text, virtualized thumbnails, mobile thumbnail toggle, local text search, read-only metadata, and native-browser printing are implemented; wider browser/accessibility QA remains |
 | P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; organized, extracted, merged, and range-split PDF outputs download locally without overwriting source files |
 | P1 | Page organization | Yes | Merge PDFs, split by custom page ranges, extract selected pages, reorder, rotate, duplicate, and delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
@@ -68,7 +68,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | FND-04 | Foundation | Build responsive app shell and design tokens | in-progress | Responsive landing page, viewer shell, Tailwind design tokens, mobile thumbnail controls, and persistent light/dark theme are implemented; manual cross-browser accessibility review remains |
 | FND-05 | Foundation | Add CI workflow and contribution guidance | done | GitHub Actions CI and setup instructions are present; latest full run is green |
 | FND-06 | Foundation | GitHub Pages static deployment | done | GitHub Actions deployment from main is green and the live app returns HTTP 200 |
-| THEME-01 | Foundation | Light and dark appearance | in-progress | User can switch themes; preference persists locally, follows system preference before first choice, and covers the landing page and existing tools |
+| THEME-01 | Foundation | Light and dark appearance | done | Accessible theme toggle; stored preference persists across reloads, follows system preference until the user chooses, and covers the landing page and existing tools |
 | VIEW-01 | Viewer | File picker and drag/drop import | done | Local signature validation and invalid-file feedback are implemented; helper tests pass in CI |
 | VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 renders page canvases with an aligned selectable text layer; Playwright verifies DOM text selection, while real-world and cross-browser fixture coverage remains |
 | VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Continuous scroll is the default reader; the current-page indicator tracks scroll, previous/next and thumbnails jump to pages, and Page tools retains single-page editing; keyboard-only and cross-browser checks remain |
