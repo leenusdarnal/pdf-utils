@@ -1120,7 +1120,7 @@
                 {@const previewStart = normalizedPointToViewport(drawingStart.point, unrotatedPageViewport, renderedPageViewport)}
                 {@const previewEnd = normalizedPointToViewport(drawingPreviewEnd, unrotatedPageViewport, renderedPageViewport)}
                 {#if drawingStart.tool === 'freehand'}
-                  {@const previewPoints = [...drawingStart.points, drawingPreviewEnd].map((point) => normalizedPointToViewport(point, unrotatedPageViewport, renderedPageViewport)).map((point) => `${point.x},${point.y}`).join(' ')}
+                  {@const previewPoints = [...drawingStart.points, drawingPreviewEnd].map((point) => normalizedPointToViewport(point, unrotatedPageViewport!, renderedPageViewport)).map((point) => `${point.x},${point.y}`).join(' ')}
                   <svg class="absolute inset-0 h-full w-full" viewBox={`0 0 ${renderedPageViewport.width} ${renderedPageViewport.height}`} aria-hidden="true">
                     <polyline points={previewPoints} fill="none" stroke="#2463eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
@@ -1160,7 +1160,7 @@
                     ></div>
                   {/each}
                 {:else if displayed.type === 'freehand'}
-                  {@const mappedPoints = displayed.points.map((point) => normalizedPointToViewport(point, unrotatedPageViewport, renderedPageViewport))}
+                  {@const mappedPoints = displayed.points.map((point) => normalizedPointToViewport(point, unrotatedPageViewport!, renderedPageViewport))}
                   {@const pathPoints = mappedPoints.map((point) => `${point.x},${point.y}`).join(' ')}
                   <svg
                     class="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
