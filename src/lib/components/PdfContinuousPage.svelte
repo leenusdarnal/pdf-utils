@@ -22,6 +22,8 @@
   let focusObserver: IntersectionObserver | null = null;
   let baseWidth = 612;
   let baseHeight = 792;
+  let pageWidth = 612;
+  let pageHeight = 792;
   let isLoading = true;
   let isNearViewport = false;
   let hasRendered = false;
@@ -209,6 +211,7 @@
   bind:this={pageElement}
   data-pdf-continuous-page={pageNumber}
   class="flex w-full shrink-0 justify-center"
+  role="group"
   aria-label={`PDF page ${pageNumber}`}
 >
   <div

@@ -385,7 +385,7 @@
       drawingTool = null;
       drawingStart = null;
       drawingPreviewEnd = null;
-      void renderPage(currentPage, true);
+      void renderPage(currentPage);
       return;
     }
 
@@ -394,7 +394,8 @@
     drawingTool = null;
     drawingStart = null;
     drawingPreviewEnd = null;
-    void fitContinuousToWidth();
+    if (fitToWidth) void fitContinuousToWidth();
+    statusText = `Page ${currentPage} of ${totalPages} · ${Math.round(zoom * 100)}% · Scroll to read`;
   }
 
   function changeZoom(amount: number) {
@@ -988,7 +989,7 @@
           <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         </button>
         <button type="button" class={`inline-flex min-h-[30px] items-center justify-center rounded-lg border border-line bg-white px-[9px] text-[10px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] max-[420px]:px-[7px] ${fitToWidth ? "border-brand-200 bg-brand-50 text-brand-600" : ""}` } aria-pressed={fitToWidth} disabled={isLoading} onclick={fitPageToWidth}>Fit width</button>
-        <button type="button" class="inline-flex min-h-[30px] items-center justify-center rounded-lg border border-line bg-white px-[9px] text-[10px] font-semibold text-[#454b59] text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label={continuousMode ? 'Switch to page tools' : 'Switch to continuous scroll'} disabled={isLoading} onclick={toggleViewerMode}>{continuousMode ? 'Page tools' : 'Scroll view'}</button>
+        <button type="button" class="inline-flex min-h-[30px] items-center justify-center rounded-lg border border-line bg-white px-[9px] text-[10px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label={continuousMode ? 'Switch to page tools' : 'Switch to continuous scroll'} disabled={isLoading} onclick={toggleViewerMode}>{continuousMode ? 'Page tools' : 'Scroll view'}</button>
       </div>
     </div>
 
