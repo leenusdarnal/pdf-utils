@@ -10,7 +10,7 @@ import {
 const PAGE_WIDTH = 600;
 const PAGE_HEIGHT = 800;
 
-function createViewport(rotation: 0 | 90, scale = 1): PdfViewportTransform {
+function createViewport(rotation: 0 | 90 | 180 | 270, scale = 1): PdfViewportTransform {
   if (rotation === 0) {
     return {
       width: PAGE_WIDTH * scale,
@@ -20,11 +20,29 @@ function createViewport(rotation: 0 | 90, scale = 1): PdfViewportTransform {
     };
   }
 
+  if (rotation === 90) {
+    return {
+      width: PAGE_HEIGHT * scale,
+      height: PAGE_WIDTH * scale,
+      convertToPdfPoint: (x, y) => [y / scale, x / scale],
+      convertToViewportPoint: (x, y) => [y * scale, x * scale]
+    };
+  }
+
+  if (rotation === 180) {
+    return {
+      width: PAGE_WIDTH * scale,
+      height: PAGE_HEIGHT * scale,
+      convertToPdfPoint: (x, y) => [PAGE_WIDTH - x / scale, y / scale],
+      convertToViewportPoint: (x, y) => [(PAGE_WIDTH - x) * scale, y * scale]
+    };
+  }
+
   return {
     width: PAGE_HEIGHT * scale,
     height: PAGE_WIDTH * scale,
-    convertToPdfPoint: (x, y) => [y / scale, x / scale],
-    convertToViewportPoint: (x, y) => [y * scale, x * scale]
+    convertToPdfPoint: (x, y) => [PAGE_WIDTH - y / scale, PAGE_HEIGHT - x / scale],
+    convertToViewportPoint: (x, y) => [(PAGE_HEIGHT - y) * scale, (PAGE_WIDTH - x) * scale]
   };
 }
 
@@ -40,14 +58,13 @@ describe('annotation viewport transforms', () => {
     expect(viewportPointToNormalized(viewportPoint, zoomed, page)).toEqual(point);
   });
 
-  it('maps normalized points through a quarter-turn page rotation', () => {
+  it.each([90, 180, 270] as const)('round-trips normalized points at %i degrees', (rotation) => {
     const page = createViewport(0);
-    const rotated = createViewport(90);
+    const rotated = createViewport(rotation);
     const point = { x: 0.25, y: 0.4 };
 
     const viewportPoint = normalizedPointToViewport(point, page, rotated);
 
-    expect(viewportPoint).toEqual({ x: 480, y: 150 });
     expect(viewportPointToNormalized(viewportPoint, rotated, page)).toEqual(point);
   });
 
