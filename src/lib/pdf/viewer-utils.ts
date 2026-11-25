@@ -57,7 +57,10 @@ export function getVisiblePageRange(
   const safeRowHeight = Math.max(1, Number.isFinite(rowHeight) ? rowHeight : 1);
   const safeOverscan = Math.max(0, Math.floor(Number.isFinite(overscan) ? overscan : 0));
 
-  const startPage = Math.max(1, Math.floor(safeScrollTop / safeRowHeight) + 1 - safeOverscan);
+  const startPage = Math.min(
+    pageCount,
+    Math.max(1, Math.floor(safeScrollTop / safeRowHeight) + 1 - safeOverscan)
+  );
   const endPage = Math.min(
     pageCount,
     Math.max(startPage, Math.ceil((safeScrollTop + safeViewportHeight) / safeRowHeight) + safeOverscan)
