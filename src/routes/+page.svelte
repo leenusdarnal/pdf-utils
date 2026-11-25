@@ -51,99 +51,98 @@
   <meta name="description" content="A lightweight, privacy-first workspace for everyday PDF tasks. Your files stay on your device." />
 </svelte:head>
 
-<div class="app-shell">
-  <header class="topbar">
-    <a class="brand" href={`${base}/`} aria-label="PDF Utils home">
-      <span class="brand-mark" aria-hidden="true">
+<div class="mx-auto w-full max-w-[1440px] px-[7.1%] max-[760px]:px-[5%]">
+  <header class="flex h-[88px] items-center gap-[52px] border-b border-[#e9ebef] max-[760px]:h-[70px] max-[760px]:gap-[22px] max-[480px]:gap-[15px]">
+    <a class="inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap font-display text-[22px] font-extrabold leading-none tracking-[-1.1px] no-underline max-[480px]:text-[19px]" href={`${base}/`} aria-label="PDF Utils home">
+      <span class="grid size-[34px] shrink-0 place-items-center rounded-[10px] bg-brand-700 text-white max-[480px]:size-[30px]" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 3.75h7l4 4v12.5H6.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 3.75v4h4M8.75 13h6.5M8.75 16h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </span>
-      <span>pdf<span class="brand-light">utils</span></span>
+      <span>pdf<span class="font-medium text-[#8c91a0]">utils</span></span>
     </a>
     {#if !selectedFile}
-      <nav class="top-nav" aria-label="Main navigation">
-        <a class="nav-active" href="#tools">Tools</a>
-        <a href="#how-it-works">How it works</a>
+      <nav class="ml-auto flex h-full items-center gap-[30px] max-[760px]:gap-[17px]" aria-label="Main navigation">
+        <a class="relative inline-flex h-full items-center text-[13px] font-semibold text-ink no-underline after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-0.5 after:bg-brand-700 max-[760px]:text-[11px]" href="#tools">Tools</a>
+        <a class="inline-flex h-full items-center text-[13px] font-semibold text-muted no-underline transition-colors hover:text-brand-700 max-[760px]:text-[11px] max-[480px]:hidden" href="#how-it-works">How it works</a>
       </nav>
     {/if}
-    <div class="privacy-pill"><span></span> Files stay on your device</div>
+    <div class="ml-auto flex items-center gap-2 rounded-full border border-[#e2e5ea] bg-white px-[13px] py-[9px] text-[11px] font-semibold text-[#626977] max-[760px]:px-[10px] max-[760px]:py-2 max-[760px]:text-[0px] max-[480px]:hidden"><span></span> Files stay on your device</div>
   </header>
 
   <main>
     {#if selectedFile}
       <PdfViewer file={selectedFile} onClose={closeDocument} />
     {:else}
-      <section class="hero">
-        <div class="eyebrow"><span class="eyebrow-line"></span> A calmer way to work with PDFs</div>
+      <section class="py-[77px] text-center max-[760px]:pb-[54px] max-[760px]:pt-[61px] max-[480px]:pt-[49px]">
+        <div class="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[1.7px] text-brand-600 max-[480px]:text-[8px] max-[480px]:tracking-[1.2px]"><span class="h-px w-[22px] bg-brand-300"></span> A calmer way to work with PDFs</div>
         <h1>Your documents.<br /><span>Handled locally.</span></h1>
-        <p class="hero-copy">Everything you need to view, organize, and refine PDFs — without sending your files to a server.</p>
+        <p class="mx-auto max-w-[500px] text-[15px] leading-[1.8] text-muted max-[760px]:max-w-[410px] max-[760px]:text-[13px] max-[480px]:text-[12px]">Everything you need to view, organize, and refine PDFs — without sending your files to a server.</p>
 
         <div
-          class:dragging={isDragging}
-          class="dropzone"
+          class={`relative mx-auto mt-[34px] min-h-[244px] max-w-[590px] rounded-[14px] border border-dashed border-[#c9cbd7] bg-white/80 px-5 pb-[19px] pt-[27px] transition-colors focus-within:outline focus-within:outline-[3px] focus-within:outline-brand-200 focus-within:outline-offset-[3px] max-[760px]:min-h-[230px] max-[480px]:px-[14px] max-[480px]:pb-[17px] max-[480px]:pt-[23px] ${isDragging ? "border-brand-700 bg-brand-50" : ""}` }
           role="region"
           aria-label="Choose a PDF to open"
           ondragover={(event) => { event.preventDefault(); isDragging = true; }}
           ondragleave={() => (isDragging = false)}
           ondrop={handleDrop}
         >
-          <input id="file-input" class="visually-hidden" type="file" accept="application/pdf,.pdf" onchange={handlePick} />
-          <div class="upload-icon" aria-hidden="true">
+          <input id="file-input" class="sr-only" type="file" accept="application/pdf,.pdf" onchange={handlePick} />
+          <div class="mx-auto mb-3 grid size-[43px] place-items-center rounded-xl border border-brand-200 bg-brand-50 text-brand-600" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           {#if isValidating}
-            <div class="drop-title">Checking your PDF…</div>
-            <div class="drop-subtitle">The file is checked locally on your device.</div>
+            <div class="mb-1.5 text-[15px] font-bold text-[#30333c]">Checking your PDF…</div>
+            <div class="text-[12px] text-subtle">The file is checked locally on your device.</div>
           {:else}
-            <div class="drop-title">Drop a PDF to get started</div>
-            <div class="drop-subtitle">or <label for="file-input" class="browse-link">choose a file</label> from your device</div>
+            <div class="mb-1.5 text-[15px] font-bold text-[#30333c]">Drop a PDF to get started</div>
+            <div class="text-[12px] text-subtle">or <label for="file-input" class="cursor-pointer font-bold text-brand-700 underline underline-offset-[3px]">choose a file</label> from your device</div>
           {/if}
           {#if fileError}
-            <p class="upload-error" role="alert">{fileError}</p>
+            <p class="mx-auto mt-[14px] max-w-[440px] text-[12px] leading-[1.55] text-danger-600" role="alert">{fileError}</p>
           {/if}
-          <div class="drop-footer"><span class="lock-icon">⌑</span> Private by design <span class="dot-separator">·</span> No account required</div>
+          <div class="mt-[27px] border-t border-[#eef0f3] pt-[15px] text-[10px] text-[#969ba6]"><span class="align-[-1px] text-[14px] text-[#6cba94]">⌑</span> Private by design <span class="mx-2">·</span> No account required</div>
         </div>
-        <p class="hero-note">PDF viewer and tools are being built in the open. <a href="https://github.com/leenusdarnal/pdf-utils" target="_blank" rel="noreferrer">View the project on GitHub ↗</a></p>
+        <p class="mt-[15px] text-[11px] text-[#999eaa]">PDF viewer and tools are being built in the open. <a class="font-semibold text-brand-600 no-underline hover:underline" href="https://github.com/leenusdarnal/pdf-utils" target="_blank" rel="noreferrer">View the project on GitHub ↗</a></p>
       </section>
 
-      <section class="tools-section" id="tools">
-        <div class="section-heading">
+      <section class="border-t border-[#e9ebef] pb-[65px] pt-10" id="tools">
+        <div class="mb-[25px] flex items-end justify-between max-[760px]:items-start max-[760px]:gap-[15px] max-[480px]:flex-col">
           <div>
-            <div class="section-kicker">THE TOOLKIT</div>
+            <div class="mb-[9px] text-[9px] font-bold uppercase tracking-[1.6px] text-brand-600">THE TOOLKIT</div>
             <h2>One workspace. Useful tools.</h2>
           </div>
-          <span class="coming-soon">Viewer MVP in progress</span>
+          <span class="rounded-[7px] border border-[#e5e3f7] bg-brand-50 px-[10px] py-[7px] text-[10px] font-semibold text-brand-600 max-[760px]:text-[9px]">Viewer MVP in progress</span>
         </div>
-        <div class="tool-grid">
-          <article class="tool-card">
-            <span class="tool-icon purple"><svg viewBox="0 0 24 24" fill="none"><path d="M5 3.5h9l5 5v12H5zM14 3.5v5h5M8 13h8M8 16h6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
-            <div><h3>View & read</h3><p>Open and navigate your documents.</p></div>
-            <span class="tool-status">Available</span>
+        <div class="grid grid-cols-2 gap-[13px] max-[760px]:grid-cols-1">
+          <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-brand-100 text-brand-600"><svg viewBox="0 0 24 24" fill="none"><path d="M5 3.5h9l5 5v12H5zM14 3.5v5h5M8 13h8M8 16h6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
+            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">View & read</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Open and navigate your documents.</p></div>
+            <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Available</span>
           </article>
-          <article class="tool-card">
-            <span class="tool-icon blue"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5h6v6H4zM14 5.5h6v6h-6zM4 15.5h6v4H4zM14 15.5h6v4h-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
-            <div><h3>Organize pages</h3><p>Merge, split, rotate, and reorder pages.</p></div>
-            <span class="tool-status">Planned</span>
+          <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#eaf4ff] text-[#4f8fce]"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5h6v6H4zM14 5.5h6v6h-6zM4 15.5h6v4H4zM14 15.5h6v4h-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Organize pages</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Merge, split, rotate, and reorder pages.</p></div>
+            <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Planned</span>
           </article>
-          <article class="tool-card">
-            <span class="tool-icon amber"><svg viewBox="0 0 24 24" fill="none"><path d="m4 17 9.8-9.8 3 3L7 20H4zM14.5 6.5l2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
-            <div><h3>Annotate</h3><p>Highlight, add notes, and mark up pages.</p></div>
-            <span class="tool-status">Planned</span>
+          <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#fff5e5] text-[#c18a36]"><svg viewBox="0 0 24 24" fill="none"><path d="m4 17 9.8-9.8 3 3L7 20H4zM14.5 6.5l2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Annotate</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Highlight, add notes, and mark up pages.</p></div>
+            <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Planned</span>
           </article>
-          <article class="tool-card">
-            <span class="tool-icon green"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5v11m0 0 4-4m-4 4-4-4M5 15.5v3A2 2 0 0 0 7 20.5h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            <div><h3>Convert & export</h3><p>Move between PDF and common image formats.</p></div>
-            <span class="tool-status">Planned</span>
+          <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#e9f8f1] text-[#39a17d]"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5v11m0 0 4-4m-4 4-4-4M5 15.5v3A2 2 0 0 0 7 20.5h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Convert & export</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Move between PDF and common image formats.</p></div>
+            <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Planned</span>
           </article>
         </div>
       </section>
 
-      <section class="local-section" id="how-it-works">
-        <div class="local-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-        <div><h2>Private by default</h2><p>PDF Utils processes your chosen document in your browser. Files are not uploaded as part of the viewer workflow.</p></div>
-        <a href="https://github.com/leenusdarnal/pdf-utils" target="_blank" rel="noreferrer">Explore the code <span>↗</span></a>
+      <section class="mb-[50px] flex items-center gap-[17px] rounded-xl border border-[#e7e8f1] bg-[#f1f0fa] px-6 py-[22px] max-[760px]:flex-wrap max-[760px]:items-start max-[760px]:p-[18px]" id="how-it-works">
+        <div class="grid size-10 shrink-0 place-items-center rounded-[10px] bg-[#e4e1fa] text-brand-600" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+        <div class="min-w-0"><h2 class="mb-1 font-display text-[14px] font-bold">Private by default</h2><p class="mb-0 text-[11px] leading-[1.6] text-[#7f8491]">PDF Utils processes your chosen document in your browser. Files are not uploaded as part of the viewer workflow.</p></div>
+        <a class="ml-auto whitespace-nowrap text-[11px] font-bold text-brand-600 no-underline hover:underline max-[760px]:ml-[57px]" href="https://github.com/leenusdarnal/pdf-utils" target="_blank" rel="noreferrer">Explore the code <span class="ml-[5px]">↗</span></a>
       </section>
     {/if}
   </main>
 
-  <footer><span>© 2026 PDF Utils</span><span>Built for useful, everyday document work.</span></footer>
+  <footer class="flex justify-between border-t border-[#e9ebef] py-5 pb-[25px] text-[10px] text-[#a0a4ae] max-[480px]:flex-wrap max-[480px]:gap-3"><span>© 2026 PDF Utils</span><span>Built for useful, everyday document work.</span></footer>
 </div>
