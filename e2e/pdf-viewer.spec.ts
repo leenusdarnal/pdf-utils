@@ -293,6 +293,83 @@ test('scrolls through PDF pages and keeps quick navigation in sync', async ({ pa
   await expect(page.getByRole('button', { name: 'Place note' })).toBeVisible();
 });
 
+test('splits a PDF into separate page-range downloads', async ({ page }) => {
+  await visitHome(page);
+  await page.getByRole('button', { name: 'Open split tool' }).click();
+  await expect(page.getByRole('heading', { name: 'Split PDF' })).toBeVisible();
+
+  const sourcePdf = await createPdfWithPageSizes([
+    [100, 200],
+    [110, 210],
+    [300, 400],
+    [310, 410]
+  ]);
+  await page.locator('#split-file-input').setInputFiles({
+    name: 'source.pdf',
+    mimeType: 'application/pdf',
+    buffer: sourcePdf
+  });
+
+  await expect(page.getByText('4 pages loaded')).toBeVisible();
+  await page.getByRole('textbox', { name: 'Page range for output 1' }).fill('1-2');
+  await page.getByRole('button', { name: '+ Add output' }).click();
+  await page.getByRole('textbox', { name: 'Page range for output 2' }).fill('4, 3');
+
+  await page.getByRole('button', { name: 'Create output PDFs' }).click();
+  const outputs = page.locator('[data-split-output]');
+  await expect(outputs).toHaveCount(2);
+  await expect(outputs.nth(0)).toContainText('Pages 1-2');
+  await expect(outputs.nth(1)).toContainText('Pages 4, 3');
+
+  const firstDownloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download part 1' }).click();
+  const firstDownload = await firstDownloadPromise;
+  expect(firstDownload.suggestedFilename()).toBe('source-part-1.pdf');
+  const firstPath = await firstDownload.path();
+  expect(firstPath).not.toBeNull();
+  const firstOutput = await PDFDocument.load(await readFile(firstPath!));
+  expect(firstOutput.getPages().map((pdfPage) => [pdfPage.getWidth(), pdfPage.getHeight()])).toEqual([
+    [100, 200],
+    [110, 210]
+  ]);
+
+  const secondDownloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download part 2' }).click();
+  const secondDownload = await secondDownloadPromise;
+  expect(secondDownload.suggestedFilename()).toBe('source-part-2.pdf');
+  const secondPath = await secondDownload.path();
+  expect(secondPath).not.toBeNull();
+  const secondOutput = await PDFDocument.load(await readFile(secondPath!));
+  expect(secondOutput.getPages().map((pdfPage) => [pdfPage.getWidth(), pdfPage.getHeight()])).toEqual([
+    [310, 410],
+    [300, 400]
+  ]);
+});
+
+test('rejects invalid split page ranges before producing output files', async ({ page }) => {
+  await visitHome(page);
+  await page.getByRole('button', { name: 'Open split tool' }).click();
+
+  const sourcePdf = await createPdfWithPageSizes([[100, 200], [110, 210], [300, 400], [310, 410]]);
+  await page.locator('#split-file-input').setInputFiles({
+    name: 'invalid-range-source.pdf',
+    mimeType: 'application/pdf',
+    buffer: sourcePdf
+  });
+  await expect(page.getByText('4 pages loaded')).toBeVisible();
+
+  const range = page.getByRole('textbox', { name: 'Page range for output 1' });
+  await range.fill('2-5');
+  await page.getByRole('button', { name: 'Create output PDFs' }).click();
+  await expect(page.getByRole('alert')).toContainText('between 1 and 4');
+  await expect(page.locator('[data-split-output]')).toHaveCount(0);
+
+  await range.fill('3-2');
+  await page.getByRole('button', { name: 'Create output PDFs' }).click();
+  await expect(page.getByRole('alert')).toContainText('ascending');
+  await expect(page.locator('[data-split-output]')).toHaveCount(0);
+});
+
 test('merges multiple PDFs in the selected order and downloads the combined document', async ({ page }) => {
   await visitHome(page);
   await page.getByRole('button', { name: 'Open merge tool' }).click();

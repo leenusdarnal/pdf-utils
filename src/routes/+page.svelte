@@ -3,6 +3,7 @@
   import PdfViewer from '$lib/components/PdfViewer.svelte';
   import PageOrganizer from '$lib/components/PageOrganizer.svelte';
   import MergePdf from '$lib/components/MergePdf.svelte';
+  import SplitPdf from '$lib/components/SplitPdf.svelte';
   import { hasPdfHeader } from '$lib/pdf/viewer-utils';
 
   let isDragging = false;
@@ -10,6 +11,7 @@
   let selectedFile: File | null = null;
   let organizeFile: File | null = null;
   let mergeMode = false;
+  let splitMode = false;
   let organizerInput: HTMLInputElement;
   let fileError = '';
 
@@ -86,7 +88,7 @@
       </span>
       <span>pdf<span class="font-medium text-[#8c91a0]">utils</span></span>
     </a>
-    {#if !selectedFile && !organizeFile && !mergeMode}
+    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode}
       <nav class="ml-auto flex h-full items-center gap-[30px] max-[760px]:gap-[17px]" aria-label="Main navigation">
         <a class="relative inline-flex h-full items-center text-[13px] font-semibold text-ink no-underline after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-0.5 after:bg-brand-700 max-[760px]:text-[11px]" href="#tools">Tools</a>
         <a class="inline-flex h-full items-center text-[13px] font-semibold text-muted no-underline transition-colors hover:text-brand-700 max-[760px]:text-[11px] max-[480px]:hidden" href="#how-it-works">How it works</a>
@@ -102,6 +104,8 @@
       <PageOrganizer file={organizeFile} onClose={() => (organizeFile = null)} />
     {:else if mergeMode}
       <MergePdf onClose={() => (mergeMode = false)} />
+    {:else if splitMode}
+      <SplitPdf onClose={() => (splitMode = false)} />
     {:else}
       <section class="py-[77px] text-center max-[760px]:pb-[54px] max-[760px]:pt-[61px] max-[480px]:pt-[49px]">
         <div class="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[1.7px] text-brand-600 max-[480px]:text-[8px] max-[480px]:tracking-[1.2px]"><span class="h-px w-[22px] bg-brand-300"></span> A calmer way to work with PDFs</div>
@@ -161,6 +165,13 @@
             </span>
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Merge PDFs</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Combine multiple files in your chosen order.</p></div>
             <button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open merge tool" onclick={() => (mergeMode = true)}>Open tool</button>
+          </article>
+          <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#fff2e9] text-[#cc8052]" aria-hidden="true">
+              <svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M5 4v16M19 4v16M5 8h5m4 0h5M5 16h5m4 0h5M10 6l2 2-2 2m4 4-2 2 2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Split PDF</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Create separate files from custom page ranges.</p></div>
+            <button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open split tool" onclick={() => (splitMode = true)}>Open tool</button>
           </article>
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
             <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#fff5e5] text-[#c18a36]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="m4 17 9.8-9.8 3 3L7 20H4zM14.5 6.5l2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
