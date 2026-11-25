@@ -13,19 +13,20 @@ A lightweight, privacy-first browser workspace for viewing, editing, organizing,
 
 ## Current implementation
 
-The first viewer slice is implemented on the `feat/app-foundation` branch in [PR #1](https://github.com/leenusdarnal/pdf-utils/pull/1). Latest CI passed Svelte/type checks, unit tests, and the production build. Browser-level interaction and accessibility regression checks are still pending. It currently includes:
+The viewer foundation is merged into `main`. CI now runs Svelte/type checks, unit tests, and Playwright Chromium browser regression tests before the production build. Cross-browser and manual accessibility checks remain part of the verification checklist. It currently includes:
 
 - Select or drop a local PDF file.
 - Check for a PDF signature in the first 1,024 bytes before parsing.
 - Open the document with PDF.js in the browser using its matching, bundled worker.
 - Render one full-size page at a time with previous/next navigation.
-- Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted.
+- Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted. On mobile, the page rail collapses by default, can be shown on demand, and collapses after page selection.
 - Search extracted page text locally, review highlighted snippets, and jump to matching pages.
+- Inspect local document information including title, author, subject, creator, producer, PDF version, page count, and file size.
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
 - Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
 
-**Not implemented yet:** selectable text overlay, printing, PDF metadata, annotations, page editing, merging/splitting, compression, watermarking, and conversion. Search result navigation and browser regression checks still need manual verification. The viewer remains in progress until browser interaction and accessibility regression checks pass.
+**Not implemented yet:** selectable text overlay, printing, annotations, page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
@@ -46,7 +47,7 @@ Redaction must never be implemented as a visual overlay. Features will be gated 
 The application uses SvelteKit, Svelte 5, TypeScript, Tailwind CSS v4, and Vite. Tailwind is integrated through `@tailwindcss/vite`; shared palette and typography tokens live in `src/routes/app.css`, while component styling uses utility classes. The visual system follows the principles in *Refactoring UI*: clear hierarchy, deliberate spacing, restrained color, readable type, and minimal decorative borders.
 
 - **PDF.js adapter:** `src/lib/pdf/pdfjs-client.ts` loads PDF.js only in the browser and configures the worker from the same pinned package.
-- **Viewer component:** `src/lib/components/PdfViewer.svelte` owns the main page state, canvas rendering, navigation, zoom, and render cleanup.
+- **Viewer component:** `src/lib/components/PdfViewer.svelte` owns the main page state, canvas rendering, navigation, zoom, local document metadata display, and render cleanup.
 - **Thumbnail navigation:** `ThumbnailSidebar.svelte` virtualizes the page list; `PdfThumbnail.svelte` renders only the visible preview canvases.
 - **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature, clamps page/zoom values, and calculates the bounded thumbnail window.
 - **Document operations:** planned service layer around `pdf-lib` for merge, split, page reorder/rotation, metadata, and export.
@@ -82,7 +83,7 @@ npm run check
 npm run build
 ```
 
-End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs the smoke suite before the production build.
+End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs regression checks for PDF import/rendering, navigation, search, zoom, invalid-file feedback, and mobile layout before the production build.
 
 Update [PROJECT_PLAN.md](./PROJECT_PLAN.md) with implementation status. The phased viewer design and task plan are under `docs/superpowers/`.
 
