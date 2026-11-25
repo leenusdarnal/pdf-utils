@@ -14,11 +14,11 @@ User interface (SvelteKit routes and components)
   └── Export/download pipeline
 ```
 
-UI components should coordinate workflows, not own PDF parsing or binary manipulation. Adapters isolate third-party library APIs and make the core behavior testable.
+UI components should coordinate workflows, not own PDF parsing or binary manipulation. Adapters isolate third-party library APIs and make the core behavior testable. The current viewer dynamically imports PDF.js from the browser lifecycle and uses the worker asset bundled from the same pinned package.
 
 ## Core modules
 
-- `lib/pdf/`: loading, document metadata, page models, PDF.js adapter.
+- `lib/pdf/`: PDF.js browser adapter (`pdfjs-client.ts`), file-signature/control helpers, and future metadata/page models.
 - `lib/operations/`: merge, split, extract, reorder, rotate, delete, metadata, export.
 - `lib/annotations/`: normalized annotation types, coordinate transforms, history, rendering, serialization.
 - `lib/storage/`: optional local draft persistence and quota/error handling.
@@ -35,8 +35,8 @@ Store geometry in normalized page coordinates (0..1) relative to the unrotated P
 
 1. User selects or drops a file.
 2. Validate file type/signature and apply practical size warnings.
-3. Load the document locally and create a revocable object URL only when needed.
-4. Perform rendering and editing locally.
+3. Load the document locally through the PDF.js adapter; avoid object URLs unless a later workflow specifically needs one.
+4. Render the current page locally. The first viewer iteration intentionally keeps only one page canvas mounted at a time.
 5. Export a new output file without silently modifying the source.
 6. Release worker, PDF.js, canvas, and object URL resources when the document closes.
 
