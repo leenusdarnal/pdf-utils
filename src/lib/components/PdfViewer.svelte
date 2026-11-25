@@ -18,6 +18,7 @@
   let viewerViewport: HTMLDivElement;
   let resizeObserver: ResizeObserver | undefined;
   let renderSequence = 0;
+  let lastViewportWidth = 0;
   let destroyed = false;
   let fitToWidth = true;
   let isLoading = true;
@@ -57,9 +58,13 @@
       }
     };
 
-    resizeObserver = new ResizeObserver(() => {
-      if (fitToWidth && pdfDocument && !destroyed) {
-        void renderPage(currentPage, true);
+    resizeObserver = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      if (width && Math.abs(width - lastViewportWidth) > 1) {
+        lastViewportWidth = width;
+        if (fitToWidth && pdfDocument && !destroyed) {
+          void renderPage(currentPage, true);
+        }
       }
     });
     if (viewerViewport) resizeObserver.observe(viewerViewport);
@@ -71,13 +76,17 @@
       renderSequence += 1;
       resizeObserver?.disconnect();
       renderTask?.cancel();
-      void loadingTask?.destroy();
-      if (pdfDocument) void pdfDocument.destroy();
+      if (loadingTask) {
+        void loadingTask.destroy();
+      } else if (pdfDocument) {
+        void pdfDocument.destroy();
+      }
     };
   });
 
   async function renderPage(requestedPage: number, recalculateFit = false) {
-    if (!pdfDocument || destroyed) return;
+    const document = pdfDocument;
+    if (!document || destroyed) return;
 
     const sequence = ++renderSequence;
     const previousTask = renderTask;
@@ -95,12 +104,13 @@
     errorMessage = '';
     statusText = 'Rendering page…';
     let activeTask: PdfRenderTask | null = null;
+    let pageToCleanup: PdfPage | null = null;
 
     try {
       const pageNumber = clampPageNumber(requestedPage, totalPages);
-      const page = await pdfDocument.getPage(pageNumber);
+      const page = await document.getPage(pageNumber);
+      pageToCleanup = page;
       if (destroyed || sequence !== renderSequence) {
-        page.cleanup();
         return;
       }
 
@@ -136,7 +146,6 @@
         currentPage = pageNumber;
         statusText = `Page ${currentPage} of ${totalPages} · ${Math.round(zoom * 100)}%`;
       }
-      page.cleanup();
     } catch (error) {
       if (!destroyed && sequence === renderSequence) {
         const errorName = error instanceof Error ? error.name : '';
@@ -146,6 +155,7 @@
         }
       }
     } finally {
+      pageToCleanup?.cleanup();
       if (renderTask === activeTask) renderTask = null;
       if (!destroyed && sequence === renderSequence) isRendering = false;
     }
@@ -231,7 +241,7 @@
       <button type="button" class="viewer-button" onclick={onClose}>Return to tools</button>
     </div>
   {:else}
-    <div class="viewer-stage" bind:this={viewerViewport} aria-label="Document page area">
+    <div class="viewer-stage" bind:this={viewerViewport} role="region" aria-label="Document page area">
       {#if isLoading}
         <div class="viewer-loading-card">
           <span class="viewer-spinner large" aria-hidden="true"></span>
