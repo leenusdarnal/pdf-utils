@@ -115,22 +115,38 @@ test('rejects a file that does not contain a PDF signature', async ({ page }) =>
   await expect(page.locator('[aria-label="PDF viewer"]')).toHaveCount(0);
 });
 
-test('keeps the viewer usable without horizontal page overflow on mobile', async ({ page }) => {
+test('keeps the viewer usable and lets mobile users collapse page thumbnails', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await visitHome(page);
   await expect(page.getByRole('heading', { name: /Your documents/ })).toHaveCSS('font-size', '43px');
 
   await openTestPdf(page);
 
-  const layout = await page.evaluate(() => ({
+  const thumbnails = page.locator('aside[aria-label="Page navigation"]');
+  const showPages = page.getByRole('button', { name: 'Show pages' });
+  await expect(showPages).toBeVisible();
+  await expect(showPages).toHaveAttribute('aria-expanded', 'false');
+  await expect(thumbnails).toBeHidden();
+
+  const collapsedLayout = await page.evaluate(() => ({
     viewportWidth: window.innerWidth,
     documentWidth: document.documentElement.scrollWidth,
     sidebarWidth: document.querySelector('aside[aria-label="Page navigation"]')?.getBoundingClientRect().width ?? 0
   }));
+  expect(collapsedLayout.documentWidth).toBeLessThanOrEqual(collapsedLayout.viewportWidth);
+  expect(collapsedLayout.sidebarWidth).toBe(0);
 
-  expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
-  expect(layout.sidebarWidth).toBeLessThanOrEqual(90);
+  await showPages.click();
+  const hidePages = page.getByRole('button', { name: 'Hide pages' });
+  await expect(hidePages).toHaveAttribute('aria-expanded', 'true');
+  await expect(thumbnails).toBeVisible();
 
-  await page.getByRole('button', { name: 'Next page' }).click();
-  await expect(page.locator('[role="status"]')).toContainText('Page 2 of 2');
+  const expandedSidebarWidth = await thumbnails.evaluate((element) => element.getBoundingClientRect().width);
+  expect(expandedSidebarWidth).toBeLessThanOrEqual(90);
+  expect(expandedSidebarWidth).toBeGreaterThan(0);
+
+  await page.getByRole('button', { name: 'Go to page 2' }).click();
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 2 of 2');
+  await expect(page.getByRole('button', { name: 'Show pages' })).toBeVisible();
+  await expect(thumbnails).toBeHidden();
 });
