@@ -37,6 +37,7 @@ Use this checklist against a production build or preview server before marking t
 
 - [ ] Select PDF text and create a highlight; verify multi-line selections retain each line rectangle.
 - [ ] Select a highlight, move it, and verify it stays inside the page bounds; undo and redo both creation and movement.
+- [ ] Draw rectangle and arrow annotations; verify their positions remain aligned after zoom and page rotation, and undo/redo works.
 - [ ] Place a text note on the page, save it, reopen it, edit the text, and delete it.
 - [ ] Move a text note by dragging its marker; confirm it stays aligned after zoom and on pages with 90/180/270-degree rotation.
 - [ ] Navigate away from a page and back; annotations remain on their original page while the document stays open.
