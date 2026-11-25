@@ -4,8 +4,8 @@ import type { NormalizedPoint, NormalizedRect } from './annotations';
 export interface PdfViewportTransform {
   width: number;
   height: number;
-  convertToPdfPoint(x: number, y: number): [number, number];
-  convertToViewportPoint(x: number, y: number): [number, number];
+  convertToPdfPoint(x: number, y: number): number[];
+  convertToViewportPoint(x: number, y: number): number[];
 }
 
 export interface ViewportRect {
