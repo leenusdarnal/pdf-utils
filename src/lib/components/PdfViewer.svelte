@@ -129,8 +129,7 @@
         MAX_CANVAS_PIXELS / Math.max(1, viewport.width * viewport.height)
       );
       const outputScale = Math.min(deviceScale, pixelBudgetScale);
-      const context = canvasElement?.getContext('2d', { alpha: false });
-      if (!context || !canvasElement) {
+      if (!canvasElement) {
         throw new Error('Canvas rendering is not available in this browser.');
       }
 
@@ -138,11 +137,8 @@
       canvasElement.height = Math.max(1, Math.floor(viewport.height * outputScale));
       canvasElement.style.width = `${Math.floor(viewport.width)}px`;
       canvasElement.style.height = `${Math.floor(viewport.height)}px`;
-      context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, canvasElement.width, canvasElement.height);
-
       activeTask = page.render({
-        canvasContext: context,
+        canvas: canvasElement,
         viewport,
         transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0]
       });
