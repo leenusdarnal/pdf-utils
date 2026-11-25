@@ -221,6 +221,24 @@
     if (isMobileViewport) thumbnailsOpen = false;
   }
 
+  function openPdfForPrinting() {
+    if (isLoading || destroyed) return;
+
+    const pdfUrl = URL.createObjectURL(file);
+    const printWindow = window.open(pdfUrl, '_blank');
+    if (!printWindow) {
+      URL.revokeObjectURL(pdfUrl);
+      statusText = 'The browser blocked the print tab. Allow pop-ups and try again.';
+      return;
+    }
+
+    // Prevent the newly opened PDF tab from retaining a reference to the app.
+    printWindow.opener = null;
+    statusText = 'Opened the original PDF in a new tab. Use the browser’s Print control.';
+    // Keep the Blob URL alive long enough for the browser PDF viewer to load and print.
+    window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 5 * 60 * 1000);
+  }
+
   function changeZoom(amount: number) {
     fitToWidth = false;
     zoom = clampZoom(zoom + amount);
@@ -332,6 +350,14 @@
       </div>
     </div>
 
+    <button
+      type="button"
+      class="inline-flex min-h-[34px] shrink-0 items-center justify-center rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]"
+      aria-label="Open PDF for printing"
+      title="Open the original PDF in a new tab to print"
+      disabled={isLoading}
+      onclick={openPdfForPrinting}
+    >Print</button>
     <button
       type="button"
       class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]"
