@@ -17,7 +17,7 @@ describe('mergePdfFiles', () => {
     const second = await createPdf([[300, 400]]);
 
     const mergedBytes = await mergePdfFiles([
-      new Blob([first], { type: 'application/pdf' }),
+      new Blob([first as BlobPart], { type: 'application/pdf' }),
       new Blob([second], { type: 'application/pdf' })
     ]);
     const merged = await PDFDocument.load(mergedBytes);
@@ -35,7 +35,7 @@ describe('mergePdfFiles', () => {
     await expect(mergePdfFiles([])).rejects.toThrow('at least two PDF files');
     const onePage = await createPdf([[100, 200]]);
     await expect(
-      mergePdfFiles([new Blob([onePage], { type: 'application/pdf' })])
+      mergePdfFiles([new Blob([onePage as BlobPart], { type: 'application/pdf' })])
     ).rejects.toThrow('at least two PDF files');
   });
 
@@ -43,7 +43,7 @@ describe('mergePdfFiles', () => {
     const first = await createPdf([[100, 200]]);
     await expect(
       mergePdfFiles([
-        new Blob([first], { type: 'application/pdf' }),
+        new Blob([first as BlobPart], { type: 'application/pdf' }),
         new Blob(['not a PDF'], { type: 'application/pdf' })
       ])
     ).rejects.toThrow('PDF 2 could not be opened');
