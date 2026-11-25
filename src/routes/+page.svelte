@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import PdfViewer from '$lib/components/PdfViewer.svelte';
   import { hasPdfHeader } from '$lib/pdf/viewer-utils';
 
@@ -52,7 +53,7 @@
 
 <div class="app-shell">
   <header class="topbar">
-    <a class="brand" href="/" aria-label="PDF Utils home">
+    <a class="brand" href={`${base}/`} aria-label="PDF Utils home">
       <span class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 3.75h7l4 4v12.5H6.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 3.75v4h4M8.75 13h6.5M8.75 16h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </span>
