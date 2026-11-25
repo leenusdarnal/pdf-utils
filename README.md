@@ -30,7 +30,7 @@ The first viewer slice is implemented on the `feat/app-foundation` branch in [PR
 
 | Area | Planned scope |
 | --- | --- |
-| View | Text layer, search, thumbnails, page navigation, zoom, fit modes, document info, print |
+| View | Text layer, search, page navigation, zoom, fit modes, document info, print |
 | Organize | Merge, split/extract pages, reorder, rotate, delete pages |
 | Edit | Text/image annotations, highlights, shapes, freehand drawing, comments, undo/redo |
 | Transform | Compress, flatten where appropriate, watermark, page numbering |
@@ -45,8 +45,9 @@ Redaction must never be implemented as a visual overlay. Features will be gated 
 The application uses SvelteKit, Svelte 5, and TypeScript.
 
 - **PDF.js adapter:** `src/lib/pdf/pdfjs-client.ts` loads PDF.js only in the browser and configures the worker from the same pinned package.
-- **Viewer component:** `src/lib/components/PdfViewer.svelte` owns page state, canvas rendering, navigation, zoom, and render cleanup.
-- **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature and clamps page/zoom values.
+- **Viewer component:** `src/lib/components/PdfViewer.svelte` owns the main page state, canvas rendering, navigation, zoom, and render cleanup.
+- **Thumbnail navigation:** `ThumbnailSidebar.svelte` virtualizes the page list; `PdfThumbnail.svelte` renders only the visible preview canvases.
+- **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature, clamps page/zoom values, and calculates the bounded thumbnail window.
 - **Document operations:** planned service layer around `pdf-lib` for merge, split, page reorder/rotation, metadata, and export.
 - **Annotation model:** planned typed, page-relative annotation data independent of screen pixels.
 - **Persistence:** no persistence by default; optional IndexedDB drafts only when the workflow requires recovery and includes clear-data controls.
