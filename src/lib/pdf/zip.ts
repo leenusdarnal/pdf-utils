@@ -113,5 +113,5 @@ export async function createStoredZip(entries: readonly ZipEntry[]): Promise<Blo
   write32(endView, 16, localOffset);
   write16(endView, 20, 0);
 
-  return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
+  return new Blob([...localParts, ...centralParts, end] as BlobPart[], { type: 'application/zip' });
 }
