@@ -1,0 +1,247 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
+  import { clampPageNumber, clampZoom } from '$lib/pdf/viewer-utils';
+
+  export let file: File;
+  export let onClose: () => void;
+
+  type LoadingTask = ReturnType<typeof import('pdfjs-dist').getDocument>;
+  type PdfDocument = Awaited<LoadingTask['promise']>;
+  type PdfPage = Awaited<ReturnType<PdfDocument['getPage']>>;
+  type PdfRenderTask = ReturnType<PdfPage['render']>;
+
+  let pdfDocument: PdfDocument | null = null;
+  let loadingTask: LoadingTask | null = null;
+  let renderTask: PdfRenderTask | null = null;
+  let canvasElement: HTMLCanvasElement;
+  let viewerViewport: HTMLDivElement;
+  let resizeObserver: ResizeObserver | undefined;
+  let renderSequence = 0;
+  let destroyed = false;
+  let fitToWidth = true;
+  let isLoading = true;
+  let isRendering = false;
+  let currentPage = 1;
+  let totalPages = 0;
+  let zoom = 1;
+  let statusText = 'Preparing your document…';
+  let errorMessage = '';
+
+  onMount(() => {
+    const loadDocument = async () => {
+      try {
+        const pdfjs = await import('pdfjs-dist');
+        if (destroyed) return;
+
+        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+        const data = new Uint8Array(await file.arrayBuffer());
+        if (destroyed) return;
+
+        loadingTask = pdfjs.getDocument({ data });
+        pdfDocument = await loadingTask.promise;
+        if (destroyed) {
+          await pdfDocument.destroy();
+          return;
+        }
+
+        totalPages = pdfDocument.numPages;
+        isLoading = false;
+        statusText = `${totalPages} ${totalPages === 1 ? 'page' : 'pages'} loaded`;
+        await renderPage(1, true);
+      } catch (error) {
+        if (destroyed) return;
+        isLoading = false;
+        errorMessage = 'This PDF could not be opened. It may be damaged, unsupported, or password-protected.';
+        statusText = 'Unable to open document';
+      }
+    };
+
+    resizeObserver = new ResizeObserver(() => {
+      if (fitToWidth && pdfDocument && !destroyed) {
+        void renderPage(currentPage, true);
+      }
+    });
+    if (viewerViewport) resizeObserver.observe(viewerViewport);
+
+    void loadDocument();
+
+    return () => {
+      destroyed = true;
+      renderSequence += 1;
+      resizeObserver?.disconnect();
+      renderTask?.cancel();
+      void loadingTask?.destroy();
+      if (pdfDocument) void pdfDocument.destroy();
+    };
+  });
+
+  async function renderPage(requestedPage: number, recalculateFit = false) {
+    if (!pdfDocument || destroyed) return;
+
+    const sequence = ++renderSequence;
+    const previousTask = renderTask;
+    if (previousTask) {
+      previousTask.cancel();
+      try {
+        await previousTask.promise;
+      } catch {
+        // A cancelled render rejects by design; the next render owns the canvas.
+      }
+    }
+    if (destroyed || sequence !== renderSequence) return;
+
+    isRendering = true;
+    errorMessage = '';
+    statusText = 'Rendering page…';
+    let activeTask: PdfRenderTask | null = null;
+
+    try {
+      const pageNumber = clampPageNumber(requestedPage, totalPages);
+      const page = await pdfDocument.getPage(pageNumber);
+      if (destroyed || sequence !== renderSequence) {
+        page.cleanup();
+        return;
+      }
+
+      const pageAtDefaultScale = page.getViewport({ scale: 1 });
+      if (recalculateFit || fitToWidth) {
+        const availableWidth = Math.max(240, (viewerViewport?.clientWidth ?? pageAtDefaultScale.width) - 40);
+        zoom = clampZoom(availableWidth / pageAtDefaultScale.width);
+      }
+
+      const viewport = page.getViewport({ scale: zoom });
+      const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+      const context = canvasElement?.getContext('2d', { alpha: false });
+      if (!context || !canvasElement) {
+        throw new Error('Canvas rendering is not available in this browser.');
+      }
+
+      canvasElement.width = Math.floor(viewport.width * outputScale);
+      canvasElement.height = Math.floor(viewport.height * outputScale);
+      canvasElement.style.width = `${Math.floor(viewport.width)}px`;
+      canvasElement.style.height = `${Math.floor(viewport.height)}px`;
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvasElement.width, canvasElement.height);
+
+      activeTask = page.render({
+        canvasContext: context,
+        viewport,
+        transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0]
+      });
+      renderTask = activeTask;
+      await activeTask.promise;
+
+      if (!destroyed && sequence === renderSequence) {
+        currentPage = pageNumber;
+        statusText = `Page ${currentPage} of ${totalPages} · ${Math.round(zoom * 100)}%`;
+      }
+      page.cleanup();
+    } catch (error) {
+      if (!destroyed && sequence === renderSequence) {
+        const errorName = error instanceof Error ? error.name : '';
+        if (errorName !== 'RenderingCancelledException') {
+          errorMessage = 'This page could not be rendered. Try another page or reopen the file.';
+          statusText = 'Page rendering failed';
+        }
+      }
+    } finally {
+      if (renderTask === activeTask) renderTask = null;
+      if (!destroyed && sequence === renderSequence) isRendering = false;
+    }
+  }
+
+  function goToPage(pageNumber: number) {
+    void renderPage(clampPageNumber(pageNumber, totalPages));
+  }
+
+  function changeZoom(amount: number) {
+    fitToWidth = false;
+    zoom = clampZoom(zoom + amount);
+    void renderPage(currentPage);
+  }
+
+  function fitPageToWidth() {
+    fitToWidth = true;
+    void renderPage(currentPage, true);
+  }
+
+  function formatFileSize(size: number) {
+    if (size < 1_048_576) return `${Math.max(1, Math.round(size / 1_024))} KB`;
+    return `${(size / 1_048_576).toFixed(2)} MB`;
+  }
+</script>
+
+<svelte:head>
+  <title>{file.name} — PDF Utils</title>
+</svelte:head>
+
+<section class="viewer-shell" aria-label="PDF viewer">
+  <header class="viewer-toolbar">
+    <div class="viewer-file-info">
+      <span class="viewer-file-icon" aria-hidden="true">PDF</span>
+      <div class="viewer-file-meta">
+        <strong title={file.name}>{file.name}</strong>
+        <span>{formatFileSize(file.size)} · {totalPages > 0 ? `${totalPages} pages` : 'Local document'}</span>
+      </div>
+    </div>
+
+    <div class="viewer-controls" aria-label="PDF controls">
+      <div class="viewer-control-group" aria-label="Page navigation">
+        <button type="button" class="viewer-button icon-button" aria-label="Previous page" title="Previous page" disabled={isLoading || currentPage <= 1} onclick={() => goToPage(currentPage - 1)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7" /></svg>
+        </button>
+        <span class="viewer-page-count"><strong>{totalPages ? currentPage : '—'}</strong><span>/</span>{totalPages || '—'}</span>
+        <button type="button" class="viewer-button icon-button" aria-label="Next page" title="Next page" disabled={isLoading || currentPage >= totalPages} onclick={() => goToPage(currentPage + 1)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7" /></svg>
+        </button>
+      </div>
+
+      <span class="viewer-toolbar-divider" aria-hidden="true"></span>
+
+      <div class="viewer-control-group" aria-label="Zoom controls">
+        <button type="button" class="viewer-button icon-button" aria-label="Zoom out" title="Zoom out" disabled={isLoading || zoom <= 0.5} onclick={() => changeZoom(-0.25)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
+        </button>
+        <span class="viewer-zoom-value" aria-live="off">{Math.round(zoom * 100)}%</span>
+        <button type="button" class="viewer-button icon-button" aria-label="Zoom in" title="Zoom in" disabled={isLoading || zoom >= 3} onclick={() => changeZoom(0.25)}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        </button>
+        <button type="button" class:active={fitToWidth} class="viewer-button fit-button" aria-pressed={fitToWidth} disabled={isLoading} onclick={fitPageToWidth}>Fit width</button>
+      </div>
+    </div>
+
+    <button type="button" class="viewer-button close-button" onclick={onClose}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+      <span>Close</span>
+    </button>
+  </header>
+
+  <div class="viewer-status" role="status" aria-live="polite" aria-atomic="true">
+    {#if isLoading}
+      <span class="viewer-spinner" aria-hidden="true"></span>
+    {/if}
+    {statusText}
+  </div>
+
+  {#if errorMessage}
+    <div class="viewer-error" role="alert">
+      <strong>Unable to display this document</strong>
+      <p>{errorMessage}</p>
+      <button type="button" class="viewer-button" onclick={onClose}>Return to tools</button>
+    </div>
+  {:else}
+    <div class="viewer-stage" bind:this={viewerViewport} aria-label="Document page area">
+      {#if isLoading}
+        <div class="viewer-loading-card">
+          <span class="viewer-spinner large" aria-hidden="true"></span>
+          <strong>Opening your PDF</strong>
+          <p>Your document is being processed on this device.</p>
+        </div>
+      {/if}
+      <div class="viewer-canvas-wrap" class:rendering={isRendering}>
+        <canvas bind:this={canvasElement} class="viewer-canvas" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
+      </div>
+    </div>
+  {/if}
+</section>
