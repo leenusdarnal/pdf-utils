@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Install dependencies
+        run: npm install
+      - name: Diagnose dependency audit
+        run: |
+          npm audit --json > /tmp/npm-audit.json || true
+          npm audit --omit=dev --json > /tmp/npm-audit-production.json || true
+          node <<'NODE'
+          const fs = require('node:fs');
+          for (const [label, path] of [
+            ['all dependencies', '/tmp/npm-audit.json'],
+            ['production dependencies', '/tmp/npm-audit-production.json']
+          ]) {
+            const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+            console.log('\n' + label + ':', JSON.stringify(report.metadata?.vulnerabilities ?? {}));
+            for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
+              const via = (item.via ?? []).map(entry =>
+                typeof entry === 'string' ? entry : `${entry.title} [${entry.range}]`
+              );
+              console.log(`- ${name}: ${item.severity}; range=${item.range}; direct=${item.isDirect}; fix=${JSON.stringify(item.fixAvailable)}; via=${via.join('; ')}`);
+            }
+          }
+          NODE
+      - name: Type and Svelte checks
+        run: npm run check
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build

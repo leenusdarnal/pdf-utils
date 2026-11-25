@@ -1,73 +1,96 @@
 # PDF Utils
 
-A lightweight, privacy-first collection of browser-based PDF tools for viewing, editing, organizing, and converting documents.
+A lightweight, privacy-first browser workspace for viewing, editing, organizing, and converting PDF documents.
 
-## Product direction
+## Product principles
 
-PDF Utils should make common document tasks fast and approachable while keeping files on the user's device by default. The application will prioritize a focused interface, predictable document handling, and a small dependency footprint.
+- **Local-first:** PDF bytes stay in the browser for core workflows; no server upload is used by the viewer.
+- **Lightweight:** dependencies are added only when they provide clear product value.
+- **Composable:** PDF rendering and document operations are isolated behind small adapters.
+- **Accessible:** controls have meaningful labels, focus states, and readable status/error feedback.
+- **Reliable:** document limitations and potentially lossy operations are disclosed.
+- **Progressive:** build a useful viewer first, then add editing and document utilities in small phases.
 
-### Principles
+## Current implementation
 
-- **Local-first:** process documents in the browser wherever practical; do not upload user files by default.
-- **Lightweight:** add dependencies only when they provide clear product value.
-- **Composable:** keep PDF rendering, editing, file operations, and export behind small adapters.
-- **Accessible:** support keyboard navigation, readable controls, meaningful labels, and responsive layouts.
-- **Reliable:** preserve document fidelity where possible and clearly communicate any lossy operation.
-- **Progressive:** deliver a useful viewer first, then add editing and utility workflows incrementally.
+The first viewer slice is implemented on the `feat/app-foundation` branch in [PR #1](https://github.com/leenusdarnal/pdf-utils/pull/1). Latest CI passed Svelte/type checks, unit tests, and the production build. Browser-level interaction and accessibility regression checks are still pending. It currently includes:
+
+- Select or drop a local PDF file.
+- Check for a PDF signature in the first 1,024 bytes before parsing.
+- Open the document with PDF.js in the browser using its matching, bundled worker.
+- Render one full-size page at a time with previous/next navigation.
+- Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted.
+- Search extracted page text locally, review highlighted snippets, and jump to matching pages.
+- Zoom from 50% to 300%, fit to width, and close the document.
+- Show loading and readable error states; cancel and clean up PDF.js work on close.
+- Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
+
+**Not implemented yet:** selectable text overlay, printing, PDF metadata, annotations, page editing, merging/splitting, compression, watermarking, and conversion. Search result navigation and browser regression checks still need manual verification. The viewer remains in progress until browser interaction and accessibility regression checks pass.
 
 ## Planned capabilities
 
-| Area | Initial scope |
+| Area | Planned scope |
 | --- | --- |
-| View | Open PDFs, page navigation, zoom, fit-to-width/page, thumbnails, search, document info, print |
+| View | Text layer, search, page navigation, zoom, fit modes, document info, print |
 | Organize | Merge, split/extract pages, reorder, rotate, delete pages |
 | Edit | Text/image annotations, highlights, shapes, freehand drawing, comments, undo/redo |
 | Transform | Compress, flatten where appropriate, watermark, page numbering |
-| Convert | Images to PDF; PDF pages to images; investigate office-document conversion as a later capability |
-| Secure | Password-protected PDF handling where browser libraries support it; redact only with true content removal and verification |
-| Quality | Validate PDF, inspect metadata, compare file size, optimize output |
+| Convert | Images to PDF; PDF pages to PNG/JPEG; assess office-document conversion later |
+| Secure | Password handling where browser libraries support it; redaction only with true content removal and verification |
+| Quality | Validate PDFs, inspect metadata, compare file size, optimize output |
 
-Feature availability will be gated by browser support, library capabilities, document fidelity, and security testing. Redaction must never be implemented as a visual overlay.
+Redaction must never be implemented as a visual overlay. Features will be gated by browser support, document fidelity, and security testing.
 
-## Architecture direction
+## Architecture
 
-The proposed implementation is a SvelteKit + TypeScript application with browser-side PDF processing.
+The application uses SvelteKit, Svelte 5, and TypeScript.
 
-- **Viewer adapter:** PDF.js for rendering, text extraction, search, and page viewport information.
-- **Document operations:** a small service layer around `pdf-lib` for merge, split, page reorder/rotation, metadata, and export.
-- **Annotation model:** typed, page-relative annotation data independent of canvas pixels.
-- **Annotation renderer:** DOM/canvas overlays positioned using the viewer's page viewport; drawing coordinates must remain correct under zoom, rotation, and resize.
-- **Export pipeline:** prefer native PDF vector/text annotations when feasible; use rasterization only as an explicit fallback because it can reduce fidelity and accessibility.
-- **Persistence:** session-first by default; optional IndexedDB for local drafts and recovery, with quota/error handling and a visible clear-data control.
-- **Workers:** move CPU-heavy operations off the main thread where supported, with cancellation and progress reporting.
-- **File handling:** validate MIME type and PDF signatures, handle malformed/large files gracefully, and avoid sending document bytes to analytics or remote services.
+- **PDF.js adapter:** `src/lib/pdf/pdfjs-client.ts` loads PDF.js only in the browser and configures the worker from the same pinned package.
+- **Viewer component:** `src/lib/components/PdfViewer.svelte` owns the main page state, canvas rendering, navigation, zoom, and render cleanup.
+- **Thumbnail navigation:** `ThumbnailSidebar.svelte` virtualizes the page list; `PdfThumbnail.svelte` renders only the visible preview canvases.
+- **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature, clamps page/zoom values, and calculates the bounded thumbnail window.
+- **Document operations:** planned service layer around `pdf-lib` for merge, split, page reorder/rotation, metadata, and export.
+- **Annotation model:** planned typed, page-relative annotation data independent of screen pixels.
+- **Persistence:** no persistence by default; optional IndexedDB drafts only when the workflow requires recovery and includes clear-data controls.
+- **Workers:** expensive operations should move off the main thread where supported, with progress and cancellation.
 
-### Important constraints
+### Technical constraints
 
-1. Use a single source of truth for document state and page transforms.
-2. Keep annotations anchored in normalized page coordinates, not screen coordinates.
-3. Test export fidelity for text, vectors, images, page boxes, rotation, and metadata.
-4. Treat PDF parsing as untrusted input; keep dependencies patched and avoid unsafe HTML rendering.
-5. Never claim a file is securely redacted unless the underlying content is actually removed and the output is independently verified.
-6. Do not copy code from reference projects without reviewing their licenses and notices.
-
-## Proposed delivery phases
-
-1. **Foundation:** project scaffold, design tokens, app shell, routing, CI, lint/type checks, architecture notes.
-2. **Viewer MVP:** import/drop, render, thumbnails, navigation, zoom, search, print, error states.
-3. **Page operations:** merge, split, extract, reorder, rotate, delete, download.
-4. **Annotation MVP:** highlight, text note, shapes, freehand, undo/redo, local draft recovery, export.
-5. **Optimization and conversion:** compression, images-to-PDF, PDF-to-images, watermark, page numbers.
-6. **Hardening:** accessibility, large-file performance, browser compatibility, security review, automated regression fixtures.
-
-## Development status
-
-The repository currently contains the initial product and architecture plan only. Implementation status is tracked in [PROJECT_PLAN.md](./PROJECT_PLAN.md).
+1. Keep parsing and binary manipulation out of UI components.
+2. Anchor annotations to normalized page coordinates, not screen pixels.
+3. Treat every PDF as untrusted input; do not render extracted text as unsafe HTML.
+4. Keep file bytes and extracted document content out of logs, telemetry, issues, and remote storage.
+5. Prefer native vector/text PDF content over rasterizing entire pages.
+6. Never claim secure redaction unless the underlying content is removed and the result is independently verified.
+7. Review third-party licenses before copying or adapting reference code.
 
 ## Development
 
-The exact framework and package versions will be selected in the foundation phase. Keep the application browser-first and avoid adding server-side document storage unless a clearly justified feature requires it.
+**Requirements:** Node.js 22.13.0 or newer (PDF.js 6.5.438 requirement).
+
+```bash
+npm install
+npm run dev
+```
+
+Useful checks:
+
+```bash
+npm test
+npm run check
+npm run build
+```
+
+Update [PROJECT_PLAN.md](./PROJECT_PLAN.md) with implementation status. The phased viewer design and task plan are under `docs/superpowers/`.
+
+## GitHub Pages
+
+The site is configured for GitHub Pages at:
+
+`https://leenusdarnal.github.io/pdf-utils/`
+
+GitHub Actions builds the app as a static SvelteKit site and deploys it from pushes to the foundation branch and `main`. Before the first deployment, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. Also open **Settings → Environments → github-pages** and allow the `feat/app-foundation` branch under deployment branches (or allow all branches temporarily); otherwise GitHub's environment protection will reject the preview deployment. The build receives the repository subpath from GitHub Pages, so local development continues to use the root path. PDF files remain in the browser; GitHub Pages serves only the application.
 
 ## License
 
-To be decided before public release. Until then, do not assume the project is licensed for reuse.
+The project license is not selected yet. Do not assume the repository is licensed for reuse. The `pdfjs-dist` dependency is distributed under Apache-2.0; retain its notices when distributing it.
