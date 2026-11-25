@@ -116,6 +116,21 @@ test('opens a PDF and supports page navigation, local search, and zoom', async (
   await expect(page.getByRole('heading', { name: /Your documents/ })).toBeVisible();
 });
 
+test('opens the original local PDF in the browser viewer for printing', async ({ page }) => {
+  await visitHome(page);
+  await openTestPdf(page);
+
+  const popupPromise = page.waitForEvent('popup');
+  await page.getByRole('button', { name: 'Open PDF for printing' }).click();
+  const printTab = await popupPromise;
+
+  await expect.poll(() => printTab.url()).toContain('blob:');
+  await expect(page.locator('[role="status"]').last()).toContainText(
+    'Opened the original PDF in a new tab'
+  );
+  await printTab.close();
+});
+
 test('rejects a file that does not contain a PDF signature', async ({ page }) => {
   await visitHome(page);
   await page.locator('#file-input').setInputFiles({
