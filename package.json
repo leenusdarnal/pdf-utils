@@ -29,7 +29,8 @@
     "@playwright/test": "^1.65.1"
   },
   "dependencies": {
-    "pdfjs-dist": "6.5.438"
+    "pdfjs-dist": "6.5.438",
+    "pdf-lib": "^1.17.1"
   },
   "engines": {
     "node": ">=22.13.0"

@@ -1,11 +1,14 @@
 <script lang="ts">
   import { base } from '$app/paths';
   import PdfViewer from '$lib/components/PdfViewer.svelte';
+  import PageOrganizer from '$lib/components/PageOrganizer.svelte';
   import { hasPdfHeader } from '$lib/pdf/viewer-utils';
 
   let isDragging = false;
   let isValidating = false;
   let selectedFile: File | null = null;
+  let organizeFile: File | null = null;
+  let organizerInput: HTMLInputElement;
   let fileError = '';
 
   async function acceptFile(file: File | undefined) {
@@ -40,6 +43,28 @@
     void acceptFile(file);
   }
 
+  async function handleOrganizerPick(event: Event) {
+    const target = event.currentTarget as HTMLInputElement;
+    const file = target.files?.[0];
+    target.value = '';
+    if (!file || isValidating) return;
+
+    fileError = '';
+    isValidating = true;
+    try {
+      const isPdf = await hasPdfHeader(file);
+      if (!isPdf) {
+        fileError = 'This file does not look like a valid PDF. Choose a PDF document and try again.';
+        return;
+      }
+      organizeFile = file;
+    } catch {
+      fileError = 'The selected file could not be read. Please try another PDF.';
+    } finally {
+      isValidating = false;
+    }
+  }
+
   function closeDocument() {
     selectedFile = null;
     fileError = '';
@@ -59,7 +84,7 @@
       </span>
       <span>pdf<span class="font-medium text-[#8c91a0]">utils</span></span>
     </a>
-    {#if !selectedFile}
+    {#if !selectedFile && !organizeFile}
       <nav class="ml-auto flex h-full items-center gap-[30px] max-[760px]:gap-[17px]" aria-label="Main navigation">
         <a class="relative inline-flex h-full items-center text-[13px] font-semibold text-ink no-underline after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-0.5 after:bg-brand-700 max-[760px]:text-[11px]" href="#tools">Tools</a>
         <a class="inline-flex h-full items-center text-[13px] font-semibold text-muted no-underline transition-colors hover:text-brand-700 max-[760px]:text-[11px] max-[480px]:hidden" href="#how-it-works">How it works</a>
@@ -71,6 +96,8 @@
   <main>
     {#if selectedFile}
       <PdfViewer file={selectedFile} onClose={closeDocument} />
+    {:else if organizeFile}
+      <PageOrganizer file={organizeFile} onClose={() => (organizeFile = null)} />
     {:else}
       <section class="py-[77px] text-center max-[760px]:pb-[54px] max-[760px]:pt-[61px] max-[480px]:pt-[49px]">
         <div class="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[1.7px] text-brand-600 max-[480px]:text-[8px] max-[480px]:tracking-[1.2px]"><span class="h-px w-[22px] bg-brand-300"></span> A calmer way to work with PDFs</div>
@@ -86,6 +113,7 @@
           ondrop={handleDrop}
         >
           <input id="file-input" class="sr-only" type="file" accept="application/pdf,.pdf" onchange={handlePick} />
+          <input class="sr-only" type="file" accept="application/pdf,.pdf" bind:this={organizerInput} onchange={handleOrganizerPick} />
           <div class="mx-auto mb-3 grid size-[43px] place-items-center rounded-xl border border-brand-200 bg-brand-50 text-brand-600" aria-hidden="true">
             <svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
@@ -120,8 +148,8 @@
           </article>
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
             <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#eaf4ff] text-[#4f8fce]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M4 5.5h6v6H4zM14 5.5h6v6h-6zM4 15.5h6v4H4zM14 15.5h6v4h-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
-            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Organize pages</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Merge, split, rotate, and reorder pages.</p></div>
-            <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Planned</span>
+            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Organize pages</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Reorder, rotate, duplicate, delete, and extract pages.</p></div>
+            <button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" onclick={() => organizerInput?.click()}>Open tool</button>
           </article>
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
             <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#fff5e5] text-[#c18a36]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="m4 17 9.8-9.8 3 3L7 20H4zM14.5 6.5l2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
