@@ -77,9 +77,12 @@ Useful checks:
 
 ```bash
 npm test
+npm run test:e2e
 npm run check
 npm run build
 ```
+
+End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs the smoke suite before the production build.
 
 Update [PROJECT_PLAN.md](./PROJECT_PLAN.md) with implementation status. The phased viewer design and task plan are under `docs/superpowers/`.
 

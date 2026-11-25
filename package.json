@@ -10,7 +10,8 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "prettier --check .",
     "format": "prettier --write .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@sveltejs/kit": "^2.20.0",
@@ -24,7 +25,8 @@
     "vitest": "^3.0.0",
     "@sveltejs/adapter-static": "^3.0.11",
     "tailwindcss": "^4.3.5",
-    "@tailwindcss/vite": "^4.3.5"
+    "@tailwindcss/vite": "^4.3.5",
+    "@playwright/test": "^1.65.1"
   },
   "dependencies": {
     "pdfjs-dist": "6.5.438"
