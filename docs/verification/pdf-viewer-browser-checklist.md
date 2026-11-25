@@ -33,6 +33,16 @@ Use this checklist against a production build or preview server before marking t
 - [ ] Use Print and confirm the original full PDF opens in a separate browser-native PDF viewer, with all pages available to the browser's Print control.
 - [ ] On mobile, the thumbnail rail starts collapsed, opens with Show pages, and collapses after selecting a thumbnail.
 
+## Annotation tools
+
+- [ ] Select PDF text and create a highlight; verify multi-line selections retain each line rectangle.
+- [ ] Select a highlight, move it, and verify it stays inside the page bounds; undo and redo both creation and movement.
+- [ ] Place a text note on the page, save it, reopen it, edit the text, and delete it.
+- [ ] Move a text note by dragging its marker; confirm it stays aligned after zoom and on pages with 90/180/270-degree rotation.
+- [ ] Navigate away from a page and back; annotations remain on their original page while the document stays open.
+- [ ] Close the document and reopen it; confirm annotations are not persisted and the source PDF remains unchanged.
+- [ ] Confirm annotations are not included in Print/export yet; do not present them as edits to the original PDF.
+
 ## Document information
 
 - [ ] Open Document info and verify filename, file size, page count, PDF version, title, author, subject, creator, and producer where present.
