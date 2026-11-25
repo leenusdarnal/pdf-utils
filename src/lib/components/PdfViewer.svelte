@@ -930,7 +930,7 @@
             <p class="m-0 text-[11px] text-[#89909d]">Your document is being processed on this device.</p>
           </div>
         {/if}
-        <div data-page-surface class={`relative my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } style:cursor={isAddingNote ? 'crosshair' : undefined} onpointerdown={handlePagePointerDown}>
+        <div data-page-surface role="group" aria-label="PDF page surface" class={`relative my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } style:cursor={isAddingNote ? 'crosshair' : undefined} onpointerdown={handlePagePointerDown}>
           <canvas bind:this={canvasElement} class="relative z-0 block max-w-none bg-white" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
           <div
             bind:this={textLayerElement}
