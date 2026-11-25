@@ -64,9 +64,9 @@ async function openTestPdf(page: Page) {
     mimeType: 'application/pdf',
     buffer: createTwoPagePdf()
   });
-  await expect(page.locator('.viewer-shell')).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator('.viewer-status')).toContainText('Page 1 of 2');
-  await expect(page.locator('.viewer-canvas')).toBeVisible();
+  await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
+  await expect(page.locator('canvas')).toBeVisible();
 }
 
 test('opens a PDF and supports page navigation, local search, and zoom', async ({ page }) => {
@@ -74,45 +74,45 @@ test('opens a PDF and supports page navigation, local search, and zoom', async (
   await openTestPdf(page);
 
   await page.getByRole('button', { name: 'Next page' }).click();
-  await expect(page.locator('.viewer-status')).toContainText('Page 2 of 2');
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 2 of 2');
 
   await page.getByRole('button', { name: 'Previous page' }).click();
-  await expect(page.locator('.viewer-status')).toContainText('Page 1 of 2');
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
 
   await page.getByLabel('Find in document').fill('needle');
   await page.getByRole('button', { name: 'Find', exact: true }).click();
-  await expect(page.locator('.search-summary').first()).toContainText('1 match found');
-  await expect(page.locator('.search-result')).toContainText('Page 2');
+  await expect(page.locator('[aria-label="Search results"]')).toContainText('1 result');
+  await expect(page.locator('[aria-label="Search results"]')).toContainText('Page 2');
 
-  await page.locator('.search-result').click();
-  await expect(page.locator('.viewer-status')).toContainText('Page 2 of 2');
+  await page.locator('[aria-label="Search results"] button').click();
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 2 of 2');
 
-  const widthBeforeZoom = await page.locator('.viewer-canvas').evaluate(
+  const widthBeforeZoom = await page.locator('canvas').evaluate(
     (canvas) => (canvas as HTMLCanvasElement).style.width
   );
   await page.getByRole('button', { name: 'Zoom in' }).click();
   await expect.poll(async () =>
-    page.locator('.viewer-canvas').evaluate((canvas) => (canvas as HTMLCanvasElement).style.width)
+    page.locator('canvas').evaluate((canvas) => (canvas as HTMLCanvasElement).style.width)
   ).not.toBe(widthBeforeZoom);
 
   await page.getByRole('button', { name: 'Fit width' }).click();
   await expect(page.getByRole('button', { name: 'Fit width' })).toHaveAttribute('aria-pressed', 'true');
 
   await page.getByRole('button', { name: 'Close document' }).click();
-  await expect(page.locator('.viewer-shell')).toBeHidden();
+  await expect(page.locator('[aria-label="PDF viewer"]')).toBeHidden();
   await expect(page.getByRole('heading', { name: /Your documents/ })).toBeVisible();
 });
 
 test('rejects a file that does not contain a PDF signature', async ({ page }) => {
   await page.goto('/');
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.locator('#file-input').setInputFiles({
     name: 'not-a-pdf.txt',
     mimeType: 'text/plain',
     buffer: Buffer.from('This file is not a PDF.')
   });
 
-  await expect(page.getByRole('alert')).toContainText('does not look like a valid PDF');
-  await expect(page.locator('.viewer-shell')).toHaveCount(0);
+  await expect(page.getByText(/does not look like a valid PDF/)).toBeVisible();
+  await expect(page.locator('[aria-label="PDF viewer"]')).toHaveCount(0);
 });
 
 test('keeps the viewer usable without horizontal page overflow on mobile', async ({ page }) => {
@@ -132,5 +132,5 @@ test('keeps the viewer usable without horizontal page overflow on mobile', async
   expect(layout.sidebarWidth).toBeLessThanOrEqual(90);
 
   await page.getByRole('button', { name: 'Next page' }).click();
-  await expect(page.locator('.viewer-status')).toContainText('Page 2 of 2');
+  await expect(page.locator('[role="status"]')).toContainText('Page 2 of 2');
 });
