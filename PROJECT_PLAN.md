@@ -1,6 +1,6 @@
 # Project Plan and Implementation Tracker
 
-Last updated: 2026-11-25
+Last updated: 2026-11-26
 
 ## Product goal
 
@@ -15,7 +15,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P1 | Page organization | Yes | Merge PDFs, split by custom page ranges, extract selected pages, reorder, rotate, duplicate, and delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
 | P1 | Annotation export | Yes | Prefer vector/native content; test fidelity and clearly disclose limitations |
-| P1 | PDF to images | Next | Export selected/all pages as PNG/JPEG with DPI and JPEG quality controls; offer individual downloads or ZIP |
+| P1 | PDF to images | Yes | Export selected/all pages as PNG/JPEG with 72/150/200/300 DPI, JPEG quality, individual downloads, and local ZIP; render one page canvas at a time |
 | P1 | Images to PDF | Next | Combine/reorder images; configure page size, orientation, margins, and predictable image fitting |
 | P1 | Compression | Next | Screen/balanced/print presets and best-effort target size; benchmark quality/size tradeoffs and avoid destructive defaults |
 | P1 | Extract images | Next | Export embedded images separately from page rasterization |
@@ -65,9 +65,9 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | FND-01 | Foundation | Confirm app architecture and dependency policy | done | Decisions documented here; no application dependencies added prematurely |
 | FND-02 | Foundation | Create SvelteKit + TypeScript scaffold | done | Scaffold and pinned PDF.js dependency are committed; latest CI clean install and production build passed |
 | FND-03 | Foundation | Establish formatting, lint, typecheck, and test scripts | done | Unit tests, Svelte/type checks, and production build pass in latest CI; formatting gate is not currently part of CI |
-| FND-04 | Foundation | Build responsive app shell and design tokens | in-progress | Responsive landing page, viewer shell, Tailwind design tokens, and mobile thumbnail controls are implemented; manual cross-browser accessibility review remains |
+| FND-04 | Foundation | Build responsive app shell and design tokens | in-progress | Responsive landing page, viewer shell, Tailwind design tokens, mobile thumbnail controls, and persistent light/dark theme are implemented; manual cross-browser accessibility review remains |
 | FND-05 | Foundation | Add CI workflow and contribution guidance | done | GitHub Actions CI and setup instructions are present; latest full run is green |
-| FND-06 | Foundation | GitHub Pages static deployment | done | GitHub Actions deployment from main is green and the live app returns HTTP 200 |
+| FND-06 | Foundation | GitHub Pages static deployment | done | GitHub Actions deployment from main is green and the live app returns HTTP 200 |\n| THEME-01 | Foundation | Light and dark appearance | in-progress | User can switch themes; preference persists locally, follows system preference before first choice, and covers the landing page and existing tools |
 | VIEW-01 | Viewer | File picker and drag/drop import | done | Local signature validation and invalid-file feedback are implemented; helper tests pass in CI |
 | VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 renders page canvases with an aligned selectable text layer; Playwright verifies DOM text selection, while real-world and cross-browser fixture coverage remains |
 | VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Continuous scroll is the default reader; the current-page indicator tracks scroll, previous/next and thumbnails jump to pages, and Page tools retains single-page editing; keyboard-only and cross-browser checks remain |
@@ -82,7 +82,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | ANN-03 | Annotation | Freehand and shape tools | in-progress | Freehand, rectangle, and arrow drawing plus shape movement are available with normalized coordinates and undo/redo; persistence, export, and broader rotation/resize checks remain |
 | ANN-04 | Annotation | Annotation export | not-started | Text/vector fidelity tested; limitations disclosed |
 | OPT-01 | Optimization | Compression workflow | deferred | Benchmark file size and visual quality before setting defaults |
-| CON-01 | Conversion | Images to PDF | not-started | Accept JPG/PNG/WebP; reorder/remove images; choose page size, orientation, margins, and fit behavior; mixed dimensions produce predictable pages |
+| CON-01 | Conversion | Images to PDF | not-started | Accept JPG/PNG/WebP; reorder/remove images; choose page size, orientation, margins, and fit behavior; mixed dimensions produce predictable pages |\n| CON-02 | Conversion | PDF to images | in-progress | Export selected/all pages as PNG/JPEG at 72/150/200/300 DPI; JPEG quality control; individual downloads and ZIP; render sequentially and release canvases to control memory |
 | CON-02 | Conversion | PDF to images | not-started | Export selected/all pages as PNG/JPEG; choose 72/150/200/300 DPI and JPEG quality; support individual downloads or ZIP without rendering all pages at once |
 | CON-03 | Conversion | Extract embedded images | deferred | Export embedded image objects separately from rendered pages; preserve useful format/quality when available |
 | OPT-01 | Optimization | Compression | not-started | Screen/balanced/print presets, best-effort target size, achieved-size report, quality preview, and non-destructive defaults; benchmark representative files |
