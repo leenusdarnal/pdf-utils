@@ -66,7 +66,7 @@ async function openTestPdf(page: Page) {
   });
   await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
-  await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.locator('canvas[aria-label^="Page "]')).toBeVisible();
 }
 
 test('opens a PDF and supports page navigation, local search, and zoom', async ({ page }) => {
@@ -81,18 +81,18 @@ test('opens a PDF and supports page navigation, local search, and zoom', async (
 
   await page.getByLabel('Find in document').fill('needle');
   await page.getByRole('button', { name: 'Find', exact: true }).click();
-  await expect(page.locator('[aria-label="Search results"]')).toContainText('1 result');
+  await expect(page.locator('[aria-label="Search results"]')).toContainText('1 match found');
   await expect(page.locator('[aria-label="Search results"]')).toContainText('Page 2');
 
   await page.locator('[aria-label="Search results"] button').click();
   await expect(page.locator('[role="status"]').last()).toContainText('Page 2 of 2');
 
-  const widthBeforeZoom = await page.locator('canvas').evaluate(
+  const widthBeforeZoom = await page.locator('canvas[aria-label^="Page "]').evaluate(
     (canvas) => (canvas as HTMLCanvasElement).style.width
   );
   await page.getByRole('button', { name: 'Zoom in' }).click();
   await expect.poll(async () =>
-    page.locator('canvas').evaluate((canvas) => (canvas as HTMLCanvasElement).style.width)
+    page.locator('canvas[aria-label^="Page "]').evaluate((canvas) => (canvas as HTMLCanvasElement).style.width)
   ).not.toBe(widthBeforeZoom);
 
   await page.getByRole('button', { name: 'Fit width' }).click();
@@ -104,7 +104,7 @@ test('opens a PDF and supports page navigation, local search, and zoom', async (
 });
 
 test('rejects a file that does not contain a PDF signature', async ({ page }) => {
-  await page.goto('/');
+  await visitHome(page);
   await page.locator('#file-input').setInputFiles({
     name: 'not-a-pdf.txt',
     mimeType: 'text/plain',
