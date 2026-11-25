@@ -401,3 +401,107 @@ h1, h2, h3 { text-wrap: balance; }
   .thumbnail-slot { padding: 3px; }
   .thumbnail-button { padding: 3px; }
 }
+
+/* Local document text search */
+.viewer-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ebf0;
+  background: #fff;
+}
+.viewer-search label {
+  color: #535a68;
+  font-size: 11px;
+  font-weight: 700;
+}
+.viewer-search-controls {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 7px;
+  min-width: min(100%, 260px);
+}
+.viewer-search input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #e0e3ea;
+  border-radius: 7px;
+  color: #303541;
+  background: #fbfcfe;
+  font-size: 12px;
+}
+.viewer-search input:focus-visible {
+  outline: 3px solid rgb(101 88 211 / 22%);
+  outline-offset: 1px;
+  border-color: #b8b0ed;
+}
+.viewer-search input:disabled { color: #9da2ad; background: #f6f7f9; }
+.viewer-search-results {
+  max-height: 250px;
+  overflow: auto;
+  border-bottom: 1px solid #e9ebf0;
+  background: #fbfbfd;
+}
+.search-summary {
+  margin: 0;
+  padding: 10px 16px;
+  color: #858b98;
+  font-size: 11px;
+}
+.viewer-search-results ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0 8px 8px;
+  list-style: none;
+}
+.viewer-search-results li { min-width: 0; }
+.search-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #515765;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.search-result:hover, .search-result:focus-visible {
+  border-color: #e2defa;
+  background: #f4f2ff;
+}
+.search-result:focus-visible { outline: 3px solid rgb(101 88 211 / 20%); outline-offset: 1px; }
+.search-result-page {
+  flex: 0 0 54px;
+  color: #7469cb;
+  font-size: 10px;
+  font-weight: 700;
+}
+.search-result-snippet {
+  min-width: 0;
+  color: #6d7380;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.search-result-snippet mark {
+  padding: 0 1px;
+  border-radius: 2px;
+  color: #3d327f;
+  background: #e8e3ff;
+}
+@media (max-width: 480px) {
+  .viewer-search { padding: 10px; }
+  .viewer-search label { width: 100%; }
+  .viewer-search-controls { min-width: 0; }
+  .search-result { gap: 7px; padding: 8px 5px; }
+  .search-result-page { flex-basis: 48px; }
+}
