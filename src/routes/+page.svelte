@@ -16,6 +16,7 @@
   let splitMode = false;
   let imageMode = false;
   let isDarkMode = false;
+  let appReady = false;
   let organizerInput: HTMLInputElement;
   let fileError = '';
 
@@ -46,6 +47,7 @@
       preferredTheme = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     applyTheme(preferredTheme);
+    appReady = true;
   });
 
   function toggleTheme() {
@@ -148,7 +150,7 @@
     </button>
   </header>
 
-  <main>
+  <main data-app-ready={appReady}>
     {#if selectedFile}
       <PdfViewer file={selectedFile} onClose={closeDocument} />
     {:else if organizeFile}
