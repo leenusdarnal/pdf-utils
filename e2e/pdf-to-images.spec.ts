@@ -43,7 +43,11 @@ test('exports selected PDF pages as images and creates a ZIP download', async ({
 });
 
 test('persists the selected dark theme after reload', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('pdf-utils-theme', 'light'));
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('pdf-utils-theme')) {
+      localStorage.setItem('pdf-utils-theme', 'light');
+    }
+  });
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('main')).toHaveAttribute('data-app-ready', 'true');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
