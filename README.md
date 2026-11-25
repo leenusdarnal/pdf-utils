@@ -25,9 +25,9 @@ The viewer foundation is merged into `main`. CI now runs Svelte/type checks, uni
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
 - Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
-- Add text highlights from selected PDF text, and add, select, move, edit, and delete text notes. Annotation overlays are stored in normalized page coordinates and mapped through PDF.js viewport transforms for zoom and page rotation; undo/redo is available while the document remains open. Changes stay in memory and do not modify the source PDF.
+- Add text highlights from selected PDF text; add, select, move, edit, and delete text notes; and draw rectangle and arrow overlays. Annotation overlays use normalized page coordinates and map through PDF.js viewport transforms for zoom and page rotation. Undo/redo is available while the document remains open. Changes stay in memory and do not modify the source PDF.
 
-**Not implemented yet:** freehand and shape annotation tools, persistence after closing the document, and PDF annotation export; page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** freehand drawing, shape selection/movement, persistence after closing the document, and PDF annotation export; page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 

@@ -69,6 +69,8 @@
   let selectedAnnotationId: string | null = null;
   let pendingHighlightRects: NormalizedRect[] = [];
   let isAddingNote = false;
+  let drawingTool: 'rectangle' | 'arrow' | null = null;
+  let drawingStart: { pointerId: number; tool: 'rectangle' | 'arrow'; point: NormalizedPoint } | null = null;
   let editingNoteId: string | null = null;
   let newNoteId: string | null = null;
   let noteDraft = '';
@@ -300,6 +302,8 @@
       noteError = '';
       isAddingNote = false;
       pendingHighlightRects = [];
+      drawingTool = null;
+      drawingStart = null;
     }
     targetPage = nextPage;
     void renderPage(targetPage);
@@ -459,6 +463,26 @@
   }
 
   function handlePagePointerDown(event: PointerEvent) {
+    if (
+      drawingTool &&
+      event.button === 0 &&
+      canvasElement &&
+      renderedPageViewport &&
+      unrotatedPageViewport
+    ) {
+      const bounds = canvasElement.getBoundingClientRect();
+      drawingStart = {
+        pointerId: event.pointerId,
+        tool: drawingTool,
+        point: viewportPointToNormalized(
+          { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
+          renderedPageViewport,
+          unrotatedPageViewport
+        )
+      };
+      event.preventDefault();
+      return;
+    }
     if (
       !isAddingNote ||
       event.button !== 0 ||
@@ -672,6 +696,53 @@
   }
 
   function finishAnnotationDrag(event: PointerEvent) {
+    if (drawingStart && drawingStart.pointerId === event.pointerId) {
+      const start = drawingStart;
+      drawingStart = null;
+      if (!canvasElement || !renderedPageViewport || !unrotatedPageViewport) return;
+      const bounds = canvasElement.getBoundingClientRect();
+      const end = viewportPointToNormalized(
+        { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
+        renderedPageViewport,
+        unrotatedPageViewport
+      );
+      const now = Date.now();
+      if (Math.hypot(end.x - start.point.x, end.y - start.point.y) < 0.006) return;
+      const base = {
+        id: createAnnotationId(),
+        pageNumber: currentPage,
+        createdAt: now,
+        updatedAt: now,
+        color: '#2463eb',
+        opacity: 1
+      };
+      if (start.tool === 'rectangle') {
+        const x = Math.min(start.point.x, end.x);
+        const y = Math.min(start.point.y, end.y);
+        const width = Math.abs(end.x - start.point.x);
+        const height = Math.abs(end.y - start.point.y);
+        if (width <= 0 || height <= 0) return;
+        annotationHistory.add({
+          ...base,
+          type: 'rectangle',
+          rect: { x, y, width, height },
+          strokeWidth: 0.003,
+          fillOpacity: 0.08
+        });
+      } else {
+        annotationHistory.add({
+          ...base,
+          type: 'arrow',
+          start: start.point,
+          end,
+          strokeWidth: 0.003
+        });
+      }
+      refreshAnnotationState();
+      selectedAnnotationId = base.id;
+      drawingTool = null;
+      return;
+    }
     if (!dragState || dragState.pointerId !== event.pointerId) return;
     if (dragState.hasMoved && dragPreview) {
       annotationHistory.update({
@@ -687,6 +758,10 @@
   }
 
   function cancelAnnotationDrag(event: PointerEvent) {
+    if (drawingStart?.pointerId === event.pointerId) {
+      drawingStart = null;
+      return;
+    }
     if (!dragState || dragState.pointerId !== event.pointerId) return;
     dragState = null;
     dragPreview = null;
@@ -852,12 +927,16 @@
       disabled={isLoading}
       onclick={() => (isAddingNote = !isAddingNote)}
     >{isAddingNote ? 'Click on page…' : 'Place note'}</button>
+    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw rectangle" aria-pressed={drawingTool === 'rectangle'} disabled={isLoading} onclick={() => { drawingTool = drawingTool === 'rectangle' ? null : 'rectangle'; isAddingNote = false; }}>Rectangle</button>
+    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw arrow" aria-pressed={drawingTool === 'arrow'} disabled={isLoading} onclick={() => { drawingTool = drawingTool === 'arrow' ? null : 'arrow'; isAddingNote = false; }}>Arrow</button>
     <span class="h-5 w-px bg-[#e7e9ee]" aria-hidden="true"></span>
     <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Undo annotation" disabled={!canUndoAnnotations} onclick={undoAnnotation}>Undo</button>
     <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Redo annotation" disabled={!canRedoAnnotations} onclick={redoAnnotation}>Redo</button>
     <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Delete selected annotation" disabled={!selectedAnnotationId} onclick={deleteSelectedAnnotation}>Delete</button>
     {#if isAddingNote}
       <span class="w-full text-[10px] text-brand-700" role="status">Select a point on the page to place a note.</span>
+    {:else if drawingTool}
+      <span class="w-full text-[10px] text-brand-700" role="status">Drag on the page to draw a {drawingTool}.</span>
     {:else if pendingHighlightRects.length > 0}
       <span class="text-[10px] text-brand-700" role="status">Text selected. Add a highlight to save it.</span>
     {/if}
@@ -930,7 +1009,7 @@
             <p class="m-0 text-[11px] text-[#89909d]">Your document is being processed on this device.</p>
           </div>
         {/if}
-        <div data-page-surface role="group" aria-label="PDF page surface" class={`relative my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } style:cursor={isAddingNote ? 'crosshair' : undefined} onpointerdown={handlePagePointerDown}>
+        <div data-page-surface role="group" aria-label="PDF page surface" class={`relative my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } style:cursor={isAddingNote || drawingTool ? 'crosshair' : undefined} onpointerdown={handlePagePointerDown}>
           <canvas bind:this={canvasElement} class="relative z-0 block max-w-none bg-white" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
           <div
             bind:this={textLayerElement}
@@ -964,6 +1043,16 @@
                       }}
                     ></div>
                   {/each}
+                {:else if displayed.type === 'rectangle'}
+                  {@const mapped = normalizedRectToViewport(displayed.rect, unrotatedPageViewport, renderedPageViewport)}
+                  <div class="pointer-events-auto absolute border-2 border-blue-600 bg-blue-500/10" data-annotation-id={annotation.id} data-annotation-type="rectangle" style={`left:${mapped.x}px;top:${mapped.y}px;width:${mapped.width}px;height:${mapped.height}px;opacity:${displayed.opacity};outline:${selectedAnnotationId === annotation.id ? '2px solid #7165d5' : 'none'};outline-offset:2px;`} role="button" tabindex="0" aria-label="Select rectangle annotation" aria-pressed={selectedAnnotationId === annotation.id} onclick={() => selectAnnotation(annotation)} onkeydown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectAnnotation(annotation); } }}></div>
+                {:else if displayed.type === 'arrow'}
+                  {@const start = normalizedPointToViewport(displayed.start, unrotatedPageViewport, renderedPageViewport)}
+                  {@const end = normalizedPointToViewport(displayed.end, unrotatedPageViewport, renderedPageViewport)}
+                  <svg class="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox={`0 0 ${renderedPageViewport.width} ${renderedPageViewport.height}`} aria-label="Arrow annotation" data-annotation-type="arrow">
+                    <defs><marker id={`arrowhead-${annotation.id}`} markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L6,3 z" fill={displayed.color} /></marker></defs>
+                    <line x1={start.x} y1={start.y} x2={end.x} y2={end.y} stroke={displayed.color} stroke-width={Math.max(2, displayed.strokeWidth * Math.min(renderedPageViewport.width, renderedPageViewport.height))} marker-end={`url(#arrowhead-${annotation.id})`} opacity={displayed.opacity} />
+                  </svg>
                 {:else if displayed.type === 'text-note'}
                   {@const mapped = normalizedPointToViewport(displayed.anchor, unrotatedPageViewport, renderedPageViewport)}
                   <button

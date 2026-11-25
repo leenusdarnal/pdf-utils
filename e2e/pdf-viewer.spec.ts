@@ -299,6 +299,35 @@ test('creates, moves, edits, and deletes page-relative text notes', async ({ pag
   await expect(page.locator('[data-annotation-type="text-note"]')).toHaveCount(0);
 });
 
+test('draws rectangle and arrow annotations and supports undo/redo', async ({ page }) => {
+  await visitHome(page);
+  await openTestPdf(page);
+
+  const pageSurface = page.locator('[data-page-surface]');
+  const surfaceBounds = await pageSurface.boundingBox();
+  expect(surfaceBounds).not.toBeNull();
+  const draw = async (x1: number, y1: number, x2: number, y2: number) => {
+    await page.mouse.move(surfaceBounds!.x + x1, surfaceBounds!.y + y1);
+    await page.mouse.down();
+    await page.mouse.move(surfaceBounds!.x + x2, surfaceBounds!.y + y2, { steps: 5 });
+    await page.mouse.up();
+  };
+
+  await page.getByRole('button', { name: 'Draw rectangle' }).click();
+  await draw(120, 150, 220, 230);
+  const rectangle = page.locator('[data-annotation-type="rectangle"]');
+  await expect(rectangle).toBeVisible();
+
+  await page.getByRole('button', { name: 'Draw arrow' }).click();
+  await draw(260, 280, 360, 340);
+  await expect(page.locator('[data-annotation-type="arrow"]')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Undo annotation' }).click();
+  await expect(page.locator('[data-annotation-type="arrow"]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Redo annotation' }).click();
+  await expect(page.locator('[data-annotation-type="arrow"]')).toBeVisible();
+});
+
 test('rejects a file that does not contain a PDF signature', async ({ page }) => {
   await visitHome(page);
   await page.locator('#file-input').setInputFiles({
