@@ -429,31 +429,47 @@ test('keeps the viewer usable and lets mobile users collapse page thumbnails', a
     await page.setViewportSize({ width, height: 844 });
     await expect(page.getByRole('button', { name: 'Fit width' })).toBeVisible();
 
-    const layout = await page.evaluate(() => {
-      const controls = document.querySelector('[aria-label="PDF controls"]');
-      const annotations = document.querySelector('[aria-label="Annotation tools"]');
-      if (!controls || !annotations) throw new Error('Viewer control groups are missing');
+    const groups = await page.evaluate(() => {
+      const utility = document.querySelector('[data-annotation-group="utility"]');
+      const primary = document.querySelector('[data-annotation-group="primary"]');
+      const pageStatus = document.querySelector('div[role="status"][aria-live="polite"][aria-atomic="true"]');
+      if (!utility || !primary || !pageStatus) throw new Error('Annotation groups or page status are missing');
+
+      const utilityBounds = utility.getBoundingClientRect();
+      const primaryBounds = primary.getBoundingClientRect();
+      const pageStatusBounds = pageStatus.getBoundingClientRect();
       return {
-        viewportWidth: window.innerWidth,
+        utilityBottom: utilityBounds.bottom,
+        primaryTop: primaryBounds.top,
+        primaryBottom: primaryBounds.bottom,
+        pageStatusTop: pageStatusBounds.top,
+        utilityWidth: utility.clientWidth,
+        utilityScrollWidth: utility.scrollWidth,
+        primaryWidth: primary.clientWidth,
+        primaryScrollWidth: primary.scrollWidth,
+        utilityButtons: Array.from(utility.querySelectorAll('button')).map((button) => button.getAttribute('aria-label')),
+        primaryButtons: Array.from(primary.querySelectorAll('button')).map((button) => button.getAttribute('aria-label')),
         documentWidth: document.documentElement.scrollWidth,
-        controlsWidth: controls.clientWidth,
-        controlsScrollWidth: controls.scrollWidth,
-        annotationsWidth: annotations.clientWidth,
-        annotationsScrollWidth: annotations.scrollWidth,
-        controlsRight: controls.getBoundingClientRect().right,
-        annotationButtonsWithin: Array.from(annotations.querySelectorAll('button')).every((button) => {
-          const buttonBounds = button.getBoundingClientRect();
-          const containerBounds = annotations.getBoundingClientRect();
-          return buttonBounds.left >= containerBounds.left - 1 &&
-            buttonBounds.right <= containerBounds.right + 1;
-        })
+        viewportWidth: window.innerWidth
       };
     });
 
-    expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
-    expect(layout.controlsScrollWidth).toBeLessThanOrEqual(layout.controlsWidth + 1);
-    expect(layout.annotationsScrollWidth).toBeLessThanOrEqual(layout.annotationsWidth + 1);
-    expect(layout.controlsRight).toBeLessThanOrEqual(layout.viewportWidth + 1);
-    expect(layout.annotationButtonsWithin).toBe(true);
+    expect(groups.utilityBottom).toBeLessThanOrEqual(groups.primaryTop + 1);
+    expect(groups.primaryBottom).toBeLessThanOrEqual(groups.pageStatusTop + 1);
+    expect(groups.utilityScrollWidth).toBeLessThanOrEqual(groups.utilityWidth + 1);
+    expect(groups.primaryScrollWidth).toBeLessThanOrEqual(groups.primaryWidth + 1);
+    expect(groups.documentWidth).toBeLessThanOrEqual(groups.viewportWidth);
+    expect(groups.utilityButtons).toEqual([
+      'Undo annotation',
+      'Redo annotation',
+      'Delete selected annotation'
+    ]);
+    expect(groups.primaryButtons).toEqual([
+      'Place note',
+      'Highlight selection',
+      'Draw freehand',
+      'Draw rectangle',
+      'Draw arrow'
+    ]);
   }
 });

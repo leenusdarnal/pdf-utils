@@ -1006,34 +1006,40 @@
       {#if searchQuery}<button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" onclick={clearSearch} aria-label="Clear search">Clear</button>{/if}
     </div>
   </form>
-  <section class="flex flex-wrap items-center gap-2 border-b border-[#e9ebf0] bg-[#fbfbfd] px-4 py-3 max-[480px]:px-[10px]" aria-label="Annotation tools">
-    <span class="mr-1 text-[11px] font-bold text-[#535a68]">Annotate</span>
-    <button
-      type="button"
-      class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]"
-      aria-label="Highlight selection"
-      disabled={isLoading || pendingHighlightRects.length === 0}
-      onclick={addHighlightFromSelection}
-    >Highlight selection</button>
-    <button
-      type="button"
-      class={"inline-flex min-h-[32px] items-center justify-center rounded-lg border px-3 text-[11px] font-semibold transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] " + (isAddingNote ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-line bg-white text-[#454b59] hover:border-brand-300 hover:bg-brand-50')}
-      aria-label="Place note"
-      aria-pressed={isAddingNote}
-      disabled={isLoading}
-      onclick={toggleNotePlacement}
-    >{isAddingNote ? 'Click on page…' : 'Place note'}</button>
-    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw rectangle" aria-pressed={drawingTool === 'rectangle'} disabled={isLoading} onclick={() => toggleDrawingTool('rectangle')}>Rectangle</button>
-    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw arrow" aria-pressed={drawingTool === 'arrow'} disabled={isLoading} onclick={() => toggleDrawingTool('arrow')}>Arrow</button>
-    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw freehand" aria-pressed={drawingTool === 'freehand'} disabled={isLoading} onclick={() => toggleDrawingTool('freehand')}>Draw</button>
-    <span class="h-5 w-px bg-[#e7e9ee]" aria-hidden="true"></span>
-    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Undo annotation" disabled={!canUndoAnnotations} onclick={undoAnnotation}>Undo</button>
-    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Redo annotation" disabled={!canRedoAnnotations} onclick={redoAnnotation}>Redo</button>
-    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Delete selected annotation" disabled={!selectedAnnotationId} onclick={deleteSelectedAnnotation}>Delete</button>
+  <section class="flex flex-col gap-2 border-b border-[#e9ebf0] bg-[#fbfbfd] px-4 py-3 max-[480px]:px-[10px]" aria-label="Annotation tools">
+    <div class="flex flex-wrap items-center gap-2" data-annotation-group="utility" role="group" aria-label="Annotation history actions">
+      <span class="mr-1 text-[10px] font-semibold uppercase tracking-[.06em] text-[#858b98]">History</span>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Undo annotation" disabled={!canUndoAnnotations} onclick={undoAnnotation}>Undo</button>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Redo annotation" disabled={!canRedoAnnotations} onclick={redoAnnotation}>Redo</button>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Delete selected annotation" disabled={!selectedAnnotationId} onclick={deleteSelectedAnnotation}>Delete</button>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2" data-annotation-group="primary" role="group" aria-label="Annotation creation tools">
+      <span class="mr-1 text-[11px] font-bold text-[#535a68]">Annotate</span>
+      <button
+        type="button"
+        class={"inline-flex min-h-[32px] items-center justify-center rounded-lg border px-3 text-[11px] font-semibold transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] " + (isAddingNote ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-line bg-white text-[#454b59] hover:border-brand-300 hover:bg-brand-50')}
+        aria-label="Place note"
+        aria-pressed={isAddingNote}
+        disabled={isLoading}
+        onclick={toggleNotePlacement}
+      >{isAddingNote ? 'Click on page…' : 'Place note'}</button>
+      <button
+        type="button"
+        class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]"
+        aria-label="Highlight selection"
+        disabled={isLoading || pendingHighlightRects.length === 0}
+        onclick={addHighlightFromSelection}
+      >Highlight selection</button>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw freehand" aria-pressed={drawingTool === 'freehand'} disabled={isLoading} onclick={() => toggleDrawingTool('freehand')}>Draw</button>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw rectangle" aria-pressed={drawingTool === 'rectangle'} disabled={isLoading} onclick={() => toggleDrawingTool('rectangle')}>Rectangle</button>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw arrow" aria-pressed={drawingTool === 'arrow'} disabled={isLoading} onclick={() => toggleDrawingTool('arrow')}>Arrow</button>
+    </div>
+
     {#if isAddingNote}
-      <span class="w-full text-[10px] text-brand-700" role="status">Select a point on the page to place a note.</span>
+      <span class="text-[10px] text-brand-700" role="status">Select a point on the page to place a note.</span>
     {:else if drawingTool}
-      <span class="w-full text-[10px] text-brand-700" role="status">{drawingTool === 'freehand' ? 'Drag on the page to draw freehand.' : `Drag on the page to draw a ${drawingTool}.`}</span>
+      <span class="text-[10px] text-brand-700" role="status">{drawingTool === 'freehand' ? 'Drag on the page to draw freehand.' : `Drag on the page to draw a ${drawingTool}.`}</span>
     {:else if pendingHighlightRects.length > 0}
       <span class="text-[10px] text-brand-700" role="status">Text selected. Add a highlight to save it.</span>
     {/if}
