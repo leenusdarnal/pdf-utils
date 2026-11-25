@@ -89,7 +89,7 @@ The site is configured for GitHub Pages at:
 
 `https://leenusdarnal.github.io/pdf-utils/`
 
-GitHub Actions builds the app as a static SvelteKit site and deploys it from pushes to the foundation branch and `main`. The build receives the repository subpath from GitHub Pages, so local development continues to use the root path. PDF files remain in the browser; GitHub Pages serves only the application.
+GitHub Actions builds the app as a static SvelteKit site and deploys it from pushes to the foundation branch and `main`. Before the first deployment, set **Settings → Pages → Build and deployment → Source** to **GitHub Actions** in this repository. The build receives the repository subpath from GitHub Pages, so local development continues to use the root path. PDF files remain in the browser; GitHub Pages serves only the application.
 
 ## License
 
