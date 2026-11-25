@@ -21,6 +21,15 @@
   let lastViewportWidth = 0;
   let destroyed = false;
   let fitToWidth = true;
+  let isInfoOpen = false;
+  let documentInfo = {
+    title: '',
+    author: '',
+    subject: '',
+    creator: '',
+    producer: '',
+    pdfVersion: ''
+  };
   let isMobileViewport = false;
   let thumbnailsOpen = true;
   let isLoading = true;
@@ -59,6 +68,28 @@
         // Its loading task is destroyed by onMount cleanup; do not update stale UI.
         if (destroyed) return;
         totalPages = pdfDocument.numPages;
+
+        try {
+          const metadata = await pdfDocument.getMetadata();
+          if (!destroyed) {
+            const info = metadata.info as unknown as Record<string, unknown>;
+            const textValue = (key: string) =>
+              typeof info[key] === 'string' ? (info[key] as string).trim() : '';
+            documentInfo = {
+              title: textValue('Title'),
+              author: textValue('Author'),
+              subject: textValue('Subject'),
+              creator: textValue('Creator'),
+              producer: textValue('Producer'),
+              pdfVersion: textValue('PDFFormatVersion')
+            };
+          }
+        } catch {
+          // Metadata is optional; a document that renders should still open if its info
+          // dictionary or XMP metadata cannot be read.
+        }
+
+        if (destroyed) return;
         isLoading = false;
         statusText = `${totalPages} ${totalPages === 1 ? 'page' : 'pages'} loaded`;
         await renderPage(1, true);
@@ -301,12 +332,71 @@
       </div>
     </div>
 
+    <button
+      type="button"
+      class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]"
+      aria-label="Document info"
+      aria-expanded={isInfoOpen}
+      aria-controls="pdf-document-info"
+      onclick={() => (isInfoOpen = !isInfoOpen)}
+    >Info</button>
     <button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] max-[760px]:ml-auto max-[420px]:min-h-8" aria-label="Close document" onclick={onClose}>
       <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
       <span>Close</span>
     </button>
   </header>
 
+  {#if isInfoOpen}
+    <section
+      id="pdf-document-info"
+      class="border-b border-[#e9ebf0] bg-[#fbfbfd] px-4 py-4 max-[480px]:px-[10px]"
+      aria-label="Document information"
+      role="region"
+    >
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <h2 class="m-0 text-[12px] font-bold text-[#343946]">Document information</h2>
+        <span class="text-[10px] text-subtle">Read locally from this PDF</span>
+      </div>
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-3 max-[480px]:gap-x-3">
+        <div class="min-w-0">
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">File name</dt>
+          <dd class="m-0 overflow-hidden text-ellipsis text-[11px] text-[#3e4450]" title={file.name}>{file.name}</dd>
+        </div>
+        <div>
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">File size</dt>
+          <dd class="m-0 text-[11px] text-[#3e4450]">{formatFileSize(file.size)}</dd>
+        </div>
+        <div>
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">Pages</dt>
+          <dd class="m-0 text-[11px] text-[#3e4450]">{totalPages}</dd>
+        </div>
+        <div>
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">PDF version</dt>
+          <dd class="m-0 text-[11px] text-[#3e4450]">{documentInfo.pdfVersion || 'Not available'}</dd>
+        </div>
+        <div>
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">Title</dt>
+          <dd class="m-0 break-words text-[11px] text-[#3e4450]">{documentInfo.title || 'Not specified'}</dd>
+        </div>
+        <div>
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">Author</dt>
+          <dd class="m-0 break-words text-[11px] text-[#3e4450]">{documentInfo.author || 'Not specified'}</dd>
+        </div>
+        <div>
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">Subject</dt>
+          <dd class="m-0 break-words text-[11px] text-[#3e4450]">{documentInfo.subject || 'Not specified'}</dd>
+        </div>
+        <div>
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">Creator</dt>
+          <dd class="m-0 break-words text-[11px] text-[#3e4450]">{documentInfo.creator || 'Not specified'}</dd>
+        </div>
+        <div class="col-span-2 max-[480px]:col-span-2">
+          <dt class="mb-1 text-[9px] font-semibold uppercase tracking-[.08em] text-subtle">Producer</dt>
+          <dd class="m-0 break-words text-[11px] text-[#3e4450]">{documentInfo.producer || 'Not specified'}</dd>
+        </div>
+      </dl>
+    </section>
+  {/if}
   <form class="flex flex-wrap items-center gap-[9px] border-b border-[#e9ebf0] bg-white px-4 py-3 max-[480px]:p-[10px]" onsubmit={(event) => { event.preventDefault(); void searchDocument(); }}>
     <label class="text-[11px] font-bold text-[#535a68] max-[480px]:w-full" for="pdf-search-input">Find in document</label>
     <div class="flex min-w-[min(100%,260px)] flex-1 items-center gap-[7px] max-[480px]:min-w-0">
