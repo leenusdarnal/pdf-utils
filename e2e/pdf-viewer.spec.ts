@@ -248,7 +248,10 @@ test('creates, moves, edits, and deletes page-relative text notes', async ({ pag
   await openTestPdf(page);
 
   const pageSurface = page.locator('[data-page-surface]');
+  // Switching from an active shape tool to notes must clear the old drawing mode.
+  await page.getByRole('button', { name: 'Draw arrow' }).click();
   await page.getByRole('button', { name: 'Place note' }).click();
+  await expect(page.getByText('Select a point on the page to place a note.')).toBeVisible();
   await pageSurface.click({ position: { x: 220, y: 230 } });
 
   const noteEditor = page.getByRole('form', { name: 'Text note editor' });
@@ -318,14 +321,61 @@ test('draws rectangle and arrow annotations and supports undo/redo', async ({ pa
   const rectangle = page.locator('[data-annotation-type="rectangle"]');
   await expect(rectangle).toBeVisible();
 
+  const rectangleBeforeMove = await rectangle.boundingBox();
+  expect(rectangleBeforeMove).not.toBeNull();
+  await page.mouse.move(rectangleBeforeMove!.x + rectangleBeforeMove!.width / 2, rectangleBeforeMove!.y + rectangleBeforeMove!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(rectangleBeforeMove!.x + rectangleBeforeMove!.width / 2 + 24, rectangleBeforeMove!.y + rectangleBeforeMove!.height / 2 + 18, { steps: 4 });
+  await page.mouse.up();
+  const rectangleAfterMove = await rectangle.boundingBox();
+  expect(rectangleAfterMove).not.toBeNull();
+  expect(rectangleAfterMove!.x - rectangleBeforeMove!.x).toBeGreaterThan(10);
+
+  await rectangle.click({ position: { x: 10, y: 10 } });
+  const deleteButton = page.getByRole('button', { name: 'Delete selected annotation' });
+  await expect(deleteButton).toBeEnabled();
+  await deleteButton.click();
+  await expect(rectangle).toHaveCount(0);
+
   await page.getByRole('button', { name: 'Draw arrow' }).click();
   await draw(260, 280, 360, 340);
-  await expect(page.locator('[data-annotation-type="arrow"]')).toBeVisible();
+  const arrow = page.locator('[data-annotation-type="arrow"]');
+  await expect(arrow).toBeVisible();
 
   await page.getByRole('button', { name: 'Undo annotation' }).click();
-  await expect(page.locator('[data-annotation-type="arrow"]')).toHaveCount(0);
+  await expect(arrow).toHaveCount(0);
   await page.getByRole('button', { name: 'Redo annotation' }).click();
-  await expect(page.locator('[data-annotation-type="arrow"]')).toBeVisible();
+  await expect(arrow).toBeVisible();
+
+  // Click the transparent stroke target to select the arrow, then delete it.
+  await arrow.locator('line[stroke="transparent"]').click();
+  await expect(deleteButton).toBeEnabled();
+  await deleteButton.click();
+  await expect(arrow).toHaveCount(0);
+});
+
+
+test('draws shapes using touch gestures on a mobile-sized viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await visitHome(page);
+  await openTestPdf(page);
+
+  const pageSurface = page.locator('[data-page-surface]');
+  await page.getByRole('button', { name: 'Draw rectangle' }).click();
+  await expect(pageSurface).toHaveClass(/touch-none/);
+  const bounds = await pageSurface.boundingBox();
+  expect(bounds).not.toBeNull();
+
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+  const start = { x: bounds!.x + 70, y: bounds!.y + 120, id: 1, radiusX: 2, radiusY: 2, force: 1 };
+  const end = { x: bounds!.x + 190, y: bounds!.y + 220, id: 1, radiusX: 2, radiusY: 2, force: 1 };
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [start] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [end] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+
+  await expect(page.locator('[data-annotation-type="rectangle"]')).toBeVisible();
+  await cdp.detach();
 });
 
 test('rejects a file that does not contain a PDF signature', async ({ page }) => {
