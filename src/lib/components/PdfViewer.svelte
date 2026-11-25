@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import ThumbnailSidebar from '$lib/components/ThumbnailSidebar.svelte';
+  import PdfContinuousViewer from '$lib/components/PdfContinuousViewer.svelte';
   import { createPdfDocumentTask, createPdfTextLayerTask } from '$lib/pdf/pdfjs-client';
   import type { PdfDocument, PdfDocumentTask, PdfPage, PdfRenderTask, PdfTextLayerTask } from '$lib/pdf/pdfjs-client';
   import { clampPageNumber, clampZoom } from '$lib/pdf/viewer-utils';
@@ -33,6 +34,8 @@
   let canvasElement: HTMLCanvasElement;
   let textLayerElement: HTMLDivElement;
   let viewerViewport: HTMLDivElement;
+  let continuousViewer: PdfContinuousViewer;
+  let continuousMode = true;
   let resizeObserver: ResizeObserver | undefined;
   let renderSequence = 0;
   let lastViewportWidth = 0;
@@ -137,9 +140,16 @@
         }
 
         if (destroyed) return;
+        if (continuousMode) {
+          await fitContinuousToWidth();
+          currentPage = 1;
+          targetPage = 1;
+        }
         isLoading = false;
-        statusText = `${totalPages} ${totalPages === 1 ? 'page' : 'pages'} loaded`;
-        await renderPage(1, true);
+        statusText = continuousMode
+          ? `Page 1 of ${totalPages} · ${Math.round(zoom * 100)}% · Scroll to read`
+          : `${totalPages} ${totalPages === 1 ? 'page' : 'pages'} loaded`;
+        if (!continuousMode) await renderPage(1, true);
       } catch {
         if (destroyed) return;
         isLoading = false;
@@ -153,7 +163,8 @@
       if (width && Math.abs(width - lastViewportWidth) > 1) {
         lastViewportWidth = width;
         if (fitToWidth && pdfDocument && !destroyed) {
-          void renderPage(targetPage, true);
+          if (continuousMode) void fitContinuousToWidth();
+          else void renderPage(targetPage, true);
         }
       }
     });
@@ -291,6 +302,13 @@
 
   function goToPage(pageNumber: number) {
     const nextPage = clampPageNumber(pageNumber, totalPages);
+    if (continuousMode) {
+      targetPage = nextPage;
+      currentPage = nextPage;
+      statusText = `Page ${nextPage} of ${totalPages} · ${Math.round(zoom * 100)}% · Scroll to read`;
+      continuousViewer?.scrollToPage(nextPage);
+      return;
+    }
     if (nextPage !== targetPage) {
       if (newNoteId) {
         annotationHistory.remove(newNoteId);
@@ -333,15 +351,64 @@
     window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 5 * 60 * 1000);
   }
 
+  async function fitContinuousToWidth() {
+    const document = pdfDocument;
+    if (!document || !viewerViewport || destroyed) return;
+
+    try {
+      const firstPage = await document.getPage(1);
+      if (destroyed) return;
+      const pageWidth = firstPage.getViewport({ scale: 1 }).width;
+      const styles = window.getComputedStyle(viewerViewport);
+      const horizontalPadding =
+        (Number.parseFloat(styles.paddingLeft) || 0) +
+        (Number.parseFloat(styles.paddingRight) || 0);
+      const availableWidth = Math.max(240, viewerViewport.clientWidth - horizontalPadding - 12);
+      zoom = clampZoom(availableWidth / pageWidth);
+    } catch {
+      // Keep the current zoom if the first page cannot be measured.
+    }
+  }
+
+  function handleContinuousPageChange(pageNumber: number) {
+    if (pageNumber < 1 || pageNumber > totalPages || destroyed) return;
+    if (currentPage === pageNumber) return;
+    currentPage = pageNumber;
+    targetPage = pageNumber;
+    statusText = `Page ${currentPage} of ${totalPages} · ${Math.round(zoom * 100)}% · Scroll to read`;
+  }
+
+  function toggleViewerMode() {
+    if (continuousMode) {
+      continuousMode = false;
+      isAddingNote = false;
+      drawingTool = null;
+      drawingStart = null;
+      drawingPreviewEnd = null;
+      void renderPage(currentPage);
+      return;
+    }
+
+    continuousMode = true;
+    isAddingNote = false;
+    drawingTool = null;
+    drawingStart = null;
+    drawingPreviewEnd = null;
+    if (fitToWidth) void fitContinuousToWidth();
+    statusText = `Page ${currentPage} of ${totalPages} · ${Math.round(zoom * 100)}% · Scroll to read`;
+  }
+
   function changeZoom(amount: number) {
     fitToWidth = false;
     zoom = clampZoom(zoom + amount);
-    void renderPage(targetPage);
+    if (!continuousMode) void renderPage(targetPage);
+    else statusText = `Page ${currentPage} of ${totalPages} · ${Math.round(zoom * 100)}% · Scroll to read`;
   }
 
   function fitPageToWidth() {
     fitToWidth = true;
-    void renderPage(targetPage, true);
+    if (continuousMode) void fitContinuousToWidth();
+    else void renderPage(targetPage, true);
   }
 
   async function searchDocument() {
@@ -922,6 +989,7 @@
           <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         </button>
         <button type="button" class={`inline-flex min-h-[30px] items-center justify-center rounded-lg border border-line bg-white px-[9px] text-[10px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] max-[420px]:px-[7px] ${fitToWidth ? "border-brand-200 bg-brand-50 text-brand-600" : ""}` } aria-pressed={fitToWidth} disabled={isLoading} onclick={fitPageToWidth}>Fit width</button>
+        <button type="button" class="inline-flex min-h-[30px] items-center justify-center rounded-lg border border-line bg-white px-[9px] text-[10px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label={continuousMode ? 'Switch to page tools' : 'Switch to continuous scroll'} disabled={isLoading} onclick={toggleViewerMode}>{continuousMode ? 'Page tools' : 'Scroll view'}</button>
       </div>
     </div>
 
@@ -1006,6 +1074,9 @@
       {#if searchQuery}<button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" onclick={clearSearch} aria-label="Clear search">Clear</button>{/if}
     </div>
   </form>
+  {#if continuousMode}
+    <div class="border-b border-[#e9ebf0] bg-[#fbfbfd] px-4 py-2 text-[10px] text-subtle max-[480px]:px-[10px]">Continuous reading view · Switch to Page tools to annotate.</div>
+  {:else}
   <section class="flex flex-col gap-2 border-b border-[#e9ebf0] bg-[#fbfbfd] px-4 py-3 max-[480px]:px-[10px]" aria-label="Annotation tools">
     <div class="flex flex-wrap items-center gap-2" data-annotation-group="utility" role="group" aria-label="Annotation history actions">
       <span class="mr-1 text-[10px] font-semibold uppercase tracking-[.06em] text-[#858b98]">History</span>
@@ -1056,6 +1127,7 @@
       </div>
     </form>
   {/if}
+  {/if}
   {#if isSearching || searchResults.length > 0 || searchError}
     <section class="max-h-[250px] overflow-auto border-b border-[#e9ebf0] bg-[#fbfbfd]" aria-label="Search results" aria-live="polite">
       {#if isSearching}
@@ -1105,6 +1177,17 @@
         </div>
       {/if}
       <div class="flex min-h-[520px] min-w-0 w-full flex-1 flex-col items-center overflow-auto overscroll-contain bg-[#eef0f4] p-[26px] max-h-[78vh] max-[760px]:min-h-[460px] max-[760px]:max-h-[70vh] max-[760px]:items-start max-[760px]:p-3 max-[420px]:min-h-[390px] max-[420px]:p-[8px]" bind:this={viewerViewport} role="region" aria-label="Document page area">
+        {#if continuousMode && pdfDocument && totalPages > 0}
+          <PdfContinuousViewer
+            bind:this={continuousViewer}
+            pdfDocument={pdfDocument}
+            {totalPages}
+            {zoom}
+            scrollRoot={viewerViewport}
+            initialPage={currentPage}
+            onPageChange={handleContinuousPageChange}
+          />
+        {:else}
         {#if isLoading}
           <div class="m-auto flex min-h-[180px] flex-col items-center justify-center gap-2 text-center text-[#5e6471]">
             <span class="size-7 animate-spin rounded-full border-[3px] border-brand-100 border-t-brand-600 motion-reduce:animate-none" aria-hidden="true"></span>
@@ -1223,6 +1306,7 @@
             </div>
           {/if}
         </div>
+        {/if}
       </div>
     </div>
   {/if}
