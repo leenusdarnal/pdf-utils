@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampPageNumber, clampZoom, hasPdfHeader } from './viewer-utils';
+import { clampPageNumber, clampZoom, getVisiblePageRange, hasPdfHeader } from './viewer-utils';
 
 describe('hasPdfHeader', () => {
   it('accepts PDF bytes even when the browser MIME type is generic', async () => {
@@ -51,8 +51,7 @@ describe('clampZoom', () => {
 });
 
 describe('getVisiblePageRange', () => {
-  it('returns only the pages near the viewport for a large document', async () => {
-    const { getVisiblePageRange } = await import('./viewer-utils');
+  it('returns only the pages near the viewport for a large document', () => {
     const range = getVisiblePageRange(10_000, 124 * 500, 500, 124, 2);
 
     expect(range.startPage).toBe(499);
@@ -60,15 +59,13 @@ describe('getVisiblePageRange', () => {
     expect(range.endPage - range.startPage + 1).toBeLessThan(12);
   });
 
-  it('keeps the range within the first and last page', async () => {
-    const { getVisiblePageRange } = await import('./viewer-utils');
+  it('keeps the range within the first and last page', () => {
 
     expect(getVisiblePageRange(5, 0, 500, 124, 3)).toEqual({ startPage: 1, endPage: 5 });
     expect(getVisiblePageRange(5, 124 * 100, 500, 124, 3)).toEqual({ startPage: 5, endPage: 5 });
   });
 
-  it('returns an empty range for a document with no pages', async () => {
-    const { getVisiblePageRange } = await import('./viewer-utils');
+  it('returns an empty range for a document with no pages', () => {
 
     expect(getVisiblePageRange(0, 0, 500)).toEqual({ startPage: 0, endPage: 0 });
   });
