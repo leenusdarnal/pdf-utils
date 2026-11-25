@@ -10,7 +10,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 | Priority | Capability | MVP decision | Notes |
 | --- | --- | --- | --- |
-| P0 | PDF viewer | Yes | Local rendering, page navigation, zoom, fit width, virtualized thumbnails, mobile thumbnail toggle, local text search, read-only metadata, and native-browser printing are implemented; selectable text remains pending |
+| P0 | PDF viewer | Yes | Local rendering, page navigation, zoom, fit width, selectable text, virtualized thumbnails, mobile thumbnail toggle, local text search, read-only metadata, and native-browser printing are implemented; wider browser/accessibility QA remains |
 | P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; download/export remains pending |
 | P1 | Page organization | Yes | Merge, split/extract, reorder, rotate, delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
@@ -61,10 +61,10 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | FND-05 | Foundation | Add CI workflow and contribution guidance | done | GitHub Actions CI and setup instructions are present; latest full run is green |
 | FND-06 | Foundation | GitHub Pages static deployment | done | GitHub Actions deployment from main is green and the live app returns HTTP 200 |
 | VIEW-01 | Viewer | File picker and drag/drop import | done | Local signature validation and invalid-file feedback are implemented; helper tests pass in CI |
-| VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 adapter and current-page canvas rendering are implemented; Playwright covers the main Chromium flow, while real-world and cross-browser fixture coverage remains |
+| VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 renders page canvases with an aligned selectable text layer; Playwright verifies DOM text selection, while real-world and cross-browser fixture coverage remains |
 | VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented and covered by Playwright; keyboard-only and cross-browser checks remain |
 | VIEW-04 | Viewer | Thumbnails and page virtualization | in-progress | Thumbnail sidebar supports page selection, virtualization, and mobile collapse/expand; Playwright covers mobile selection and panel behavior; large-document performance checks remain |
-| VIEW-05 | Viewer | Text extraction and document search | in-progress | Local search scans page text, highlights matches in result snippets, and navigates to matching pages; Playwright covers a searchable PDF fixture, while broader real-world coverage remains |
+| VIEW-05 | Viewer | Text extraction and document search | in-progress | PDF.js text content powers both the selectable text layer and local search; Playwright verifies text selection and searchable fixture navigation, while broader real-world coverage remains |
 | VIEW-06 | Viewer | Print and document information | done | Read-only metadata panel shows common info, page count, and size; Print opens the original local PDF in a separate browser-native PDF viewer for whole-document printing |
 | OPS-01 | Page operations | Merge PDFs | not-started | Merge order preview; valid downloadable output |
 | OPS-02 | Page operations | Split and extract pages | not-started | Page ranges validated; each output downloads correctly |
