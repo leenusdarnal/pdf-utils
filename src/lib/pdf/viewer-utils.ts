@@ -30,3 +30,38 @@ export async function hasPdfHeader(file: Blob): Promise<boolean> {
 
   return false;
 }
+
+export interface VisiblePageRange {
+  startPage: number;
+  endPage: number;
+}
+
+/**
+ * Calculates a bounded page window for a virtualized thumbnail list.
+ * Pages outside this range do not need a mounted canvas or DOM node.
+ */
+export function getVisiblePageRange(
+  totalPages: number,
+  scrollTop: number,
+  viewportHeight: number,
+  rowHeight = 124,
+  overscan = 3
+): VisiblePageRange {
+  if (!Number.isFinite(totalPages) || totalPages < 1) {
+    return { startPage: 0, endPage: 0 };
+  }
+
+  const pageCount = Math.floor(totalPages);
+  const safeScrollTop = Math.max(0, Number.isFinite(scrollTop) ? scrollTop : 0);
+  const safeViewportHeight = Math.max(0, Number.isFinite(viewportHeight) ? viewportHeight : 0);
+  const safeRowHeight = Math.max(1, Number.isFinite(rowHeight) ? rowHeight : 1);
+  const safeOverscan = Math.max(0, Math.floor(Number.isFinite(overscan) ? overscan : 0));
+
+  const startPage = Math.max(1, Math.floor(safeScrollTop / safeRowHeight) + 1 - safeOverscan);
+  const endPage = Math.min(
+    pageCount,
+    Math.max(startPage, Math.ceil((safeScrollTop + safeViewportHeight) / safeRowHeight) + safeOverscan)
+  );
+
+  return { startPage, endPage };
+}
