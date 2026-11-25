@@ -20,7 +20,7 @@ UI components should coordinate workflows, not own PDF parsing or binary manipul
 
 - `lib/pdf/`: PDF.js browser adapter (`pdfjs-client.ts`), file-signature/control helpers, and future metadata/page models.
 - `lib/operations/`: merge, split, extract, reorder, rotate, delete, metadata, export.
-- `lib/annotations/`: validated normalized annotation types and bounded in-memory history are implemented in `annotations.ts`; viewport transforms, rendering, and serialization will be added with the annotation UI and export work.
+- `lib/annotations/`: `annotations.ts` defines validated annotation types and bounded in-memory history; `annotation-geometry.ts` maps normalized points/rectangles through PDF.js viewport transforms. The viewer renders text highlights and text-note overlays; PDF serialization/export remains pending.
 - `lib/storage/`: optional local draft persistence and quota/error handling.
 - `lib/workers/`: worker entry points for expensive tasks.
 - `lib/components/`: reusable controls and document workspace UI.
@@ -29,7 +29,7 @@ These are target boundaries, not a requirement to create empty folders before th
 
 ## Annotation coordinate contract
 
-Store geometry in normalized page coordinates (0..1) relative to the visible bounds of the unrotated page. The origin is the top-left corner; x increases to the right and y increases downward. Convert to viewport pixels only at render time using PDF.js viewport transforms. Test 0/90/180/270-degree rotation, zoom, device pixel ratio, and container resize. Stroke widths are fractions of the page's shorter side.
+Store geometry in normalized page coordinates (0..1) relative to the visible bounds of the unrotated page. The origin is the top-left corner; x increases to the right and y increases downward. Convert to viewport pixels only at render time using PDF.js viewport transforms. The geometry helpers map all four rectangle corners so quarter-turn rotation is handled; unit tests cover zoom and rotation round-trips. Device pixel ratio and resize behavior continue to use CSS viewport coordinates independent of the canvas backing bitmap. Stroke widths are fractions of the page's shorter side.
 
 ## Data lifecycle
 
