@@ -70,8 +70,8 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | OPS-02 | Page operations | Split and extract pages | not-started | Page ranges validated; each output downloads correctly |
 | OPS-03 | Page operations | Reorder, rotate, and delete pages | not-started | Preview matches exported page order/orientation |
 | ANN-01 | Annotation | Typed annotation schema and history | done | Validated highlight, text-note, freehand, rectangle, and arrow types use normalized page-relative coordinates; bounded undo/redo history and validation are covered by unit tests |
-| ANN-02 | Annotation | Highlight and text notes | in-progress | UI supports selection-based highlights and add/select/move/edit/delete text notes; normalized viewport transforms and automated zoom/rotation tests are being verified |
-| ANN-03 | Annotation | Freehand and shape tools | not-started | Pointer/touch support; stable alignment through resize |
+| ANN-02 | Annotation | Highlight and text notes | done | UI supports selection-based highlights and add/select/move/edit/delete text notes; normalized viewport transforms and Playwright zoom/rotation coverage pass |
+| ANN-03 | Annotation | Freehand and shape tools | in-progress | Rectangle and arrow drawing are available with normalized coordinates and undo/redo; freehand, shape movement, touch QA, and broader rotation/resize checks remain |
 | ANN-04 | Annotation | Annotation export | not-started | Text/vector fidelity tested; limitations disclosed |
 | OPT-01 | Optimization | Compression workflow | deferred | Benchmark file size and visual quality before setting defaults |
 | CON-01 | Conversion | Images to PDF | deferred | Mixed image dimensions supported; output page sizes predictable |
