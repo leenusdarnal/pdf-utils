@@ -39,7 +39,7 @@
 
         pdfDocument = await loadingTask.promise;
         if (destroyed) return;
-        totalPages = loadedDocument.numPages;
+        totalPages = pdfDocument.numPages;
         isLoading = false;
         statusText = `${totalPages} ${totalPages === 1 ? 'page' : 'pages'} loaded`;
         await renderPage(1, true);
@@ -71,8 +71,6 @@
       renderTask?.cancel();
       if (loadingTask) {
         void loadingTask.destroy();
-      } else if (pdfDocument) {
-        void pdfDocument.destroy();
       }
     };
   });
@@ -238,7 +236,7 @@
       <button type="button" class="viewer-button" onclick={onClose}>Return to tools</button>
     </div>
   {:else}
-    <div class="viewer-stage" bind:this={viewerViewport} role="region" aria-label="Document page area" tabindex="0">
+    <div class="viewer-stage" bind:this={viewerViewport} role="region" aria-label="Document page area">
       {#if isLoading}
         <div class="viewer-loading-card">
           <span class="viewer-spinner large" aria-hidden="true"></span>
