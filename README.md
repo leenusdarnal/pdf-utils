@@ -13,7 +13,7 @@ A lightweight, privacy-first browser workspace for viewing, editing, organizing,
 
 ## Current implementation
 
-The viewer foundation is merged into `main`. CI now runs Svelte/type checks, unit tests, and Playwright Chromium browser regression tests before the production build, including a selectable-text browser assertion. Cross-browser and manual accessibility checks remain part of the verification checklist. It currently includes:
+The viewer foundation is merged into `main`. CI now runs Svelte/type checks, unit tests, and Playwright Chromium browser regression tests before the production build, including selectable-text and annotation workflow assertions. Cross-browser and manual accessibility checks remain part of the verification checklist. It currently includes:
 
 - Select or drop a local PDF file.
 - Check for a PDF signature in the first 1,024 bytes before parsing.
@@ -25,9 +25,9 @@ The viewer foundation is merged into `main`. CI now runs Svelte/type checks, uni
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
 - Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
-- Define validated highlight, text-note, freehand, rectangle, and arrow annotation data with normalized page-relative geometry and bounded in-memory undo/redo history. The model is a foundation only; drawing/editing controls and PDF annotation export are not available yet.
+- Add text highlights from selected PDF text, and add, select, move, edit, and delete text notes. Annotation overlays are stored in normalized page coordinates and mapped through PDF.js viewport transforms for zoom and page rotation; undo/redo is available while the document remains open. Changes stay in memory and do not modify the source PDF.
 
-**Not implemented yet:** annotation drawing/editing UI and PDF annotation export, page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** freehand and shape annotation tools, persistence after closing the document, and PDF annotation export; page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
@@ -35,7 +35,7 @@ The viewer foundation is merged into `main`. CI now runs Svelte/type checks, uni
 | --- | --- |
 | View | Text layer, search, page navigation, zoom, fit modes, document info, print |
 | Organize | Merge, split/extract pages, reorder, rotate, delete pages |
-| Edit | Text/image annotations, highlights, shapes, freehand drawing, comments, undo/redo |
+| Edit | Text highlights and notes (implemented); text/image editing, shapes, freehand drawing, comments, persistence, and PDF export remain planned |
 | Transform | Compress, flatten where appropriate, watermark, page numbering |
 | Convert | Images to PDF; PDF pages to PNG/JPEG; assess office-document conversion later |
 | Secure | Password handling where browser libraries support it; redaction only with true content removal and verification |

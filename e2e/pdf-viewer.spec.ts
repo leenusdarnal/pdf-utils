@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-function createTwoPagePdf(): Buffer {
+function createTwoPagePdf(rotation = 0): Buffer {
   const pageTexts = [
     'PDF Utils browser test first page',
     'PDF Utils searchable needle on the second page'
@@ -12,7 +12,7 @@ function createTwoPagePdf(): Buffer {
     const pageObjectNumber = index + 3;
     const contentObjectNumber = firstContentObjectNumber + index;
     return (
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Rotate ${rotation} ` +
       `/Resources << /Font << /F1 ${fontObjectNumber} 0 R >> >> ` +
       `/Contents ${contentObjectNumber} 0 R >>`
     );
@@ -60,11 +60,11 @@ async function visitHome(page: Page) {
   await expect(page.locator('#file-input')).toHaveCount(1);
 }
 
-async function openTestPdf(page: Page) {
+async function openTestPdf(page: Page, rotation = 0) {
   await page.locator('#file-input').setInputFiles({
     name: 'pdf-utils-browser-test.pdf',
     mimeType: 'application/pdf',
-    buffer: createTwoPagePdf()
+    buffer: createTwoPagePdf(rotation)
   });
   await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
@@ -128,6 +128,55 @@ test('opens a PDF and supports page navigation, local search, and zoom', async (
   await expect(page.getByRole('heading', { name: /Your documents/ })).toBeVisible();
 });
 
+test('keeps text highlights aligned on rotated pages and after zooming', async ({ page }) => {
+  await visitHome(page);
+  await openTestPdf(page, 90);
+
+  const textLayer = page.locator('.textLayer');
+  const selectionRect = await textLayer.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    const rect = range.getBoundingClientRect();
+    return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+  });
+  expect(selectionRect.width).toBeGreaterThan(0);
+  expect(selectionRect.height).toBeGreaterThan(0);
+  await textLayer.dispatchEvent('mouseup');
+  await page.getByRole('button', { name: 'Highlight selection' }).click();
+
+  const highlight = page.locator('[data-annotation-type="highlight"]').first();
+  await expect(highlight).toBeVisible();
+  const highlightBefore = await highlight.boundingBox();
+  const pageBefore = await page.locator('canvas[aria-label^="Page "]').boundingBox();
+  expect(highlightBefore).not.toBeNull();
+  expect(pageBefore).not.toBeNull();
+  expect(Math.abs(highlightBefore!.x - selectionRect.left)).toBeLessThan(3);
+  expect(Math.abs(highlightBefore!.y - selectionRect.top)).toBeLessThan(3);
+  expect(Math.abs(highlightBefore!.width - selectionRect.width)).toBeLessThan(3);
+  expect(Math.abs(highlightBefore!.height - selectionRect.height)).toBeLessThan(3);
+
+  const before = {
+    x: (highlightBefore!.x - pageBefore!.x) / pageBefore!.width,
+    y: (highlightBefore!.y - pageBefore!.y) / pageBefore!.height,
+    width: highlightBefore!.width / pageBefore!.width,
+    height: highlightBefore!.height / pageBefore!.height
+  };
+
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
+  const highlightAfter = await highlight.boundingBox();
+  const pageAfter = await page.locator('canvas[aria-label^="Page "]').boundingBox();
+  expect(highlightAfter).not.toBeNull();
+  expect(pageAfter).not.toBeNull();
+  expect(Math.abs((highlightAfter!.x - pageAfter!.x) / pageAfter!.width - before.x)).toBeLessThan(0.02);
+  expect(Math.abs((highlightAfter!.y - pageAfter!.y) / pageAfter!.height - before.y)).toBeLessThan(0.02);
+  expect(Math.abs(highlightAfter!.width / pageAfter!.width - before.width)).toBeLessThan(0.02);
+  expect(Math.abs(highlightAfter!.height / pageAfter!.height - before.height)).toBeLessThan(0.02);
+});
+
 test('opens the original local PDF in a new tab for native printing', async ({ page }) => {
   await visitHome(page);
   await openTestPdf(page);
@@ -156,6 +205,98 @@ test('opens the original local PDF in a new tab for native printing', async ({ p
   await expect(page.locator('[role="status"]').last()).toContainText(
     'The browser blocked the print tab'
   );
+});
+
+test('creates, moves, and undoes selectable text highlights', async ({ page }) => {
+  await visitHome(page);
+  await openTestPdf(page);
+
+  await page.locator('.textLayer').dispatchEvent('mouseup');
+  const addHighlight = page.getByRole('button', { name: 'Highlight selection' });
+  await expect(addHighlight).toBeEnabled();
+  await addHighlight.click();
+
+  const highlights = page.locator('[data-annotation-type="highlight"]');
+  await expect(highlights.first()).toBeVisible();
+  const beforeDrag = await highlights.first().boundingBox();
+  expect(beforeDrag).not.toBeNull();
+
+  const startX = beforeDrag!.x + beforeDrag!.width / 2;
+  const startY = beforeDrag!.y + beforeDrag!.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + 18, startY + 14, { steps: 5 });
+  await page.mouse.up();
+
+  const afterDrag = await highlights.first().boundingBox();
+  expect(afterDrag).not.toBeNull();
+  expect(afterDrag!.y - beforeDrag!.y).toBeGreaterThan(5);
+
+  await page.getByRole('button', { name: 'Undo annotation' }).click();
+  const afterUndo = await highlights.first().boundingBox();
+  expect(afterUndo).not.toBeNull();
+  expect(Math.abs(afterUndo!.y - beforeDrag!.y)).toBeLessThan(2);
+
+  await page.getByRole('button', { name: 'Undo annotation' }).click();
+  await expect(highlights).toHaveCount(0);
+  await page.getByRole('button', { name: 'Redo annotation' }).click();
+  await expect(highlights.first()).toBeVisible();
+});
+
+test('creates, moves, edits, and deletes page-relative text notes', async ({ page }) => {
+  await visitHome(page);
+  await openTestPdf(page);
+
+  const pageSurface = page.locator('[data-page-surface]');
+  await page.getByRole('button', { name: 'Place note' }).click();
+  await pageSurface.click({ position: { x: 220, y: 230 } });
+
+  const noteEditor = page.getByRole('form', { name: 'Text note editor' });
+  await expect(noteEditor).toBeVisible();
+  await page.getByRole('textbox', { name: 'Note text' }).fill('Review this section');
+  await page.getByRole('button', { name: 'Save note' }).click();
+
+  const note = page.getByRole('button', { name: 'Note: Review this section' });
+  await expect(note).toBeVisible();
+  const noteBeforeZoom = await note.boundingBox();
+  const pageBeforeZoom = await page.locator('canvas[aria-label^="Page "]').boundingBox();
+  expect(noteBeforeZoom).not.toBeNull();
+  expect(pageBeforeZoom).not.toBeNull();
+  const relativeX = (noteBeforeZoom!.x + noteBeforeZoom!.width / 2 - pageBeforeZoom!.x) / pageBeforeZoom!.width;
+  const relativeY = (noteBeforeZoom!.y + noteBeforeZoom!.height / 2 - pageBeforeZoom!.y) / pageBeforeZoom!.height;
+
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
+  const noteAfterZoom = await note.boundingBox();
+  const pageAfterZoom = await page.locator('canvas[aria-label^="Page "]').boundingBox();
+  expect(noteAfterZoom).not.toBeNull();
+  expect(pageAfterZoom).not.toBeNull();
+  const zoomedRelativeX = (noteAfterZoom!.x + noteAfterZoom!.width / 2 - pageAfterZoom!.x) / pageAfterZoom!.width;
+  const zoomedRelativeY = (noteAfterZoom!.y + noteAfterZoom!.height / 2 - pageAfterZoom!.y) / pageAfterZoom!.height;
+  expect(Math.abs(zoomedRelativeX - relativeX)).toBeLessThan(0.02);
+  expect(Math.abs(zoomedRelativeY - relativeY)).toBeLessThan(0.02);
+
+  const dragStartX = noteAfterZoom!.x + noteAfterZoom!.width / 2;
+  const dragStartY = noteAfterZoom!.y + noteAfterZoom!.height / 2;
+  await page.mouse.move(dragStartX, dragStartY);
+  await page.mouse.down();
+  await page.mouse.move(dragStartX + 24, dragStartY + 16, { steps: 4 });
+  await page.mouse.up();
+  const noteAfterDrag = await note.boundingBox();
+  expect(noteAfterDrag).not.toBeNull();
+  expect(noteAfterDrag!.x - noteAfterZoom!.x).toBeGreaterThan(10);
+
+  await note.click();
+  const noteInput = page.getByRole('textbox', { name: 'Note text' });
+  await expect(noteInput).toHaveValue('Review this section');
+  await noteInput.fill('Updated review note');
+  await page.getByRole('button', { name: 'Save note' }).click();
+  const updatedNote = page.getByRole('button', { name: 'Note: Updated review note' });
+  await expect(updatedNote).toBeVisible();
+
+  await updatedNote.click();
+  await page.getByRole('button', { name: 'Delete note' }).click();
+  await expect(page.locator('[data-annotation-type="text-note"]')).toHaveCount(0);
 });
 
 test('rejects a file that does not contain a PDF signature', async ({ page }) => {

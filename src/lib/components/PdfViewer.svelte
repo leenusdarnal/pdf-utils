@@ -5,6 +5,21 @@
   import type { PdfDocument, PdfDocumentTask, PdfPage, PdfRenderTask, PdfTextLayerTask } from '$lib/pdf/pdfjs-client';
   import { clampPageNumber, clampZoom } from '$lib/pdf/viewer-utils';
   import { findTextMatches, type PdfTextMatch } from '$lib/pdf/pdf-search';
+  import {
+    AnnotationHistory,
+    type NormalizedPoint,
+    type NormalizedRect,
+    type PdfAnnotation,
+    type PdfHighlightAnnotation,
+    type PdfTextNoteAnnotation
+  } from '$lib/annotations/annotations';
+  import {
+    normalizedPointToViewport,
+    normalizedRectToViewport,
+    viewportPointToNormalized,
+    viewportRectToNormalized,
+    type PdfViewportTransform
+  } from '$lib/annotations/annotation-geometry';
 
   export let file: File;
   export let onClose: () => void;
@@ -47,6 +62,33 @@
   let isSearching = false;
   let searchError = '';
   let searchSequence = 0;
+
+  const annotationHistory = new AnnotationHistory();
+  let annotations: PdfAnnotation[] = [];
+  let visibleAnnotations: PdfAnnotation[] = [];
+  let selectedAnnotationId: string | null = null;
+  let pendingHighlightRects: NormalizedRect[] = [];
+  let isAddingNote = false;
+  let editingNoteId: string | null = null;
+  let newNoteId: string | null = null;
+  let noteDraft = '';
+  let noteError = '';
+  let canUndoAnnotations = false;
+  let canRedoAnnotations = false;
+  let unrotatedPageViewport: PdfViewportTransform | null = null;
+  let renderedPageViewport: PdfViewportTransform | null = null;
+  let dragState: {
+    annotation: PdfAnnotation;
+    pointerId: number;
+    startPoint: NormalizedPoint;
+    startClientX: number;
+    startClientY: number;
+    hasMoved: boolean;
+  } | null = null;
+  let dragPreview: PdfAnnotation | null = null;
+  let suppressAnnotationClick = false;
+
+  $: visibleAnnotations = annotations.filter((annotation) => annotation.pageNumber === currentPage);
 
   onMount(() => {
     const mobileViewport = window.matchMedia('(max-width: 760px)');
@@ -140,6 +182,9 @@
     if (!document || destroyed) return;
 
     const sequence = ++renderSequence;
+    pendingHighlightRects = [];
+    renderedPageViewport = null;
+    unrotatedPageViewport = null;
     const previousTextLayerTask = textLayerTask;
     textLayerTask = null;
     previousTextLayerTask?.cancel();
@@ -179,6 +224,8 @@
       }
 
       const viewport = page.getViewport({ scale: zoom });
+      unrotatedPageViewport = page.getViewport({ scale: 1, rotation: 0 });
+      renderedPageViewport = viewport;
       const deviceScale = Math.min(window.devicePixelRatio || 1, 2);
       const pixelBudgetScale = Math.sqrt(
         MAX_CANVAS_PIXELS / Math.max(1, viewport.width * viewport.height)
@@ -240,7 +287,21 @@
   }
 
   function goToPage(pageNumber: number) {
-    targetPage = clampPageNumber(pageNumber, totalPages);
+    const nextPage = clampPageNumber(pageNumber, totalPages);
+    if (nextPage !== targetPage) {
+      if (newNoteId) {
+        annotationHistory.remove(newNoteId);
+        refreshAnnotationState();
+      }
+      selectedAnnotationId = null;
+      editingNoteId = null;
+      newNoteId = null;
+      noteDraft = '';
+      noteError = '';
+      isAddingNote = false;
+      pendingHighlightRects = [];
+    }
+    targetPage = nextPage;
     void renderPage(targetPage);
   }
 
@@ -323,6 +384,314 @@
     isSearching = false;
   }
 
+  function createAnnotationId(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'annotation-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  }
+
+  function refreshAnnotationState() {
+    annotations = [...annotationHistory.annotations];
+    canUndoAnnotations = annotationHistory.canUndo;
+    canRedoAnnotations = annotationHistory.canRedo;
+    if (selectedAnnotationId && !annotations.some((item) => item.id === selectedAnnotationId)) {
+      selectedAnnotationId = null;
+    }
+    if (
+      editingNoteId &&
+      !annotations.some((item) => item.id === editingNoteId && item.type === 'text-note')
+    ) {
+      editingNoteId = null;
+      newNoteId = null;
+      noteDraft = '';
+      noteError = '';
+    }
+  }
+
+  function captureHighlightSelection() {
+    if (!textLayerElement || !canvasElement || !renderedPageViewport || !unrotatedPageViewport) return;
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || selection.rangeCount === 0) return;
+    const range = selection.getRangeAt(0);
+    if (
+      !textLayerElement.contains(range.startContainer) ||
+      !textLayerElement.contains(range.endContainer)
+    ) {
+      return;
+    }
+
+    const pageBounds = canvasElement.getBoundingClientRect();
+    pendingHighlightRects = Array.from(range.getClientRects())
+      .map((rect) =>
+        viewportRectToNormalized(
+          {
+            x: rect.left - pageBounds.left,
+            y: rect.top - pageBounds.top,
+            width: rect.width,
+            height: rect.height
+          },
+          renderedPageViewport!,
+          unrotatedPageViewport!
+        )
+      )
+      .filter((rect): rect is NormalizedRect => rect !== null && rect.width > 0 && rect.height > 0);
+  }
+
+  function addHighlightFromSelection() {
+    if (!pendingHighlightRects.length) return;
+    const now = Date.now();
+    const annotation: PdfHighlightAnnotation = {
+      type: 'highlight',
+      id: createAnnotationId(),
+      pageNumber: currentPage,
+      createdAt: now,
+      updatedAt: now,
+      color: '#f5c542',
+      opacity: 0.38,
+      rects: pendingHighlightRects.map((rect) => ({ ...rect }))
+    };
+    annotationHistory.add(annotation);
+    refreshAnnotationState();
+    selectedAnnotationId = annotation.id;
+    pendingHighlightRects = [];
+    window.getSelection()?.removeAllRanges();
+  }
+
+  function handlePagePointerDown(event: PointerEvent) {
+    if (
+      !isAddingNote ||
+      event.button !== 0 ||
+      !canvasElement ||
+      !renderedPageViewport ||
+      !unrotatedPageViewport
+    ) return;
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest('[data-annotation-id]')) return;
+
+    const pageBounds = canvasElement.getBoundingClientRect();
+    const anchor = viewportPointToNormalized(
+      { x: event.clientX - pageBounds.left, y: event.clientY - pageBounds.top },
+      renderedPageViewport,
+      unrotatedPageViewport
+    );
+    const now = Date.now();
+    const note: PdfTextNoteAnnotation = {
+      type: 'text-note',
+      id: createAnnotationId(),
+      pageNumber: currentPage,
+      createdAt: now,
+      updatedAt: now,
+      color: '#2463eb',
+      opacity: 1,
+      anchor,
+      text: ''
+    };
+    annotationHistory.add(note);
+    refreshAnnotationState();
+    selectedAnnotationId = note.id;
+    editingNoteId = note.id;
+    newNoteId = note.id;
+    noteDraft = '';
+    noteError = '';
+    isAddingNote = false;
+    event.preventDefault();
+  }
+
+  function saveNote() {
+    if (!editingNoteId) return;
+    const note = annotations.find(
+      (annotation): annotation is PdfTextNoteAnnotation =>
+        annotation.id === editingNoteId && annotation.type === 'text-note'
+    );
+    if (!note) return;
+    if (!noteDraft.trim()) {
+      noteError = 'Enter note text before saving.';
+      return;
+    }
+
+    annotationHistory.update({
+      ...note,
+      text: noteDraft.trim(),
+      updatedAt: Math.max(Date.now(), note.createdAt)
+    });
+    refreshAnnotationState();
+    newNoteId = null;
+    editingNoteId = null;
+    noteError = '';
+  }
+
+  function cancelNoteEditing() {
+    if (newNoteId) {
+      annotationHistory.remove(newNoteId);
+      refreshAnnotationState();
+      selectedAnnotationId = null;
+    }
+    newNoteId = null;
+    editingNoteId = null;
+    noteDraft = '';
+    noteError = '';
+  }
+
+  function selectAnnotation(annotation: PdfAnnotation) {
+    if (suppressAnnotationClick) {
+      suppressAnnotationClick = false;
+      return;
+    }
+    selectedAnnotationId = annotation.id;
+    if (annotation.type === 'text-note') {
+      editingNoteId = annotation.id;
+      newNoteId = null;
+      noteDraft = annotation.text;
+      noteError = '';
+    } else {
+      editingNoteId = null;
+      newNoteId = null;
+      noteDraft = '';
+      noteError = '';
+    }
+  }
+
+  function deleteSelectedAnnotation() {
+    if (!selectedAnnotationId) return;
+    annotationHistory.remove(selectedAnnotationId);
+    refreshAnnotationState();
+    editingNoteId = null;
+    newNoteId = null;
+    noteDraft = '';
+    noteError = '';
+  }
+
+  function undoAnnotation() {
+    if (annotationHistory.undo()) {
+      refreshAnnotationState();
+      editingNoteId = null;
+      newNoteId = null;
+      noteDraft = '';
+      noteError = '';
+    }
+  }
+
+  function redoAnnotation() {
+    if (annotationHistory.redo()) {
+      refreshAnnotationState();
+      editingNoteId = null;
+      newNoteId = null;
+      noteDraft = '';
+      noteError = '';
+    }
+  }
+
+  function getDisplayedAnnotation(annotation: PdfAnnotation): PdfAnnotation {
+    return dragPreview?.id === annotation.id ? dragPreview : annotation;
+  }
+
+  function beginAnnotationDrag(event: PointerEvent, annotation: PdfAnnotation) {
+    if (
+      event.button !== 0 ||
+      !canvasElement ||
+      !renderedPageViewport ||
+      !unrotatedPageViewport
+    ) return;
+    const pageBounds = canvasElement.getBoundingClientRect();
+    const startPoint = viewportPointToNormalized(
+      { x: event.clientX - pageBounds.left, y: event.clientY - pageBounds.top },
+      renderedPageViewport,
+      unrotatedPageViewport
+    );
+    dragState = {
+      annotation,
+      pointerId: event.pointerId,
+      startPoint,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      hasMoved: false
+    };
+    dragPreview = annotation;
+    try {
+      (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    } catch {
+      // Window-level pointer listeners still handle browsers without capture support.
+    }
+  }
+
+  function moveAnnotationDrag(event: PointerEvent) {
+    if (
+      !dragState ||
+      dragState.pointerId !== event.pointerId ||
+      !canvasElement ||
+      !renderedPageViewport ||
+      !unrotatedPageViewport
+    ) return;
+    const distance = Math.hypot(
+      event.clientX - dragState.startClientX,
+      event.clientY - dragState.startClientY
+    );
+    if (distance < 3) return;
+
+    const pageBounds = canvasElement.getBoundingClientRect();
+    const nextPoint = viewportPointToNormalized(
+      { x: event.clientX - pageBounds.left, y: event.clientY - pageBounds.top },
+      renderedPageViewport,
+      unrotatedPageViewport
+    );
+    const dx = nextPoint.x - dragState.startPoint.x;
+    const dy = nextPoint.y - dragState.startPoint.y;
+    const original = dragState.annotation;
+    let preview: PdfAnnotation;
+
+    if (original.type === 'text-note') {
+      preview = {
+        ...original,
+        anchor: {
+          x: Math.max(0, Math.min(1, original.anchor.x + dx)),
+          y: Math.max(0, Math.min(1, original.anchor.y + dy))
+        }
+      };
+    } else if (original.type === 'highlight') {
+      const minX = Math.min(...original.rects.map((rect) => rect.x));
+      const minY = Math.min(...original.rects.map((rect) => rect.y));
+      const maxX = Math.max(...original.rects.map((rect) => rect.x + rect.width));
+      const maxY = Math.max(...original.rects.map((rect) => rect.y + rect.height));
+      const boundedX = Math.max(-minX, Math.min(1 - maxX, dx));
+      const boundedY = Math.max(-minY, Math.min(1 - maxY, dy));
+      preview = {
+        ...original,
+        rects: original.rects.map((rect) => ({
+          ...rect,
+          x: rect.x + boundedX,
+          y: rect.y + boundedY
+        }))
+      };
+    } else {
+      return;
+    }
+
+    dragState = { ...dragState, hasMoved: true };
+    dragPreview = preview;
+  }
+
+  function finishAnnotationDrag(event: PointerEvent) {
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    if (dragState.hasMoved && dragPreview) {
+      annotationHistory.update({
+        ...dragPreview,
+        updatedAt: Math.max(Date.now(), dragPreview.createdAt)
+      });
+      refreshAnnotationState();
+      selectedAnnotationId = dragPreview.id;
+      suppressAnnotationClick = true;
+    }
+    dragState = null;
+    dragPreview = null;
+  }
+
+  function cancelAnnotationDrag(event: PointerEvent) {
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+    dragState = null;
+    dragPreview = null;
+  }
+
   function formatFileSize(size: number) {
     if (size < 1_048_576) return `${Math.max(1, Math.round(size / 1_024))} KB`;
     return `${(size / 1_048_576).toFixed(2)} MB`;
@@ -332,6 +701,13 @@
 <svelte:head>
   <title>{file.name} — PDF Utils</title>
 </svelte:head>
+<svelte:window
+  onmouseup={captureHighlightSelection}
+  onkeyup={captureHighlightSelection}
+  onpointermove={moveAnnotationDrag}
+  onpointerup={finishAnnotationDrag}
+  onpointercancel={cancelAnnotationDrag}
+/>
 
 <section class="mx-auto my-7 mb-10 flex min-h-[min(78vh,900px)] w-full flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_12px_34px_rgb(29_35_51_/_0.05)] max-[760px]:my-[18px] max-[760px]:mb-[30px] max-[760px]:min-h-[74vh]" aria-label="PDF viewer">
   <header class="flex min-h-[76px] items-center justify-between gap-[18px] border-b border-[#e9ebf0] bg-white px-[18px] py-3 max-[760px]:flex-wrap max-[760px]:gap-3 max-[760px]:p-3 max-[420px]:p-[10px]">
@@ -459,6 +835,45 @@
       {#if searchQuery}<button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" onclick={clearSearch} aria-label="Clear search">Clear</button>{/if}
     </div>
   </form>
+  <section class="flex flex-wrap items-center gap-2 border-b border-[#e9ebf0] bg-[#fbfbfd] px-4 py-3 max-[480px]:px-[10px]" aria-label="Annotation tools">
+    <span class="mr-1 text-[11px] font-bold text-[#535a68]">Annotate</span>
+    <button
+      type="button"
+      class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]"
+      aria-label="Highlight selection"
+      disabled={isLoading || pendingHighlightRects.length === 0}
+      onclick={addHighlightFromSelection}
+    >Highlight selection</button>
+    <button
+      type="button"
+      class={"inline-flex min-h-[32px] items-center justify-center rounded-lg border px-3 text-[11px] font-semibold transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] " + (isAddingNote ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-line bg-white text-[#454b59] hover:border-brand-300 hover:bg-brand-50')}
+      aria-label="Place note"
+      aria-pressed={isAddingNote}
+      disabled={isLoading}
+      onclick={() => (isAddingNote = !isAddingNote)}
+    >{isAddingNote ? 'Click on page…' : 'Place note'}</button>
+    <span class="h-5 w-px bg-[#e7e9ee]" aria-hidden="true"></span>
+    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Undo annotation" disabled={!canUndoAnnotations} onclick={undoAnnotation}>Undo</button>
+    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Redo annotation" disabled={!canRedoAnnotations} onclick={redoAnnotation}>Redo</button>
+    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Delete selected annotation" disabled={!selectedAnnotationId} onclick={deleteSelectedAnnotation}>Delete</button>
+    {#if isAddingNote}
+      <span class="w-full text-[10px] text-brand-700" role="status">Select a point on the page to place a note.</span>
+    {:else if pendingHighlightRects.length > 0}
+      <span class="text-[10px] text-brand-700" role="status">Text selected. Add a highlight to save it.</span>
+    {/if}
+  </section>
+  {#if editingNoteId}
+    <form class="grid gap-2 border-b border-[#e9ebf0] bg-white px-4 py-3 max-[480px]:px-[10px]" aria-label="Text note editor" onsubmit={(event) => { event.preventDefault(); saveNote(); }}>
+      <label for="pdf-note-editor" class="text-[11px] font-bold text-[#535a68]">Note text</label>
+      <textarea id="pdf-note-editor" class="min-h-[76px] w-full resize-y rounded-lg border border-[#e0e3ea] bg-[#fbfcfe] px-3 py-2 text-[12px] text-[#303541] outline-none placeholder:text-[#8a909c] focus-visible:border-brand-300 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-1" aria-label="Note text" value={noteDraft} oninput={(event) => { noteDraft = (event.currentTarget as HTMLTextAreaElement).value; noteError = ''; }} placeholder="Write a note about this page…"></textarea>
+      {#if noteError}<p class="m-0 text-[10px] text-danger-600" role="alert">{noteError}</p>{/if}
+      <div class="flex flex-wrap gap-2">
+        <button type="submit" class="inline-flex min-h-[32px] items-center justify-center rounded-lg bg-brand-600 px-3 text-[11px] font-semibold text-white hover:bg-brand-700 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2">Save note</button>
+        <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" onclick={cancelNoteEditing}>Cancel</button>
+        {#if !newNoteId}<button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-danger-600 hover:border-danger-600 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" onclick={deleteSelectedAnnotation}>Delete note</button>{/if}
+      </div>
+    </form>
+  {/if}
   {#if isSearching || searchResults.length > 0 || searchError}
     <section class="max-h-[250px] overflow-auto border-b border-[#e9ebf0] bg-[#fbfbfd]" aria-label="Search results" aria-live="polite">
       {#if isSearching}
@@ -515,7 +930,7 @@
             <p class="m-0 text-[11px] text-[#89909d]">Your document is being processed on this device.</p>
           </div>
         {/if}
-        <div class={`relative my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } >
+        <div data-page-surface role="group" aria-label="PDF page surface" class={`relative my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } style:cursor={isAddingNote ? 'crosshair' : undefined} onpointerdown={handlePagePointerDown}>
           <canvas bind:this={canvasElement} class="relative z-0 block max-w-none bg-white" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
           <div
             bind:this={textLayerElement}
@@ -523,6 +938,49 @@
             role="group"
             aria-label={`Selectable text for page ${currentPage}`}
           ></div>
+          {#if renderedPageViewport && unrotatedPageViewport}
+            <div class="pointer-events-none absolute inset-0 z-20" aria-label="PDF annotations">
+              {#each visibleAnnotations as annotation (annotation.id)}
+                {@const displayed = getDisplayedAnnotation(annotation)}
+                {#if displayed.type === 'highlight'}
+                  {#each displayed.rects as rect, rectIndex (annotation.id + '-' + rectIndex)}
+                    {@const mapped = normalizedRectToViewport(rect, unrotatedPageViewport, renderedPageViewport)}
+                    <div
+                      class="pointer-events-auto absolute cursor-move rounded-[2px] border border-transparent select-none"
+                      data-annotation-id={annotation.id}
+                      data-annotation-type="highlight"
+                      style={"left:" + mapped.x + "px;top:" + mapped.y + "px;width:" + mapped.width + "px;height:" + mapped.height + "px;background:" + annotation.color + ";opacity:" + annotation.opacity + ";outline:" + (selectedAnnotationId === annotation.id ? "2px solid #7165d5" : "none") + ";outline-offset:1px;"}
+                      role="button"
+                      tabindex="0"
+                      aria-label="Select highlight"
+                      aria-pressed={selectedAnnotationId === annotation.id}
+                      onpointerdown={(event) => beginAnnotationDrag(event, annotation)}
+                      onclick={() => selectAnnotation(annotation)}
+                      onkeydown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          selectAnnotation(annotation);
+                        }
+                      }}
+                    ></div>
+                  {/each}
+                {:else if displayed.type === 'text-note'}
+                  {@const mapped = normalizedPointToViewport(displayed.anchor, unrotatedPageViewport, renderedPageViewport)}
+                  <button
+                    type="button"
+                    class="pointer-events-auto absolute grid size-7 place-items-center rounded-full border-2 border-white bg-[#2463eb] text-[11px] font-bold text-white shadow-[0_2px_7px_rgb(22_35_66_/_0.25)] transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 cursor-move"
+                    data-annotation-id={annotation.id}
+                    data-annotation-type="text-note"
+                    style={"left:" + mapped.x + "px;top:" + mapped.y + "px;transform:translate(-50%,-50%);outline:" + (selectedAnnotationId === annotation.id ? "2px solid #7165d5" : "none") + ";outline-offset:2px;"}
+                    aria-label={"Note: " + (displayed.text || "Untitled note")}
+                    title={displayed.text || 'Untitled note'}
+                    onpointerdown={(event) => beginAnnotationDrag(event, annotation)}
+                    onclick={() => selectAnnotation(annotation)}
+                  >N</button>
+                {/if}
+              {/each}
+            </div>
+          {/if}
         </div>
       </div>
     </div>
