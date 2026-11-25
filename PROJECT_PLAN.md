@@ -10,8 +10,8 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 | Priority | Capability | MVP decision | Notes |
 | --- | --- | --- | --- |
-| P0 | PDF viewer | Yes | Rendering, page navigation, zoom, fit modes, thumbnails, text search, print |
-| P0 | File import/export | Yes | Drag/drop, file picker, validation, download, clear error handling |
+| P0 | PDF viewer | Yes | First slice: local rendering, page navigation, zoom, fit width. Text selection/search, thumbnails, metadata, and print remain pending |
+| P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; download/export remains pending |
 | P1 | Page organization | Yes | Merge, split/extract, reorder, rotate, delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
 | P1 | Annotation export | Yes | Prefer vector/native content; test fidelity and clearly disclose limitations |
@@ -37,7 +37,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 ## Technical boundaries
 
-- Keep PDF.js and pdf-lib usage behind adapters/services so libraries can be replaced or upgraded safely.
+- Keep PDF.js and pdf-lib usage behind adapters/services so libraries can be replaced or upgraded safely. The first PDF.js adapter is src/lib/pdf/pdfjs-client.ts.
 - Do not put parsing, conversion, or large binary work in UI components.
 - Use object URLs carefully and revoke them when no longer needed.
 - Treat every PDF as untrusted input; set sensible file-size/page-count warnings and handle malformed documents.
@@ -55,13 +55,13 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | ID | Phase | Deliverable | Status | Acceptance criteria |
 | --- | --- | --- | --- | --- |
 | FND-01 | Foundation | Confirm app architecture and dependency policy | done | Decisions documented here; no application dependencies added prematurely |
-| FND-02 | Foundation | Create SvelteKit + TypeScript scaffold | not-started | Clean install/build; strict TypeScript; minimal dependency set |
-| FND-03 | Foundation | Establish formatting, lint, typecheck, and test scripts | not-started | CI runs checks on pull requests and main |
-| FND-04 | Foundation | Build responsive app shell and design tokens | not-started | Accessible navigation, consistent spacing/type/color, mobile and desktop layouts |
-| FND-05 | Foundation | Add CI workflow and contribution guidance | not-started | CI green; README setup steps verified |
-| VIEW-01 | Viewer | File picker and drag/drop import | not-started | Valid PDFs open; invalid/empty files show actionable errors |
-| VIEW-02 | Viewer | PDF.js rendering adapter | not-started | Multi-page documents render reliably; loading/error states |
-| VIEW-03 | Viewer | Navigation and zoom controls | not-started | Page jump, previous/next, zoom, fit width/page |
+| FND-02 | Foundation | Create SvelteKit + TypeScript scaffold | in-progress | Scaffold and pinned PDF.js dependency are committed; clean install/build verification is pending |
+| FND-03 | Foundation | Establish formatting, lint, typecheck, and test scripts | in-progress | Test and type-check scripts plus CI exist; green verification and formatting gate remain pending |
+| FND-04 | Foundation | Build responsive app shell and design tokens | in-progress | Responsive landing page and viewer shell are implemented; browser/accessibility checks remain pending |
+| FND-05 | Foundation | Add CI workflow and contribution guidance | in-progress | GitHub Actions CI and setup instructions are present; latest full run is not yet verified green |
+| VIEW-01 | Viewer | File picker and drag/drop import | in-progress | Local signature validation and invalid-file feedback are implemented; test run is pending |
+| VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 adapter and current-page canvas rendering are implemented; browser regression checks are pending |
+| VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented; interaction tests are pending |
 | VIEW-04 | Viewer | Thumbnails and page virtualization | not-started | Large documents do not mount every full-size page at once |
 | VIEW-05 | Viewer | Text layer and document search | not-started | Search results navigate to matching page and highlight results |
 | VIEW-06 | Viewer | Print and document information | not-started | Print action works; basic metadata/page count shown |
