@@ -11,6 +11,8 @@
   type PdfPage = Awaited<ReturnType<PdfDocument['getPage']>>;
   type PdfRenderTask = ReturnType<PdfPage['render']>;
 
+  const MAX_CANVAS_PIXELS = 16_000_000;
+
   let pdfDocument: PdfDocument | null = null;
   let loadingTask: LoadingTask | null = null;
   let renderTask: PdfRenderTask | null = null;
@@ -40,17 +42,15 @@
         if (destroyed) return;
 
         loadingTask = pdfjs.getDocument({ data });
-        pdfDocument = await loadingTask.promise;
-        if (destroyed) {
-          await pdfDocument.destroy();
-          return;
-        }
+        const loadedDocument = await loadingTask.promise;
+        if (destroyed) return;
 
-        totalPages = pdfDocument.numPages;
+        pdfDocument = loadedDocument;
+        totalPages = loadedDocument.numPages;
         isLoading = false;
         statusText = `${totalPages} ${totalPages === 1 ? 'page' : 'pages'} loaded`;
         await renderPage(1, true);
-      } catch (error) {
+      } catch {
         if (destroyed) return;
         isLoading = false;
         errorMessage = 'This PDF could not be opened. It may be damaged, unsupported, or password-protected.';
@@ -121,14 +121,18 @@
       }
 
       const viewport = page.getViewport({ scale: zoom });
-      const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+      const deviceScale = Math.min(window.devicePixelRatio || 1, 2);
+      const pixelBudgetScale = Math.sqrt(
+        MAX_CANVAS_PIXELS / Math.max(1, viewport.width * viewport.height)
+      );
+      const outputScale = Math.min(deviceScale, pixelBudgetScale);
       const context = canvasElement?.getContext('2d', { alpha: false });
       if (!context || !canvasElement) {
         throw new Error('Canvas rendering is not available in this browser.');
       }
 
-      canvasElement.width = Math.floor(viewport.width * outputScale);
-      canvasElement.height = Math.floor(viewport.height * outputScale);
+      canvasElement.width = Math.max(1, Math.floor(viewport.width * outputScale));
+      canvasElement.height = Math.max(1, Math.floor(viewport.height * outputScale));
       canvasElement.style.width = `${Math.floor(viewport.width)}px`;
       canvasElement.style.height = `${Math.floor(viewport.height)}px`;
       context.fillStyle = '#ffffff';
