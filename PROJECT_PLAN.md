@@ -10,7 +10,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 | Priority | Capability | MVP decision | Notes |
 | --- | --- | --- | --- |
-| P0 | PDF viewer | Yes | First slice: local rendering, page navigation, zoom, and fit width. Virtualized thumbnail navigation is in progress; text selection/search, metadata, and print remain pending |
+| P0 | PDF viewer | Yes | First slice: local rendering, page navigation, zoom, and fit width. Virtualized thumbnail navigation and local text search are in progress; text selection, metadata, and print remain pending |
 | P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; download/export remains pending |
 | P1 | Page organization | Yes | Merge, split/extract, reorder, rotate, delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
@@ -63,7 +63,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 adapter and current-page canvas rendering are implemented; browser regression checks are pending |
 | VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented; browser interaction tests are pending |
 | VIEW-04 | Viewer | Thumbnails and page virtualization | in-progress | Thumbnail sidebar supports page selection; only the visible window plus overscan mounts thumbnail canvases; browser/performance checks remain pending |
-| VIEW-05 | Viewer | Text layer and document search | not-started | Search results navigate to matching page and highlight results |
+| VIEW-05 | Viewer | Text extraction and document search | in-progress | Local search scans page text, highlights matches in result snippets, and navigates to the matching page; browser checks remain pending |
 | VIEW-06 | Viewer | Print and document information | not-started | Print action works; basic metadata/page count shown |
 | OPS-01 | Page operations | Merge PDFs | not-started | Merge order preview; valid downloadable output |
 | OPS-02 | Page operations | Split and extract pages | not-started | Page ranges validated; each output downloads correctly |
