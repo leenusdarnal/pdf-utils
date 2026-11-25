@@ -116,19 +116,34 @@ test('opens a PDF and supports page navigation, local search, and zoom', async (
   await expect(page.getByRole('heading', { name: /Your documents/ })).toBeVisible();
 });
 
-test('opens the original local PDF in the browser viewer for printing', async ({ page }) => {
+test('opens the original local PDF in a new tab for native printing', async ({ page }) => {
   await visitHome(page);
   await openTestPdf(page);
 
-  const popupPromise = page.waitForEvent('popup');
-  await page.getByRole('button', { name: 'Open PDF for printing' }).click();
-  const printTab = await popupPromise;
+  await page.evaluate(() => {
+    (window as any).__printOpenCalls = [];
+    window.open = ((url: string | URL, target?: string) => {
+      (window as any).__printOpenCalls.push({ url: String(url), target: target ?? '' });
+      return { opener: null } as unknown as Window;
+    }) as typeof window.open;
+  });
 
-  await expect.poll(() => printTab.url()).toContain('blob:');
+  await page.getByRole('button', { name: 'Open PDF for printing' }).click();
+  const calls = await page.evaluate(() => (window as any).__printOpenCalls as Array<{url: string; target: string}>);
+  expect(calls).toHaveLength(1);
+  expect(calls[0].url).toMatch(/^blob:/);
+  expect(calls[0].target).toBe('_blank');
   await expect(page.locator('[role="status"]').last()).toContainText(
     'Opened the original PDF in a new tab'
   );
-  await printTab.close();
+
+  await page.evaluate(() => {
+    window.open = (() => null) as typeof window.open;
+  });
+  await page.getByRole('button', { name: 'Open PDF for printing' }).click();
+  await expect(page.locator('[role="status"]').last()).toContainText(
+    'The browser blocked the print tab'
+  );
 });
 
 test('rejects a file that does not contain a PDF signature', async ({ page }) => {
