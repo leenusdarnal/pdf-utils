@@ -69,8 +69,8 @@
   let selectedAnnotationId: string | null = null;
   let pendingHighlightRects: NormalizedRect[] = [];
   let isAddingNote = false;
-  let drawingTool: 'rectangle' | 'arrow' | null = null;
-  let drawingStart: { pointerId: number; tool: 'rectangle' | 'arrow'; point: NormalizedPoint } | null = null;
+  let drawingTool: 'rectangle' | 'arrow' | 'freehand' | null = null;
+  let drawingStart: { pointerId: number; tool: 'rectangle' | 'arrow' | 'freehand'; point: NormalizedPoint; points: NormalizedPoint[] } | null = null;
   let drawingPreviewEnd: NormalizedPoint | null = null;
   let editingNoteId: string | null = null;
   let newNoteId: string | null = null;
@@ -470,7 +470,7 @@
     drawingPreviewEnd = null;
   }
 
-  function toggleDrawingTool(tool: 'rectangle' | 'arrow') {
+  function toggleDrawingTool(tool: 'rectangle' | 'arrow' | 'freehand') {
     drawingTool = drawingTool === tool ? null : tool;
     isAddingNote = false;
     drawingStart = null;
@@ -486,16 +486,18 @@
       unrotatedPageViewport
     ) {
       const bounds = canvasElement.getBoundingClientRect();
+      const point = viewportPointToNormalized(
+        { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
+        renderedPageViewport,
+        unrotatedPageViewport
+      );
       drawingStart = {
         pointerId: event.pointerId,
         tool: drawingTool,
-        point: viewportPointToNormalized(
-          { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
-          renderedPageViewport,
-          unrotatedPageViewport
-        )
+        point,
+        points: [point]
       };
-      drawingPreviewEnd = drawingStart.point;
+      drawingPreviewEnd = point;
       try {
         (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
       } catch {
@@ -672,11 +674,18 @@
       unrotatedPageViewport
     ) {
       const bounds = canvasElement.getBoundingClientRect();
-      drawingPreviewEnd = viewportPointToNormalized(
+      const point = viewportPointToNormalized(
         { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
         renderedPageViewport,
         unrotatedPageViewport
       );
+      drawingPreviewEnd = point;
+      if (drawingStart.tool === 'freehand') {
+        const last = drawingStart.points[drawingStart.points.length - 1];
+        if (Math.hypot(point.x - last.x, point.y - last.y) >= 0.001 && drawingStart.points.length < 10_000) {
+          drawingStart.points = [...drawingStart.points, point];
+        }
+      }
       return;
     }
 
@@ -792,7 +801,17 @@
         color: '#2463eb',
         opacity: 1
       };
-      if (start.tool === 'rectangle') {
+      if (start.tool === 'freehand') {
+        const points = [...start.points];
+        if (points.length < 2) points.push(end);
+        if (points.length < 2) return;
+        annotationHistory.add({
+          ...base,
+          type: 'freehand',
+          points,
+          strokeWidth: 0.004
+        });
+      } else if (start.tool === 'rectangle') {
         const x = Math.min(start.point.x, end.x);
         const y = Math.min(start.point.y, end.y);
         const width = Math.abs(end.x - start.point.x);
@@ -1006,6 +1025,7 @@
     >{isAddingNote ? 'Click on page…' : 'Place note'}</button>
     <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw rectangle" aria-pressed={drawingTool === 'rectangle'} disabled={isLoading} onclick={() => toggleDrawingTool('rectangle')}>Rectangle</button>
     <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw arrow" aria-pressed={drawingTool === 'arrow'} disabled={isLoading} onclick={() => toggleDrawingTool('arrow')}>Arrow</button>
+    <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw freehand" aria-pressed={drawingTool === 'freehand'} disabled={isLoading} onclick={() => toggleDrawingTool('freehand')}>Draw</button>
     <span class="h-5 w-px bg-[#e7e9ee]" aria-hidden="true"></span>
     <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Undo annotation" disabled={!canUndoAnnotations} onclick={undoAnnotation}>Undo</button>
     <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Redo annotation" disabled={!canRedoAnnotations} onclick={redoAnnotation}>Redo</button>
@@ -1013,7 +1033,7 @@
     {#if isAddingNote}
       <span class="w-full text-[10px] text-brand-700" role="status">Select a point on the page to place a note.</span>
     {:else if drawingTool}
-      <span class="w-full text-[10px] text-brand-700" role="status">Drag on the page to draw a {drawingTool}.</span>
+      <span class="w-full text-[10px] text-brand-700" role="status">{drawingTool === 'freehand' ? 'Drag on the page to draw freehand.' : `Drag on the page to draw a ${drawingTool}.`}</span>
     {:else if pendingHighlightRects.length > 0}
       <span class="text-[10px] text-brand-700" role="status">Text selected. Add a highlight to save it.</span>
     {/if}
@@ -1099,7 +1119,12 @@
               {#if drawingStart && drawingPreviewEnd}
                 {@const previewStart = normalizedPointToViewport(drawingStart.point, unrotatedPageViewport, renderedPageViewport)}
                 {@const previewEnd = normalizedPointToViewport(drawingPreviewEnd, unrotatedPageViewport, renderedPageViewport)}
-                {#if drawingStart.tool === 'rectangle'}
+                {#if drawingStart.tool === 'freehand'}
+                  {@const previewPoints = [...drawingStart.points, drawingPreviewEnd].map((point) => normalizedPointToViewport(point, unrotatedPageViewport, renderedPageViewport)).map((point) => `${point.x},${point.y}`).join(' ')}
+                  <svg class="absolute inset-0 h-full w-full" viewBox={`0 0 ${renderedPageViewport.width} ${renderedPageViewport.height}`} aria-hidden="true">
+                    <polyline points={previewPoints} fill="none" stroke="#2463eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                {:else if drawingStart.tool === 'rectangle'}
                   <div
                     class="absolute border-2 border-dashed border-blue-600 bg-blue-500/10"
                     style={`left:${Math.min(previewStart.x, previewEnd.x)}px;top:${Math.min(previewStart.y, previewEnd.y)}px;width:${Math.abs(previewEnd.x - previewStart.x)}px;height:${Math.abs(previewEnd.y - previewStart.y)}px;`}
@@ -1134,6 +1159,18 @@
                       }}
                     ></div>
                   {/each}
+                {:else if displayed.type === 'freehand'}
+                  {@const mappedPoints = displayed.points.map((point) => normalizedPointToViewport(point, unrotatedPageViewport, renderedPageViewport))}
+                  {@const pathPoints = mappedPoints.map((point) => `${point.x},${point.y}`).join(' ')}
+                  <svg
+                    class="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+                    viewBox={`0 0 ${renderedPageViewport.width} ${renderedPageViewport.height}`}
+                    data-annotation-id={annotation.id}
+                    data-annotation-type="freehand"
+                    aria-label="Freehand annotation"
+                  >
+                    <polyline points={pathPoints} fill="none" stroke={displayed.color} stroke-width={Math.max(2, displayed.strokeWidth * Math.min(renderedPageViewport.width, renderedPageViewport.height))} stroke-linecap="round" stroke-linejoin="round" opacity={displayed.opacity} />
+                  </svg>
                 {:else if displayed.type === 'rectangle'}
                   {@const mapped = normalizedRectToViewport(displayed.rect, unrotatedPageViewport, renderedPageViewport)}
                   <div class="pointer-events-auto absolute touch-none cursor-move border-2 border-blue-600 bg-blue-500/10" data-annotation-id={annotation.id} data-annotation-type="rectangle" style={`left:${mapped.x}px;top:${mapped.y}px;width:${mapped.width}px;height:${mapped.height}px;opacity:${displayed.opacity};outline:${selectedAnnotationId === annotation.id ? '2px solid #7165d5' : 'none'};outline-offset:2px;`} role="button" tabindex="0" aria-label="Select rectangle annotation" aria-pressed={selectedAnnotationId === annotation.id} onpointerdown={(event) => beginAnnotationDrag(event, annotation)} onclick={() => selectAnnotation(annotation)} onkeydown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectAnnotation(annotation); } }}></div>

@@ -355,6 +355,32 @@ test('draws rectangle and arrow annotations and supports undo/redo', async ({ pa
 });
 
 
+test('draws freehand annotations and supports undo/redo', async ({ page }) => {
+  await visitHome(page);
+  await openTestPdf(page);
+
+  const pageSurface = page.locator('[data-page-surface]');
+  const bounds = await pageSurface.boundingBox();
+  expect(bounds).not.toBeNull();
+
+  await page.getByRole('button', { name: 'Draw freehand' }).click();
+  await page.mouse.move(bounds!.x + 110, bounds!.y + 150);
+  await page.mouse.down();
+  await page.mouse.move(bounds!.x + 145, bounds!.y + 180, { steps: 4 });
+  await page.mouse.move(bounds!.x + 185, bounds!.y + 155, { steps: 4 });
+  await page.mouse.move(bounds!.x + 220, bounds!.y + 205, { steps: 4 });
+  await page.mouse.up();
+
+  const stroke = page.locator('[data-annotation-type="freehand"]');
+  await expect(stroke).toBeVisible();
+  await expect(stroke.locator('polyline')).toHaveAttribute('points', /,/);
+
+  await page.getByRole('button', { name: 'Undo annotation' }).click();
+  await expect(stroke).toHaveCount(0);
+  await page.getByRole('button', { name: 'Redo annotation' }).click();
+  await expect(stroke).toBeVisible();
+});
+
 test('draws shapes using touch gestures on a mobile-sized viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await visitHome(page);
