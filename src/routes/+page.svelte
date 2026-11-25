@@ -1,9 +1,11 @@
 <script lang="ts">
   import { base } from '$app/paths';
+  import { onMount } from 'svelte';
   import PdfViewer from '$lib/components/PdfViewer.svelte';
   import PageOrganizer from '$lib/components/PageOrganizer.svelte';
   import MergePdf from '$lib/components/MergePdf.svelte';
   import SplitPdf from '$lib/components/SplitPdf.svelte';
+  import PdfToImages from '$lib/components/PdfToImages.svelte';
   import { hasPdfHeader } from '$lib/pdf/viewer-utils';
 
   let isDragging = false;
@@ -12,8 +14,45 @@
   let organizeFile: File | null = null;
   let mergeMode = false;
   let splitMode = false;
+  let imageMode = false;
+  let isDarkMode = false;
+  let appReady = false;
   let organizerInput: HTMLInputElement;
   let fileError = '';
+
+  function applyTheme(theme: 'light' | 'dark') {
+    isDarkMode = theme === 'dark';
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem('pdf-utils-theme', theme);
+    } catch {
+      // The current session theme still works when storage is unavailable.
+    }
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      'content',
+      isDarkMode ? '#10131b' : '#f7f8fa'
+    );
+  }
+
+  onMount(() => {
+    let preferredTheme: 'light' | 'dark' = 'light';
+    try {
+      const savedTheme = localStorage.getItem('pdf-utils-theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        preferredTheme = savedTheme;
+      } else if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+        preferredTheme = 'dark';
+      }
+    } catch {
+      preferredTheme = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    applyTheme(preferredTheme);
+    appReady = true;
+  });
+
+  function toggleTheme() {
+    applyTheme(isDarkMode ? 'light' : 'dark');
+  }
 
   async function acceptFile(file: File | undefined) {
     if (!file || isValidating) return;
@@ -88,16 +127,30 @@
       </span>
       <span>pdf<span class="font-medium text-[#8c91a0]">utils</span></span>
     </a>
-    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode}
+    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode && !imageMode}
       <nav class="ml-auto flex h-full items-center gap-[30px] max-[760px]:gap-[17px]" aria-label="Main navigation">
         <a class="relative inline-flex h-full items-center text-[13px] font-semibold text-ink no-underline after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-0.5 after:bg-brand-700 max-[760px]:text-[11px]" href="#tools">Tools</a>
         <a class="inline-flex h-full items-center text-[13px] font-semibold text-muted no-underline transition-colors hover:text-brand-700 max-[760px]:text-[11px] max-[480px]:hidden" href="#how-it-works">How it works</a>
       </nav>
     {/if}
     <div class="ml-auto flex items-center gap-2 rounded-full border border-[#e2e5ea] bg-white px-[13px] py-[9px] text-[11px] font-semibold text-[#626977] max-[760px]:px-[10px] max-[760px]:py-2 max-[760px]:text-[0px] max-[480px]:hidden"><span class="size-1.5 rounded-full bg-success-500 max-[760px]:size-[7px]"></span> Files stay on your device</div>
+    <button
+      type="button"
+      class="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-[#e2e5ea] bg-white text-[#535b69] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 max-[480px]:size-9"
+      aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-pressed={isDarkMode}
+      title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+      onclick={toggleTheme}
+    >
+      {#if isDarkMode}
+        <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      {:else}
+        <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.8 8.8 0 1 0 20.2 15.1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      {/if}
+    </button>
   </header>
 
-  <main>
+  <main data-app-ready={appReady}>
     {#if selectedFile}
       <PdfViewer file={selectedFile} onClose={closeDocument} />
     {:else if organizeFile}
@@ -106,6 +159,8 @@
       <MergePdf onClose={() => (mergeMode = false)} />
     {:else if splitMode}
       <SplitPdf onClose={() => (splitMode = false)} />
+    {:else if imageMode}
+      <PdfToImages onClose={() => (imageMode = false)} />
     {:else}
       <section class="py-[77px] text-center max-[760px]:pb-[54px] max-[760px]:pt-[61px] max-[480px]:pt-[49px]">
         <div class="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[1.7px] text-brand-600 max-[480px]:text-[8px] max-[480px]:tracking-[1.2px]"><span class="h-px w-[22px] bg-brand-300"></span> A calmer way to work with PDFs</div>
@@ -180,8 +235,8 @@
           </article>
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
             <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#e9f8f1] text-[#39a17d]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M12 3.5v11m0 0 4-4m-4 4-4-4M5 15.5v3A2 2 0 0 0 7 20.5h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Convert & export</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Move between PDF and common image formats.</p></div>
-            <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Planned</span>
+            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">PDF to images</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Export pages as PNG or JPEG with resolution controls.</p></div>
+            <button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open PDF to images tool" onclick={() => (imageMode = true)}>Open tool</button>
           </article>
         </div>
       </section>

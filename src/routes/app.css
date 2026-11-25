@@ -78,3 +78,96 @@
     scroll-behavior: auto;
   }
 }
+
+
+/* User-selectable dark theme. Semantic tokens cover new UI; targeted utility
+   overrides keep older tool components readable without rewriting every view. */
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --color-canvas: #10131b;
+  --color-surface: #191f2b;
+  --color-ink: #e8ebf2;
+  --color-muted: #aab2c0;
+  --color-subtle: #8f99a9;
+  --color-line: #343c4b;
+}
+
+html[data-theme='dark'] body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+html[data-theme='dark'] .bg-white,
+html[data-theme='dark'] [class~='bg-white/80'] {
+  background-color: var(--color-surface) !important;
+}
+
+html[data-theme='dark'] [class*='bg-[#'] {
+  background-color: #202735 !important;
+}
+
+html[data-theme='dark'] .bg-brand-50 {
+  background-color: #282541 !important;
+}
+
+html[data-theme='dark'] .bg-brand-100 {
+  background-color: #302c50 !important;
+}
+
+html[data-theme='dark'] .bg-brand-200 {
+  background-color: #3a355c !important;
+}
+
+html[data-theme='dark'] [class*='border-[#'] {
+  border-color: var(--color-line) !important;
+}
+
+html[data-theme='dark'] [class*='text-[#'] {
+  color: #c4cbd7 !important;
+}
+
+html[data-theme='dark'] input:not([type='range']),
+html[data-theme='dark'] select,
+html[data-theme='dark'] textarea {
+  color: var(--color-ink);
+  background-color: #151b26;
+  border-color: var(--color-line);
+}
+
+html[data-theme='dark'] input::placeholder,
+html[data-theme='dark'] textarea::placeholder {
+  color: #8792a2;
+}
+
+html[data-theme='dark'] .text-ink {
+  color: var(--color-ink);
+}
+
+html[data-theme='dark'] .text-muted {
+  color: var(--color-muted);
+}
+
+html[data-theme='dark'] .text-subtle {
+  color: var(--color-subtle);
+}
+
+html[data-theme='dark'] .text-danger-600 {
+  color: #ff9a9a;
+}
+
+html[data-theme='dark'] .border-line {
+  border-color: var(--color-line);
+}
+
+html[data-theme='dark'] .bg-canvas {
+  background-color: var(--color-canvas);
+}
+
+html[data-theme='dark'] a {
+  color: inherit;
+}
+
+html[data-theme='dark'] ::selection {
+  color: #ffffff;
+  background: #5b50bc;
+}
