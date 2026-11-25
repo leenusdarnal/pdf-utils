@@ -27,16 +27,17 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Bound each rendered page canvas to a 16-megapixel budget and a maximum device scale of 2.
 - Organize a PDF by reordering, rotating, duplicating, and deleting pages; export the arranged document or selected pages as a new PDF.
 - Merge two or more PDFs locally. The user can add files, change their merge order, remove files, and download a newly combined PDF.
+- Split one PDF into multiple new files using page expressions such as `1-3` or `1, 3-5`. Each output is generated locally and can be downloaded separately.
 - Add text highlights from selected PDF text, add/select/move/edit/delete text notes, and draw freehand, rectangle, and arrow annotations. Annotation overlays use normalized page coordinates and map through PDF.js viewport transforms for zoom and page rotation. Undo/redo is available while the document remains open. Annotation changes stay in memory and are not yet written into the source PDF.
 
-**Not implemented yet:** annotation persistence after closing the document and annotation export; splitting a PDF into multiple independently downloadable ranges, compression, watermarking, page numbering, and image conversion. The organizer can extract selected pages into one new PDF, but a multi-range split workflow is still pending. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current annotations or create an annotated copy. Playwright covers the main Chromium workflows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** annotation persistence after closing the document and annotation export; compression, watermarking, page numbering, and image conversion. The organizer can extract selected pages into one new PDF, but a multi-range split workflow is still pending. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current annotations or create an annotated copy. Playwright covers the main Chromium workflows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
 | Area | Planned scope |
 | --- | --- |
 | View | Text layer, search, page navigation, zoom, fit modes, document info, print |
-| Organize | Merge PDFs, reorder/rotate/duplicate/delete pages, extract selected pages (implemented); multi-range splitting remains planned |
+| Organize | Merge PDFs, split by custom page ranges into separate files, reorder/rotate/duplicate/delete pages, and extract selected pages |
 | Edit | Text highlights and notes (implemented); text/image editing, shapes, freehand drawing, comments, persistence, and PDF export remain planned |
 | Transform | Compress, flatten where appropriate, watermark, page numbering |
 | Convert | Images to PDF; PDF pages to PNG/JPEG; assess office-document conversion later |
@@ -53,7 +54,7 @@ The application uses SvelteKit, Svelte 5, TypeScript, Tailwind CSS v4, and Vite.
 - **Viewer component:** `src/lib/components/PdfViewer.svelte` owns the main page state, canvas rendering, navigation, zoom, local document metadata display, and render cleanup.
 - **Thumbnail navigation:** `ThumbnailSidebar.svelte` virtualizes the page list; `PdfThumbnail.svelte` renders only the visible preview canvases.
 - **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature, clamps page/zoom values, and calculates the bounded thumbnail window.
-- **Document operations:** `src/lib/pdf/merge-pdfs.ts` merges input PDFs through `pdf-lib`; `PageOrganizer.svelte` currently owns the page-order preview and selected-page export flow. Keep binary manipulation in service modules rather than UI components.
+- **Document operations:** `src/lib/pdf/merge-pdfs.ts` merges input PDFs, while `src/lib/pdf/split-pdf.ts` parses validated page ranges and creates independent outputs through `pdf-lib`; `PageOrganizer.svelte` owns the page-order preview and selected-page export flow. Keep binary manipulation in service modules rather than UI components.
 - **Annotation model:** `src/lib/annotations/annotations.ts` defines validated highlight, text-note, freehand, rectangle, and arrow types plus a bounded undo/redo history. Coordinates are normalized to the unrotated page bounds and remain independent of screen pixels.
 - **Persistence:** no persistence by default; optional IndexedDB drafts only when the workflow requires recovery and includes clear-data controls.
 - **Workers:** expensive operations should move off the main thread where supported, with progress and cancellation.
@@ -86,7 +87,7 @@ npm run check
 npm run build
 ```
 
-End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs regression checks for PDF import/rendering, continuous scrolling, search, zoom, mobile layout, annotations, multi-file merge order, and merged output page order before the production build.
+End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs regression checks for PDF import/rendering, continuous scrolling, search, zoom, mobile layout, annotations, multi-file merge order, split-range validation, and split-output page count/order before the production build.
 
 Update [PROJECT_PLAN.md](./PROJECT_PLAN.md) with implementation status. The phased viewer design and task plan are under `docs/superpowers/`.
 
