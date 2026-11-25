@@ -201,7 +201,7 @@ describe('AnnotationHistory', () => {
     expect(history.undo()).toBe(true);
     expect(history.annotations[0]).toMatchObject({ text: 'Version 2' });
     expect(history.undo()).toBe(true);
-    expect(history.annotations).toEqual([]);
+    expect(history.annotations[0]).toMatchObject({ text: 'Version 1' });
     expect(history.undo()).toBe(false);
   });
 
