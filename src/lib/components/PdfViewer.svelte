@@ -225,16 +225,15 @@
     if (isLoading || destroyed) return;
 
     const pdfUrl = URL.createObjectURL(file);
-    const printWindow = window.open('about:blank', '_blank');
+    const printWindow = window.open(pdfUrl, '_blank');
     if (!printWindow) {
       URL.revokeObjectURL(pdfUrl);
       statusText = 'The browser blocked the print tab. Allow pop-ups and try again.';
       return;
     }
 
-    // Detach the new tab from the app before navigating it to the local PDF.
+    // Prevent the newly opened PDF tab from retaining a reference to the app.
     printWindow.opener = null;
-    printWindow.location.replace(pdfUrl);
     statusText = 'Opened the original PDF in a new tab. Use the browser’s Print control.';
     // Keep the Blob URL alive long enough for the browser PDF viewer to load and print.
     window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 5 * 60 * 1000);
