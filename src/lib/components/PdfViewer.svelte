@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import ThumbnailSidebar from '$lib/components/ThumbnailSidebar.svelte';
   import { createPdfDocumentTask } from '$lib/pdf/pdfjs-client';
   import type { PdfDocument, PdfDocumentTask, PdfPage, PdfRenderTask } from '$lib/pdf/pdfjs-client';
   import { clampPageNumber, clampZoom } from '$lib/pdf/viewer-utils';
@@ -242,16 +243,26 @@
       <button type="button" class="viewer-button" onclick={onClose}>Return to tools</button>
     </div>
   {:else}
-    <div class="viewer-stage" bind:this={viewerViewport} role="region" aria-label="Document page area">
-      {#if isLoading}
-        <div class="viewer-loading-card">
-          <span class="viewer-spinner large" aria-hidden="true"></span>
-          <strong>Opening your PDF</strong>
-          <p>Your document is being processed on this device.</p>
-        </div>
+    <div class="viewer-body">
+      {#if pdfDocument && totalPages > 0}
+        <ThumbnailSidebar
+          document={pdfDocument}
+          {totalPages}
+          {currentPage}
+          onSelectPage={goToPage}
+        />
       {/if}
-      <div class="viewer-canvas-wrap" class:rendering={isRendering}>
-        <canvas bind:this={canvasElement} class="viewer-canvas" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
+      <div class="viewer-stage" bind:this={viewerViewport} role="region" aria-label="Document page area">
+        {#if isLoading}
+          <div class="viewer-loading-card">
+            <span class="viewer-spinner large" aria-hidden="true"></span>
+            <strong>Opening your PDF</strong>
+            <p>Your document is being processed on this device.</p>
+          </div>
+        {/if}
+        <div class="viewer-canvas-wrap" class:rendering={isRendering}>
+          <canvas bind:this={canvasElement} class="viewer-canvas" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
+        </div>
       </div>
     </div>
   {/if}
