@@ -240,89 +240,89 @@
   <title>{file.name} — PDF Utils</title>
 </svelte:head>
 
-<section class="viewer-shell" aria-label="PDF viewer">
-  <header class="viewer-toolbar">
-    <div class="viewer-file-info">
-      <span class="viewer-file-icon" aria-hidden="true">PDF</span>
-      <div class="viewer-file-meta">
-        <strong title={file.name}>{file.name}</strong>
-        <span>{formatFileSize(file.size)} · {totalPages > 0 ? `${totalPages} pages` : 'Local document'}</span>
+<section class="mx-auto my-7 mb-10 flex min-h-[min(78vh,900px)] w-full flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-[0_12px_34px_rgb(29_35_51_/_0.05)] max-[760px]:my-[18px] max-[760px]:mb-[30px] max-[760px]:min-h-[74vh]" aria-label="PDF viewer">
+  <header class="flex min-h-[76px] items-center justify-between gap-[18px] border-b border-[#e9ebf0] bg-white px-[18px] py-3 max-[760px]:flex-wrap max-[760px]:gap-3 max-[760px]:p-3 max-[420px]:p-[10px]">
+    <div class="flex min-w-0 items-center gap-[11px] max-[760px]:basis-[calc(100%-100px)]">
+      <span class="grid size-[42px] shrink-0 place-items-center rounded-lg border border-brand-200 bg-brand-50 text-[9px] font-extrabold tracking-[.3px] text-brand-600" aria-hidden="true">PDF</span>
+      <div class="flex min-w-0 flex-col gap-1">
+        <strong class="max-w-[260px] overflow-hidden text-ellipsis whitespace-nowrap text-[12px] font-semibold text-[#292d38] max-[760px]:max-w-[min(58vw,360px)]" title={file.name}>{file.name}</strong>
+        <span class="text-[10px] text-subtle">{formatFileSize(file.size)} · {totalPages > 0 ? `${totalPages} pages` : 'Local document'}</span>
       </div>
     </div>
 
-    <div class="viewer-controls" aria-label="PDF controls">
-      <div class="viewer-control-group" aria-label="Page navigation">
-        <button type="button" class="viewer-button icon-button" aria-label="Previous page" title="Previous page" disabled={isLoading || targetPage <= 1} onclick={() => goToPage(targetPage - 1)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7" /></svg>
+    <div class="flex items-center justify-center gap-[14px] max-[760px]:order-3 max-[760px]:w-full max-[760px]:justify-between max-[760px]:gap-[7px] max-[760px]:border-t max-[760px]:border-[#f0f1f4] max-[760px]:pt-[10px]" aria-label="PDF controls">
+      <div class="flex items-center gap-[7px] max-[420px]:gap-[3px]" aria-label="Page navigation">
+        <button type="button" class="inline-flex size-[34px] shrink-0 items-center justify-center rounded-lg border border-line bg-white p-0 text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Previous page" title="Previous page" disabled={isLoading || targetPage <= 1} onclick={() => goToPage(targetPage - 1)}>
+          <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7" /></svg>
         </button>
-        <span class="viewer-page-count"><strong>{totalPages ? currentPage : '—'}</strong><span>/</span>{totalPages || '—'}</span>
-        <button type="button" class="viewer-button icon-button" aria-label="Next page" title="Next page" disabled={isLoading || targetPage >= totalPages} onclick={() => goToPage(targetPage + 1)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7" /></svg>
+        <span class="flex min-w-[52px] items-center justify-center gap-1.5 text-[11px] text-[#7c8290]"><strong class="font-semibold text-[#303541] [font-variant-numeric:tabular-nums]">{totalPages ? currentPage : '—'}</strong><span>/</span>{totalPages || '—'}</span>
+        <button type="button" class="inline-flex size-[34px] shrink-0 items-center justify-center rounded-lg border border-line bg-white p-0 text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Next page" title="Next page" disabled={isLoading || targetPage >= totalPages} onclick={() => goToPage(targetPage + 1)}>
+          <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7" /></svg>
         </button>
       </div>
 
-      <span class="viewer-toolbar-divider" aria-hidden="true"></span>
+      <span class="h-6 w-px bg-[#e7e9ee]" aria-hidden="true"></span>
 
-      <div class="viewer-control-group" aria-label="Zoom controls">
-        <button type="button" class="viewer-button icon-button" aria-label="Zoom out" title="Zoom out" disabled={isLoading || zoom <= 0.5} onclick={() => changeZoom(-0.25)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
+      <div class="flex items-center gap-[7px] max-[420px]:gap-[3px]" aria-label="Zoom controls">
+        <button type="button" class="inline-flex size-[34px] shrink-0 items-center justify-center rounded-lg border border-line bg-white p-0 text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Zoom out" title="Zoom out" disabled={isLoading || zoom <= 0.5} onclick={() => changeZoom(-0.25)}>
+          <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
         </button>
-        <span class="viewer-zoom-value" aria-live="off">{Math.round(zoom * 100)}%</span>
-        <button type="button" class="viewer-button icon-button" aria-label="Zoom in" title="Zoom in" disabled={isLoading || zoom >= 3} onclick={() => changeZoom(0.25)}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        <span class="min-w-[43px] text-center text-[10px] text-[#6d7380] [font-variant-numeric:tabular-nums]" aria-live="off">{Math.round(zoom * 100)}%</span>
+        <button type="button" class="inline-flex size-[34px] shrink-0 items-center justify-center rounded-lg border border-line bg-white p-0 text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Zoom in" title="Zoom in" disabled={isLoading || zoom >= 3} onclick={() => changeZoom(0.25)}>
+          <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         </button>
-        <button type="button" class:active={fitToWidth} class="viewer-button fit-button" aria-pressed={fitToWidth} disabled={isLoading} onclick={fitPageToWidth}>Fit width</button>
+        <button type="button" class={`inline-flex min-h-[30px] items-center justify-center rounded-lg border border-line bg-white px-[9px] text-[10px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] max-[420px]:px-[7px] ${fitToWidth ? "border-brand-200 bg-brand-50 text-brand-600" : ""}` } aria-pressed={fitToWidth} disabled={isLoading} onclick={fitPageToWidth}>Fit width</button>
       </div>
     </div>
 
-    <button type="button" class="viewer-button close-button" aria-label="Close document" onclick={onClose}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+    <button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] max-[760px]:ml-auto max-[420px]:min-h-8" aria-label="Close document" onclick={onClose}>
+      <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
       <span>Close</span>
     </button>
   </header>
 
-  <form class="viewer-search" onsubmit={(event) => { event.preventDefault(); void searchDocument(); }}>
-    <label for="pdf-search-input">Find in document</label>
-    <div class="viewer-search-controls">
-      <input id="pdf-search-input" type="search" value={searchQuery} placeholder="Search text…" autocomplete="off" disabled={isLoading || !pdfDocument} oninput={(event) => (searchQuery = (event.currentTarget as HTMLInputElement).value)} />
-      <button type="submit" class="viewer-button" disabled={isLoading || isSearching || !searchQuery.trim()}>Find</button>
-      {#if searchQuery}<button type="button" class="viewer-button" onclick={clearSearch} aria-label="Clear search">Clear</button>{/if}
+  <form class="flex flex-wrap items-center gap-[9px] border-b border-[#e9ebf0] bg-white px-4 py-3 max-[480px]:p-[10px]" onsubmit={(event) => { event.preventDefault(); void searchDocument(); }}>
+    <label class="text-[11px] font-bold text-[#535a68] max-[480px]:w-full" for="pdf-search-input">Find in document</label>
+    <div class="flex min-w-[min(100%,260px)] flex-1 items-center gap-[7px] max-[480px]:min-w-0">
+      <input class="h-[34px] min-w-0 flex-1 rounded-lg border border-[#e0e3ea] bg-[#fbfcfe] px-[10px] text-[12px] text-[#303541] outline-none placeholder:text-[#8a909c] focus-visible:border-brand-300 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-1 disabled:bg-[#f6f7f9] disabled:text-[#9da2ad]" id="pdf-search-input" type="search" value={searchQuery} placeholder="Search text…" autocomplete="off" disabled={isLoading || !pdfDocument} oninput={(event) => (searchQuery = (event.currentTarget as HTMLInputElement).value)} />
+      <button type="submit" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" disabled={isLoading || isSearching || !searchQuery.trim()}>Find</button>
+      {#if searchQuery}<button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" onclick={clearSearch} aria-label="Clear search">Clear</button>{/if}
     </div>
   </form>
   {#if isSearching || searchResults.length > 0 || searchError}
-    <section class="viewer-search-results" aria-label="Search results" aria-live="polite">
+    <section class="max-h-[250px] overflow-auto border-b border-[#e9ebf0] bg-[#fbfbfd]" aria-label="Search results" aria-live="polite">
       {#if isSearching}
-        <p class="search-summary">Searching document text…</p>
+        <p class="m-0 px-4 py-[10px] text-[11px] text-[#858b98]">Searching document text…</p>
       {:else if searchResults.length > 0}
-        <p class="search-summary">{searchResults.length === 100 ? "100+ matches (showing first 100)" : `${searchResults.length} ${searchResults.length === 1 ? "match" : "matches"} found`}</p>
-        <ol>
+        <p class="m-0 px-4 py-[10px] text-[11px] text-[#858b98]">{searchResults.length === 100 ? "100+ matches (showing first 100)" : `${searchResults.length} ${searchResults.length === 1 ? "match" : "matches"} found`}</p>
+        <ol class="grid list-none gap-0.5 px-2 pb-2">
           {#each searchResults as result, index (`${result.pageNumber}-${result.index}-${index}`)}
-            <li><button type="button" class="search-result" onclick={() => goToPage(result.pageNumber)}>
-              <span class="search-result-page">Page {result.pageNumber}</span>
-              <span class="search-result-snippet">{result.snippet.slice(0, result.matchStart)}<mark>{result.matchText}</mark>{result.snippet.slice(result.matchStart + result.matchText.length)}</span>
+            <li><button type="button" class="flex w-full items-start gap-3 rounded-lg border border-transparent bg-transparent px-2 py-[9px] text-left text-[#515765] hover:border-brand-100 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-1 max-[480px]:gap-[7px] max-[480px]:px-[5px] max-[480px]:py-2" onclick={() => goToPage(result.pageNumber)}>
+              <span class="w-[54px] shrink-0 text-[10px] font-bold text-brand-600 max-[480px]:w-12">Page {result.pageNumber}</span>
+              <span class="min-w-0 text-[11px] leading-[1.5] text-[#6d7380] [overflow-wrap:anywhere]">{result.snippet.slice(0, result.matchStart)}<mark class="rounded-sm bg-brand-100 px-px text-brand-900">{result.matchText}</mark>{result.snippet.slice(result.matchStart + result.matchText.length)}</span>
             </button></li>
           {/each}
         </ol>
       {:else}
-        <p class="search-summary" role="status">{searchError}</p>
+        <p class="m-0 px-4 py-[10px] text-[11px] text-[#858b98]" role="status">{searchError}</p>
       {/if}
     </section>
   {/if}
-  <div class="viewer-status" role="status" aria-live="polite" aria-atomic="true">
+  <div class="flex min-h-[35px] items-center justify-center gap-2 border-b border-[#e9ebf0] bg-[#fbfbfd] text-[10px] text-subtle [font-variant-numeric:tabular-nums]" role="status" aria-live="polite" aria-atomic="true">
     {#if isLoading}
-      <span class="viewer-spinner" aria-hidden="true"></span>
+      <span class="size-[15px] animate-spin rounded-full border-2 border-brand-100 border-t-brand-600 motion-reduce:animate-none" aria-hidden="true"></span>
     {/if}
     {statusText}
   </div>
 
   {#if errorMessage}
-    <div class="viewer-error" role="alert">
-      <strong>Unable to display this document</strong>
-      <p>{errorMessage}</p>
-      <button type="button" class="viewer-button" onclick={onClose}>Return to tools</button>
+    <div class="flex min-h-[320px] flex-1 flex-col items-center justify-center px-5 py-9 text-center" role="alert">
+      <strong class="text-[14px] font-bold text-[#343946]">Unable to display this document</strong>
+      <p class="mb-[18px] mt-2 max-w-[420px] text-[12px] leading-[1.6] text-[#7d8491]">{errorMessage}</p>
+      <button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" onclick={onClose}>Return to tools</button>
     </div>
   {:else}
-    <div class="viewer-body">
+    <div class="flex min-h-[520px] min-w-0 flex-1 max-[760px]:min-h-[460px]">
       {#if pdfDocument && totalPages > 0}
         <ThumbnailSidebar
           document={pdfDocument}
@@ -331,16 +331,16 @@
           onSelectPage={goToPage}
         />
       {/if}
-      <div class="viewer-stage" bind:this={viewerViewport} role="region" aria-label="Document page area">
+      <div class="flex min-h-[520px] min-w-0 flex-1 flex-col items-center overflow-auto overscroll-contain bg-[#eef0f4] p-[26px] max-h-[78vh] max-[760px]:min-h-[460px] max-[760px]:max-h-[70vh] max-[760px]:items-start max-[760px]:p-4 max-[420px]:min-h-[390px] max-[420px]:p-[10px]" bind:this={viewerViewport} role="region" aria-label="Document page area">
         {#if isLoading}
-          <div class="viewer-loading-card">
-            <span class="viewer-spinner large" aria-hidden="true"></span>
-            <strong>Opening your PDF</strong>
-            <p>Your document is being processed on this device.</p>
+          <div class="m-auto flex min-h-[180px] flex-col items-center justify-center gap-2 text-center text-[#5e6471]">
+            <span class="size-7 animate-spin rounded-full border-[3px] border-brand-100 border-t-brand-600 motion-reduce:animate-none" aria-hidden="true"></span>
+            <strong class="mt-1.5 text-[13px] font-bold text-[#343946]">Opening your PDF</strong>
+            <p class="m-0 text-[11px] text-[#89909d]">Your document is being processed on this device.</p>
           </div>
         {/if}
-        <div class="viewer-canvas-wrap" class:rendering={isRendering}>
-          <canvas bind:this={canvasElement} class="viewer-canvas" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
+        <div class={`my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } >
+          <canvas bind:this={canvasElement} class="block max-w-none bg-white" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
         </div>
       </div>
     </div>

@@ -54,7 +54,7 @@
 </script>
 
 {#if failed}
-  <span class="thumbnail-fallback" aria-hidden="true">Preview unavailable</span>
+  <span class="px-[6px] py-[6px] text-center text-[9px] text-[#969ba6]" aria-hidden="true">Preview unavailable</span>
 {:else}
-  <canvas bind:this={canvasElement} aria-hidden="true"></canvas>
+  <canvas class="block max-h-full max-w-full object-contain" bind:this={canvasElement} aria-hidden="true"></canvas>
 {/if}
