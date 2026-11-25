@@ -4,6 +4,7 @@
   import { createPdfDocumentTask } from '$lib/pdf/pdfjs-client';
   import type { PdfDocument, PdfDocumentTask, PdfPage, PdfRenderTask } from '$lib/pdf/pdfjs-client';
   import { clampPageNumber, clampZoom } from '$lib/pdf/viewer-utils';
+  import { findTextMatches, type PdfTextMatch } from '$lib/pdf/pdf-search';
 
   export let file: File;
   export let onClose: () => void;
@@ -28,6 +29,11 @@
   let zoom = 1;
   let statusText = 'Preparing your document…';
   let errorMessage = '';
+  let searchQuery = '';
+  let searchResults: PdfTextMatch[] = [];
+  let isSearching = false;
+  let searchError = '';
+  let searchSequence = 0;
 
   onMount(() => {
     const loadDocument = async () => {
@@ -70,6 +76,7 @@
     return () => {
       destroyed = true;
       renderSequence += 1;
+      searchSequence += 1;
       resizeObserver?.disconnect();
       renderTask?.cancel();
       if (loadingTask) {
@@ -178,6 +185,51 @@
     void renderPage(targetPage, true);
   }
 
+  async function searchDocument() {
+    const document = pdfDocument;
+    const query = searchQuery.trim();
+    const sequence = ++searchSequence;
+    searchResults = [];
+    searchError = '';
+
+    if (!document || !query || destroyed) {
+      isSearching = false;
+      return;
+    }
+
+    isSearching = true;
+    try {
+      const results: PdfTextMatch[] = [];
+      for (let pageNumber = 1; pageNumber <= totalPages && results.length < 100; pageNumber += 1) {
+        if (destroyed || sequence !== searchSequence) return;
+        const page = await document.getPage(pageNumber);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item) => ('str' in item ? item.str : ''))
+          .filter(Boolean)
+          .join(' ');
+        results.push(...findTextMatches(pageText, query, pageNumber, 100 - results.length));
+      }
+
+      if (!destroyed && sequence === searchSequence) {
+        searchResults = results.slice(0, 100);
+        if (searchResults.length === 0) searchError = 'No matches found in this document.';
+      }
+    } catch {
+      if (!destroyed && sequence === searchSequence) searchError = 'Text search could not complete for this document.';
+    } finally {
+      if (!destroyed && sequence === searchSequence) isSearching = false;
+    }
+  }
+
+  function clearSearch() {
+    searchSequence += 1;
+    searchQuery = '';
+    searchResults = [];
+    searchError = '';
+    isSearching = false;
+  }
+
   function formatFileSize(size: number) {
     if (size < 1_048_576) return `${Math.max(1, Math.round(size / 1_024))} KB`;
     return `${(size / 1_048_576).toFixed(2)} MB`;
@@ -229,6 +281,33 @@
     </button>
   </header>
 
+  <form class="viewer-search" onsubmit={(event) => { event.preventDefault(); void searchDocument(); }}>
+    <label for="pdf-search-input">Find in document</label>
+    <div class="viewer-search-controls">
+      <input id="pdf-search-input" type="search" value={searchQuery} placeholder="Search text…" autocomplete="off" disabled={isLoading || !pdfDocument} oninput={(event) => (searchQuery = (event.currentTarget as HTMLInputElement).value)} />
+      <button type="submit" class="viewer-button" disabled={isLoading || isSearching || !searchQuery.trim()}>Find</button>
+      {#if searchQuery}<button type="button" class="viewer-button" onclick={clearSearch} aria-label="Clear search">Clear</button>{/if}
+    </div>
+  </form>
+  {#if isSearching || searchResults.length > 0 || searchError}
+    <section class="viewer-search-results" aria-label="Search results" aria-live="polite">
+      {#if isSearching}
+        <p class="search-summary">Searching document text…</p>
+      {:else if searchResults.length > 0}
+        <p class="search-summary">{searchResults.length === 100 ? "100+ matches (showing first 100)" : `${searchResults.length} ${searchResults.length === 1 ? "match" : "matches"} found`}</p>
+        <ol>
+          {#each searchResults as result, index (`${result.pageNumber}-${result.index}-${index}`)}
+            <li><button type="button" class="search-result" onclick={() => goToPage(result.pageNumber)}>
+              <span class="search-result-page">Page {result.pageNumber}</span>
+              <span class="search-result-snippet">{result.snippet.slice(0, result.matchStart)}<mark>{result.matchText}</mark>{result.snippet.slice(result.matchStart + result.matchText.length)}</span>
+            </button></li>
+          {/each}
+        </ol>
+      {:else}
+        <p class="search-summary" role="status">{searchError}</p>
+      {/if}
+    </section>
+  {/if}
   <div class="viewer-status" role="status" aria-live="polite" aria-atomic="true">
     {#if isLoading}
       <span class="viewer-spinner" aria-hidden="true"></span>
