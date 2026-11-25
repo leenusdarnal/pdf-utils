@@ -424,4 +424,36 @@ test('keeps the viewer usable and lets mobile users collapse page thumbnails', a
   await expect(page.locator('[role="status"]').last()).toContainText('Page 2 of 2');
   await expect(page.getByRole('button', { name: 'Show pages' })).toBeVisible();
   await expect(thumbnails).toBeHidden();
+
+  for (const width of [320, 360, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(page.getByRole('button', { name: 'Fit width' })).toBeVisible();
+
+    const layout = await page.evaluate(() => {
+      const controls = document.querySelector('[aria-label="PDF controls"]');
+      const annotations = document.querySelector('[aria-label="Annotation tools"]');
+      if (!controls || !annotations) throw new Error('Viewer control groups are missing');
+      return {
+        viewportWidth: window.innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+        controlsWidth: controls.clientWidth,
+        controlsScrollWidth: controls.scrollWidth,
+        annotationsWidth: annotations.clientWidth,
+        annotationsScrollWidth: annotations.scrollWidth,
+        controlsRight: controls.getBoundingClientRect().right,
+        annotationButtonsWithin: Array.from(annotations.querySelectorAll('button')).every((button) => {
+          const buttonBounds = button.getBoundingClientRect();
+          const containerBounds = annotations.getBoundingClientRect();
+          return buttonBounds.left >= containerBounds.left - 1 &&
+            buttonBounds.right <= containerBounds.right + 1;
+        })
+      };
+    });
+
+    expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
+    expect(layout.controlsScrollWidth).toBeLessThanOrEqual(layout.controlsWidth + 1);
+    expect(layout.annotationsScrollWidth).toBeLessThanOrEqual(layout.annotationsWidth + 1);
+    expect(layout.controlsRight).toBeLessThanOrEqual(layout.viewportWidth + 1);
+    expect(layout.annotationButtonsWithin).toBe(true);
+  }
 });

@@ -890,7 +890,7 @@
       </div>
     </div>
 
-    <div class="flex items-center justify-center gap-[14px] max-[760px]:order-3 max-[760px]:w-full max-[760px]:justify-between max-[760px]:gap-[7px] max-[760px]:border-t max-[760px]:border-[#f0f1f4] max-[760px]:pt-[10px]" aria-label="PDF controls">
+    <div class="flex items-center justify-center gap-[14px] max-[760px]:order-3 max-[760px]:w-full max-[760px]:flex-wrap max-[760px]:justify-between max-[760px]:gap-x-2 max-[760px]:gap-y-2 max-[760px]:border-t max-[760px]:border-[#f0f1f4] max-[760px]:pt-[10px]" aria-label="PDF controls">
       <button
       type="button"
       class="hidden min-h-[34px] items-center justify-center rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 max-[760px]:inline-flex"
@@ -911,9 +911,9 @@
         </button>
       </div>
 
-      <span class="h-6 w-px bg-[#e7e9ee]" aria-hidden="true"></span>
+      <span class="h-6 w-px bg-[#e7e9ee] max-[760px]:hidden" aria-hidden="true"></span>
 
-      <div class="flex items-center gap-[7px] max-[420px]:gap-[3px]" aria-label="Zoom controls">
+      <div class="flex items-center gap-[7px] max-[420px]:gap-[3px] max-[760px]:w-full max-[760px]:justify-end">
         <button type="button" class="inline-flex size-[34px] shrink-0 items-center justify-center rounded-lg border border-line bg-white p-0 text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Zoom out" title="Zoom out" disabled={isLoading || zoom <= 0.5} onclick={() => changeZoom(-0.25)}>
           <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" /></svg>
         </button>
@@ -1083,7 +1083,7 @@
       <button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" onclick={onClose}>Return to tools</button>
     </div>
   {:else}
-    <div class="flex min-h-[520px] min-w-0 flex-1 max-[760px]:min-h-[460px]">
+    <div class="flex min-h-[520px] min-w-0 flex-1 max-[760px]:min-h-[460px] max-[760px]:w-full">
       {#if pdfDocument && totalPages > 0}
         <div
           id="pdf-thumbnails"
@@ -1098,7 +1098,7 @@
           />
         </div>
       {/if}
-      <div class="flex min-h-[520px] min-w-0 flex-1 flex-col items-center overflow-auto overscroll-contain bg-[#eef0f4] p-[26px] max-h-[78vh] max-[760px]:min-h-[460px] max-[760px]:max-h-[70vh] max-[760px]:items-start max-[760px]:p-4 max-[420px]:min-h-[390px] max-[420px]:p-[10px]" bind:this={viewerViewport} role="region" aria-label="Document page area">
+      <div class="flex min-h-[520px] min-w-0 w-full flex-1 flex-col items-center overflow-auto overscroll-contain bg-[#eef0f4] p-[26px] max-h-[78vh] max-[760px]:min-h-[460px] max-[760px]:max-h-[70vh] max-[760px]:items-start max-[760px]:p-3 max-[420px]:min-h-[390px] max-[420px]:p-[8px]" bind:this={viewerViewport} role="region" aria-label="Document page area">
         {#if isLoading}
           <div class="m-auto flex min-h-[180px] flex-col items-center justify-center gap-2 text-center text-[#5e6471]">
             <span class="size-7 animate-spin rounded-full border-[3px] border-brand-100 border-t-brand-600 motion-reduce:animate-none" aria-hidden="true"></span>
@@ -1120,7 +1120,7 @@
                 {@const previewStart = normalizedPointToViewport(drawingStart.point, unrotatedPageViewport, renderedPageViewport)}
                 {@const previewEnd = normalizedPointToViewport(drawingPreviewEnd, unrotatedPageViewport, renderedPageViewport)}
                 {#if drawingStart.tool === 'freehand'}
-                  {@const previewPoints = [...drawingStart.points, drawingPreviewEnd].map((point) => normalizedPointToViewport(point, unrotatedPageViewport!, renderedPageViewport)).map((point) => `${point.x},${point.y}`).join(' ')}
+                  {@const previewPoints = [...drawingStart.points, drawingPreviewEnd].map((point) => normalizedPointToViewport(point, unrotatedPageViewport!, renderedPageViewport!)).map((point) => `${point.x},${point.y}`).join(' ')}
                   <svg class="absolute inset-0 h-full w-full" viewBox={`0 0 ${renderedPageViewport.width} ${renderedPageViewport.height}`} aria-hidden="true">
                     <polyline points={previewPoints} fill="none" stroke="#2463eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
@@ -1160,7 +1160,7 @@
                     ></div>
                   {/each}
                 {:else if displayed.type === 'freehand'}
-                  {@const mappedPoints = displayed.points.map((point) => normalizedPointToViewport(point, unrotatedPageViewport!, renderedPageViewport))}
+                  {@const mappedPoints = displayed.points.map((point) => normalizedPointToViewport(point, unrotatedPageViewport!, renderedPageViewport!))}
                   {@const pathPoints = mappedPoints.map((point) => `${point.x},${point.y}`).join(' ')}
                   <svg
                     class="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
