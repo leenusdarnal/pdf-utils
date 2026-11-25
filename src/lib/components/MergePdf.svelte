@@ -159,6 +159,8 @@
 
   <div
     class="min-h-[290px] bg-[#f6f7fa] px-6 py-6 max-[600px]:px-3"
+    role="region"
+    aria-label="Drop PDF files to merge"
     ondragover={(event) => event.preventDefault()}
     ondrop={handleDrop}
   >

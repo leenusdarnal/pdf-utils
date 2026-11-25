@@ -18,7 +18,7 @@ describe('mergePdfFiles', () => {
 
     const mergedBytes = await mergePdfFiles([
       new Blob([first as BlobPart], { type: 'application/pdf' }),
-      new Blob([second], { type: 'application/pdf' })
+      new Blob([second as BlobPart], { type: 'application/pdf' })
     ]);
     const merged = await PDFDocument.load(mergedBytes);
     const pages = merged.getPages();

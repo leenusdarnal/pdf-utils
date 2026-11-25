@@ -161,6 +161,7 @@
             </span>
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Merge PDFs</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Combine multiple files in your chosen order.</p></div>
             <button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open merge tool" onclick={() => (mergeMode = true)}>Open tool</button>
+          </article>
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
             <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#fff5e5] text-[#c18a36]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="m4 17 9.8-9.8 3 3L7 20H4zM14.5 6.5l2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Annotate</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Highlight, add notes, and mark up pages.</p></div>
