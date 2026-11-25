@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import ThumbnailSidebar from '$lib/components/ThumbnailSidebar.svelte';
-  import { createPdfDocumentTask } from '$lib/pdf/pdfjs-client';
-  import type { PdfDocument, PdfDocumentTask, PdfPage, PdfRenderTask } from '$lib/pdf/pdfjs-client';
+  import { createPdfDocumentTask, createPdfTextLayerTask } from '$lib/pdf/pdfjs-client';
+  import type { PdfDocument, PdfDocumentTask, PdfPage, PdfRenderTask, PdfTextLayerTask } from '$lib/pdf/pdfjs-client';
   import { clampPageNumber, clampZoom } from '$lib/pdf/viewer-utils';
   import { findTextMatches, type PdfTextMatch } from '$lib/pdf/pdf-search';
 
@@ -14,7 +14,9 @@
   let pdfDocument: PdfDocument | null = null;
   let loadingTask: PdfDocumentTask | null = null;
   let renderTask: PdfRenderTask | null = null;
+  let textLayerTask: PdfTextLayerTask | null = null;
   let canvasElement: HTMLCanvasElement;
+  let textLayerElement: HTMLDivElement;
   let viewerViewport: HTMLDivElement;
   let resizeObserver: ResizeObserver | undefined;
   let renderSequence = 0;
@@ -121,6 +123,8 @@
       searchSequence += 1;
       resizeObserver?.disconnect();
       renderTask?.cancel();
+      textLayerTask?.cancel();
+      textLayerTask = null;
       if (loadingTask) {
         // Destroying the loading task also releases its resolved document and worker.
         // Swallow cleanup rejection because the component is already being removed.
@@ -136,6 +140,11 @@
     if (!document || destroyed) return;
 
     const sequence = ++renderSequence;
+    const previousTextLayerTask = textLayerTask;
+    textLayerTask = null;
+    previousTextLayerTask?.cancel();
+    textLayerElement?.replaceChildren();
+
     const previousTask = renderTask;
     if (previousTask) {
       previousTask.cancel();
@@ -190,6 +199,25 @@
       });
       renderTask = activeTask;
       await activeTask.promise;
+
+      if (destroyed || sequence !== renderSequence) return;
+
+      textLayerElement.style.width = `${Math.floor(viewport.width)}px`;
+      textLayerElement.style.height = `${Math.floor(viewport.height)}px`;
+      const nextTextLayerTask = await createPdfTextLayerTask(page, textLayerElement, viewport);
+      if (destroyed || sequence !== renderSequence) {
+        nextTextLayerTask.cancel();
+        return;
+      }
+
+      textLayerTask = nextTextLayerTask;
+      try {
+        await nextTextLayerTask.promise;
+      } catch (textLayerError) {
+        if (destroyed || sequence !== renderSequence) return;
+        throw textLayerError;
+      }
+      if (textLayerTask === nextTextLayerTask) textLayerTask = null;
 
       if (!destroyed && sequence === renderSequence) {
         currentPage = pageNumber;
@@ -487,8 +515,14 @@
             <p class="m-0 text-[11px] text-[#89909d]">Your document is being processed on this device.</p>
           </div>
         {/if}
-        <div class={`my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } >
-          <canvas bind:this={canvasElement} class="block max-w-none bg-white" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
+        <div class={`relative my-auto flex-none bg-white shadow-[0_4px_18px_rgb(29_35_51_/_0.13)] ${isRendering ? "opacity-80" : ""}` } >
+          <canvas bind:this={canvasElement} class="relative z-0 block max-w-none bg-white" aria-label={`Page ${currentPage} of ${totalPages || 'document'}`}></canvas>
+          <div
+            bind:this={textLayerElement}
+            class="textLayer absolute left-0 top-0 z-10 select-text"
+            role="group"
+            aria-label={`Selectable text for page ${currentPage}`}
+          ></div>
         </div>
       </div>
     </div>
