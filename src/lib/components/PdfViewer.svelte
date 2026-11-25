@@ -132,7 +132,7 @@
       activeTask = page.render({
         canvas: canvasElement,
         viewport,
-        transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0]
+        transform: outputScale === 1 ? undefined : [outputScale, 0, 0, outputScale, 0, 0]
       });
       renderTask = activeTask;
       await activeTask.promise;
