@@ -21,6 +21,8 @@
   let lastViewportWidth = 0;
   let destroyed = false;
   let fitToWidth = true;
+  let isMobileViewport = false;
+  let thumbnailsOpen = true;
   let isLoading = true;
   let isRendering = false;
   let currentPage = 1;
@@ -36,6 +38,14 @@
   let searchSequence = 0;
 
   onMount(() => {
+    const mobileViewport = window.matchMedia('(max-width: 760px)');
+    const syncViewportMode = () => {
+      isMobileViewport = mobileViewport.matches;
+      thumbnailsOpen = !isMobileViewport;
+    };
+    syncViewportMode();
+    mobileViewport.addEventListener('change', syncViewportMode);
+
     const loadDocument = async () => {
       try {
         loadingTask = await createPdfDocumentTask(file);
@@ -74,6 +84,7 @@
     void loadDocument();
 
     return () => {
+      mobileViewport.removeEventListener('change', syncViewportMode);
       destroyed = true;
       renderSequence += 1;
       searchSequence += 1;
@@ -174,6 +185,11 @@
     void renderPage(targetPage);
   }
 
+  function selectThumbnailPage(pageNumber: number) {
+    goToPage(pageNumber);
+    if (isMobileViewport) thumbnailsOpen = false;
+  }
+
   function changeZoom(amount: number) {
     fitToWidth = false;
     zoom = clampZoom(zoom + amount);
@@ -251,7 +267,17 @@
     </div>
 
     <div class="flex items-center justify-center gap-[14px] max-[760px]:order-3 max-[760px]:w-full max-[760px]:justify-between max-[760px]:gap-[7px] max-[760px]:border-t max-[760px]:border-[#f0f1f4] max-[760px]:pt-[10px]" aria-label="PDF controls">
-      <div class="flex items-center gap-[7px] max-[420px]:gap-[3px]" aria-label="Page navigation">
+      <button
+      type="button"
+      class="hidden min-h-[34px] items-center justify-center rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 max-[760px]:inline-flex"
+      aria-label={thumbnailsOpen ? 'Hide pages' : 'Show pages'}
+      aria-expanded={thumbnailsOpen}
+      aria-controls="pdf-thumbnails"
+      onclick={() => (thumbnailsOpen = !thumbnailsOpen)}
+    >
+      {thumbnailsOpen ? 'Hide pages' : 'Show pages'}
+    </button>
+    <div class="flex items-center gap-[7px] max-[420px]:gap-[3px]" aria-label="Page navigation">
         <button type="button" class="inline-flex size-[34px] shrink-0 items-center justify-center rounded-lg border border-line bg-white p-0 text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]" aria-label="Previous page" title="Previous page" disabled={isLoading || targetPage <= 1} onclick={() => goToPage(targetPage - 1)}>
           <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7" /></svg>
         </button>
@@ -324,12 +350,18 @@
   {:else}
     <div class="flex min-h-[520px] min-w-0 flex-1 max-[760px]:min-h-[460px]">
       {#if pdfDocument && totalPages > 0}
-        <ThumbnailSidebar
-          document={pdfDocument}
-          {totalPages}
-          {currentPage}
-          onSelectPage={goToPage}
-        />
+        <div
+          id="pdf-thumbnails"
+          style:display={isMobileViewport && !thumbnailsOpen ? 'none' : 'contents'}
+          aria-hidden={isMobileViewport && !thumbnailsOpen}
+        >
+          <ThumbnailSidebar
+            document={pdfDocument}
+            {totalPages}
+            {currentPage}
+            onSelectPage={selectThumbnailPage}
+          />
+        </div>
       {/if}
       <div class="flex min-h-[520px] min-w-0 flex-1 flex-col items-center overflow-auto overscroll-contain bg-[#eef0f4] p-[26px] max-h-[78vh] max-[760px]:min-h-[460px] max-[760px]:max-h-[70vh] max-[760px]:items-start max-[760px]:p-4 max-[420px]:min-h-[390px] max-[420px]:p-[10px]" bind:this={viewerViewport} role="region" aria-label="Document page area">
         {#if isLoading}
