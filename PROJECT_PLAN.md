@@ -62,7 +62,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | VIEW-01 | Viewer | File picker and drag/drop import | done | Local signature validation and invalid-file feedback are implemented; helper tests pass in CI |
 | VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 adapter and current-page canvas rendering are implemented; browser regression checks are pending |
 | VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented; browser interaction tests are pending |
-| VIEW-04 | Viewer | Thumbnails and page virtualization | not-started | Large documents do not mount every full-size page at once |
+| VIEW-04 | Viewer | Thumbnails and page virtualization | in-progress | Thumbnail sidebar supports page selection; only the visible window plus overscan mounts thumbnail canvases; browser/performance checks remain pending |
 | VIEW-05 | Viewer | Text layer and document search | not-started | Search results navigate to matching page and highlight results |
 | VIEW-06 | Viewer | Print and document information | not-started | Print action works; basic metadata/page count shown |
 | OPS-01 | Page operations | Merge PDFs | not-started | Merge order preview; valid downloadable output |
