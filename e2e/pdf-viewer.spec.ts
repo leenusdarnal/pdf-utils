@@ -49,19 +49,28 @@ function createTwoPagePdf(): Buffer {
   return Buffer.from(pdf, 'binary');
 }
 
+async function visitHome(page: Page) {
+  page.on('pageerror', (error) => console.error('[browser pageerror]', error.message));
+  page.on('console', (message) => {
+    if (message.type() === 'error') console.error('[browser console error]', message.text());
+  });
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('#file-input')).toHaveCount(1);
+}
+
 async function openTestPdf(page: Page) {
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.locator('#file-input').setInputFiles({
     name: 'pdf-utils-browser-test.pdf',
     mimeType: 'application/pdf',
     buffer: createTwoPagePdf()
   });
-  await expect(page.locator('.viewer-shell')).toBeVisible();
+  await expect(page.locator('.viewer-shell')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.viewer-status')).toContainText('Page 1 of 2');
   await expect(page.locator('.viewer-canvas')).toBeVisible();
 }
 
 test('opens a PDF and supports page navigation, local search, and zoom', async ({ page }) => {
-  await page.goto('/');
+  await visitHome(page);
   await openTestPdf(page);
 
   await page.getByRole('button', { name: 'Next page' }).click();
