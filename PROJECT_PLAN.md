@@ -10,7 +10,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 | Priority | Capability | MVP decision | Notes |
 | --- | --- | --- | --- |
-| P0 | PDF viewer | Yes | First slice: local rendering, page navigation, zoom, fit width. Text selection/search, thumbnails, metadata, and print remain pending |
+| P0 | PDF viewer | Yes | First slice: local rendering, page navigation, zoom, and fit width. Virtualized thumbnail navigation is in progress; text selection/search, metadata, and print remain pending |
 | P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; download/export remains pending |
 | P1 | Page organization | Yes | Merge, split/extract, reorder, rotate, delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
