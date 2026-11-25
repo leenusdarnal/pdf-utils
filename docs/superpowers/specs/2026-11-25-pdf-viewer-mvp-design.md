@@ -26,16 +26,16 @@ Turn the foundation's PDF file picker into a useful local PDF viewer. The main w
 
 1. **Embed Mozilla's generic viewer:** feature-rich, but brings a large viewer UI and styling surface that duplicates our product design.
 2. **Use a third-party Svelte PDF wrapper:** quicker initial wiring, but adds another dependency and an abstraction we do not need for a focused canvas viewer.
-3. **Use PDF.js display API behind a small Svelte component (chosen):** smallest integration surface, explicit lifecycle, product-owned controls, and no network processing.
+3. **Use PDF.js display API behind a small browser adapter and Svelte component (chosen):** small integration surface, explicit lifecycle, product-owned controls, and no document upload.
 
 ## Architecture and decisions
 
-- Add pdfjs-dist 6.5.438 as a runtime dependency, verified against the npm registry on 2026-11-25. The registry reports Apache-2.0.
-- Import the PDF.js display API only from the browser lifecycle; configure GlobalWorkerOptions.workerSrc to the Vite-emitted pdf.worker.mjs asset.
+- Add pdfjs-dist 6.5.438 as a runtime dependency, verified against the npm registry on 2026-11-25. The registry reports Apache-2.0. Its published engine requirement is Node.js 22.13.0 or newer (or Node.js 24+), which is reflected in package.json and .nvmrc.
+- Keep PDF.js loading/worker configuration in `src/lib/pdf/pdfjs-client.ts`; dynamically import the display API in the browser and configure GlobalWorkerOptions.workerSrc to the Vite-emitted pdf.worker.mjs asset.
 - Read the selected File locally into a Uint8Array and pass the bytes to getDocument({ data }).
 - Keep file signature validation and pure page/zoom bounds helpers in src/lib/pdf/ so they can be tested without a DOM.
 - Keep rendering, navigation, and PDF resource lifecycle in src/lib/components/PdfViewer.svelte.
-- Render one page to a canvas at a bounded device-pixel ratio; cancel an in-flight render before starting another and destroy the loading/document task on teardown.
+- Render one page to a canvas at a bounded device-pixel ratio and a 16-megapixel backing-bitmap budget; cancel an in-flight render before starting another and destroy the loading task on teardown.
 - Keep the workspace fluid on narrow screens; the canvas lives inside an overflow container and never expands the page layout.
 - Use explicit accessible names, disabled states, and a polite status/error region for assistive technology.
 - Do not fetch external fonts, CMaps, analytics, or file-processing services for the MVP.
