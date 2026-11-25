@@ -1,20 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
+  import { createPdfDocumentTask } from '$lib/pdf/pdfjs-client';
+  import type { PdfDocument, PdfDocumentTask, PdfPage, PdfRenderTask } from '$lib/pdf/pdfjs-client';
   import { clampPageNumber, clampZoom } from '$lib/pdf/viewer-utils';
 
   export let file: File;
   export let onClose: () => void;
 
-  type LoadingTask = ReturnType<typeof import('pdfjs-dist').getDocument>;
-  type PdfDocument = Awaited<LoadingTask['promise']>;
-  type PdfPage = Awaited<ReturnType<PdfDocument['getPage']>>;
-  type PdfRenderTask = ReturnType<PdfPage['render']>;
-
   const MAX_CANVAS_PIXELS = 16_000_000;
 
   let pdfDocument: PdfDocument | null = null;
-  let loadingTask: LoadingTask | null = null;
+  let loadingTask: PdfDocumentTask | null = null;
   let renderTask: PdfRenderTask | null = null;
   let canvasElement: HTMLCanvasElement;
   let viewerViewport: HTMLDivElement;
@@ -35,18 +31,14 @@
   onMount(() => {
     const loadDocument = async () => {
       try {
-        const pdfjs = await import('pdfjs-dist');
-        if (destroyed) return;
+        loadingTask = await createPdfDocumentTask(file);
+        if (destroyed) {
+          await loadingTask.destroy();
+          return;
+        }
 
-        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-        const data = new Uint8Array(await file.arrayBuffer());
+        pdfDocument = await loadingTask.promise;
         if (destroyed) return;
-
-        loadingTask = pdfjs.getDocument({ data });
-        const loadedDocument = await loadingTask.promise;
-        if (destroyed) return;
-
-        pdfDocument = loadedDocument;
         totalPages = loadedDocument.numPages;
         isLoading = false;
         statusText = `${totalPages} ${totalPages === 1 ? 'page' : 'pages'} loaded`;
