@@ -15,11 +15,19 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P1 | Page organization | Yes | Merge PDFs, split by custom page ranges, extract selected pages, reorder, rotate, duplicate, and delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
 | P1 | Annotation export | Yes | Prefer vector/native content; test fidelity and clearly disclose limitations |
-| P2 | Compression | Later | Benchmark quality/size tradeoffs; avoid destructive defaults |
-| P2 | Image conversion | Later | Images to PDF and PDF pages to PNG/JPEG |
+| P1 | PDF to images | Next | Export selected/all pages as PNG/JPEG with DPI and JPEG quality controls; offer individual downloads or ZIP |
+| P1 | Images to PDF | Next | Combine/reorder images; configure page size, orientation, margins, and predictable image fitting |
+| P1 | Compression | Next | Screen/balanced/print presets and best-effort target size; benchmark quality/size tradeoffs and avoid destructive defaults |
+| P1 | Extract images | Next | Export embedded images separately from page rasterization |
+| P2 | Editing tools | Later | Text/image insertion, signatures, stamps, crop, forms, flattening; distinguish overlays from editing existing content |
 | P2 | Watermark/page numbers | Later | Deterministic placement and preview |
-| P3 | Secure redaction | Separate security-gated project | Must remove underlying text/image content, sanitize, and verify output; no overlay-only redaction |
-| P3 | Office conversion | Research only | Likely requires external runtime/service; assess privacy and hosting costs first |
+| P2 | N-up layout | Later | Place 2, 4, 6 or more pages per sheet with print-ready output |
+| P2 | OCR and text extraction | Later | Searchable OCR, PDF-to-text, and PDF-to-Markdown; evaluate browser/local runtimes and language coverage |
+| P2 | Compare and repair | Later | Compare pages/content and attempt safe repair of malformed PDFs |
+| P2 | Office conversion | Research only | Assess fidelity, local processing options, licensing, bundle size, and hosting costs before selecting an approach |
+| P3 | AI document tools | Research only | Summarization, translation, and Chat with PDF; privacy, cost, consent, and remote processing must be explicit |
+| P3 | Secure redaction | Separate security-gated project | Must remove underlying text/image content, sanitize, and independently verify output; no overlay-only redaction |
+| P3 | Batch workflows | Later | Queue multiple files and save reusable multi-tool workflows with clear per-file status |
 
 ## Architecture decisions
 
@@ -74,10 +82,25 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | ANN-03 | Annotation | Freehand and shape tools | in-progress | Freehand, rectangle, and arrow drawing plus shape movement are available with normalized coordinates and undo/redo; persistence, export, and broader rotation/resize checks remain |
 | ANN-04 | Annotation | Annotation export | not-started | Text/vector fidelity tested; limitations disclosed |
 | OPT-01 | Optimization | Compression workflow | deferred | Benchmark file size and visual quality before setting defaults |
-| CON-01 | Conversion | Images to PDF | deferred | Mixed image dimensions supported; output page sizes predictable |
-| CON-02 | Conversion | PDF to images | deferred | Export selected/all pages at chosen format and resolution |
-| TRN-01 | Transform | Watermark and page numbers | deferred | Preview and exported placement match |
-| SEC-01 | Security | Redaction research and threat model | deferred | No release until content-removal and independent verification tests pass |
+| CON-01 | Conversion | Images to PDF | not-started | Accept JPG/PNG/WebP; reorder/remove images; choose page size, orientation, margins, and fit behavior; mixed dimensions produce predictable pages |
+| CON-02 | Conversion | PDF to images | not-started | Export selected/all pages as PNG/JPEG; choose 72/150/200/300 DPI and JPEG quality; support individual downloads or ZIP without rendering all pages at once |
+| CON-03 | Conversion | Extract embedded images | deferred | Export embedded image objects separately from rendered pages; preserve useful format/quality when available |
+| OPT-01 | Optimization | Compression | not-started | Screen/balanced/print presets, best-effort target size, achieved-size report, quality preview, and non-destructive defaults; benchmark representative files |
+| EDIT-01 | Editing | Text and image insertion, signatures, stamps | deferred | Add/move/resize overlays with clear distinction from editing original PDF text; preview and export fidelity tested |
+| EDIT-02 | Editing | Crop and page-size adjustment | deferred | Set crop/page boxes and output size with preview; preserve content placement and handle rotation |
+| EDIT-03 | Editing | Forms and flattening | deferred | Fill supported interactive fields; flatten only on explicit user action and explain loss of interactivity |
+| TRN-01 | Transform | Watermark and page numbers | deferred | Preview and exported placement match; support ranges, margins, positioning, and style |
+| TRN-02 | Transform | N-up pages per sheet | deferred | Support 2-up, 4-up, 6-up and configurable layouts with print-ready output and page order tests |
+| OCR-01 | OCR and extraction | Searchable OCR | deferred | OCR scanned pages into searchable text; document supported languages, local processing, accuracy limits, and progress/cancel behavior |
+| OCR-02 | OCR and extraction | PDF to text and Markdown | deferred | Extract text in reading order with page breaks and clearly documented layout limitations |
+| DOC-01 | Document quality | Compare PDFs | deferred | Compare page count, text and visual differences; show aligned page-level results and avoid claiming semantic equivalence |
+| DOC-02 | Document quality | Repair malformed PDFs | deferred | Detect supported failure classes, preserve original, and validate repaired output by reopening it |
+| CON-04 | Conversion | Office document conversion | deferred | Research browser/local options, fidelity, licensing, runtime size, and privacy before committing to implementation |
+| AI-01 | AI document tools | Summarize, translate, and ask questions | deferred | Explicitly disclose any remote processing; obtain consent, protect document content, and provide source/page references where possible |
+| SEC-01 | Security | Redaction research and threat model | deferred | No release until underlying content removal, sanitization, and independent verification tests pass; never treat a drawn overlay as redaction |
+| SEC-02 | Security | Password protection and authorized unlocking | deferred | Use supported PDF encryption; clearly distinguish opening password from permissions and never bypass unknown credentials |
+| SEC-03 | Security | Metadata and bookmark management | deferred | Inspect/edit metadata and bookmarks; verify changes in reopened output |
+| FLOW-01 | Workflows | Batch processing and reusable workflows | deferred | Queue multiple files, show per-file progress/errors, and allow repeatable local tool sequences without uploading files |
 | QLT-01 | Quality | Accessibility audit | not-started | Keyboard-only core workflow; semantic labels and contrast checks |
 | QLT-02 | Quality | Performance and large-file testing | not-started | Defined fixture set and baseline measurements |
 | QLT-03 | Quality | Browser compatibility matrix | not-started | Current Chromium, Firefox, and Safari tested where available |
@@ -103,6 +126,10 @@ A feature is complete only when:
 4. Add navigation, zoom, thumbnails, search, print, and robust error handling.
 5. Add page operations using an isolated PDF operation service.
 6. Add annotation model and editor UI, then export and fidelity tests.
+7. Add PDF-to-images, images-to-PDF, embedded-image extraction, and compression as the next everyday utility set.
+8. Add editing and page-layout tools (text/image overlays, signatures, crop, forms, watermarks, page numbering, N-up).
+9. Evaluate OCR, text/Markdown extraction, comparison, repair, and Office conversion with local-first and fidelity benchmarks.
+10. Gate AI, redaction, password, and batch workflow features on privacy, security, and correctness reviews.
 
 ## Change control
 
