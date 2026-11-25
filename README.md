@@ -83,6 +83,14 @@ npm run build
 
 Update [PROJECT_PLAN.md](./PROJECT_PLAN.md) with implementation status. The phased viewer design and task plan are under `docs/superpowers/`.
 
+## GitHub Pages
+
+The site is configured for GitHub Pages at:
+
+`https://leenusdarnal.github.io/pdf-utils/`
+
+GitHub Actions builds the app as a static SvelteKit site and deploys it from pushes to the foundation branch and `main`. The build receives the repository subpath from GitHub Pages, so local development continues to use the root path. PDF files remain in the browser; GitHub Pages serves only the application.
+
 ## License
 
 The project license is not selected yet. Do not assume the repository is licensed for reuse. The `pdfjs-dist` dependency is distributed under Apache-2.0; retain its notices when distributing it.
