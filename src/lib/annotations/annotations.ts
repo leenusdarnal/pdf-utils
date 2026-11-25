@@ -79,7 +79,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function assertFiniteRange(value: unknown, name: string, min: number, max: number): void {
+function assertFiniteRange(
+  value: unknown,
+  name: string,
+  min: number,
+  max: number
+): asserts value is number {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
     throw new Error(`${name} must be a finite number between ${min} and ${max}`);
   }
@@ -94,16 +99,21 @@ function assertPoint(value: unknown, name: string): asserts value is NormalizedP
 function assertRect(value: unknown, name: string): asserts value is NormalizedRect {
   if (!isRecord(value)) throw new Error(`${name} must be a rectangle`);
 
-  assertFiniteRange(value.x, `${name}.x`, 0, 1);
-  assertFiniteRange(value.y, `${name}.y`, 0, 1);
+  const x = value.x;
+  const y = value.y;
+  const width = value.width;
+  const height = value.height;
 
-  if (typeof value.width !== 'number' || !Number.isFinite(value.width) || value.width <= 0) {
+  assertFiniteRange(x, `${name}.x`, 0, 1);
+  assertFiniteRange(y, `${name}.y`, 0, 1);
+
+  if (typeof width !== 'number' || !Number.isFinite(width) || width <= 0) {
     throw new Error(`${name}.width must be a positive finite number`);
   }
-  if (typeof value.height !== 'number' || !Number.isFinite(value.height) || value.height <= 0) {
+  if (typeof height !== 'number' || !Number.isFinite(height) || height <= 0) {
     throw new Error(`${name}.height must be a positive finite number`);
   }
-  if (value.x + value.width > 1 || value.y + value.height > 1) {
+  if (x + width > 1 || y + height > 1) {
     throw new Error(`${name} must stay within the page bounds`);
   }
 }
