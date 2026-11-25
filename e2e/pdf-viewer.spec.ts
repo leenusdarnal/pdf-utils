@@ -117,7 +117,7 @@ test('rejects a file that does not contain a PDF signature', async ({ page }) =>
 
 test('keeps the viewer usable without horizontal page overflow on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await visitHome(page);
   await expect(page.getByRole('heading', { name: /Your documents/ })).toHaveCSS('font-size', '43px');
 
   await openTestPdf(page);
