@@ -13,7 +13,7 @@ A lightweight, privacy-first browser workspace for viewing, editing, organizing,
 
 ## Current implementation
 
-The first viewer slice is implemented on the `feat/app-foundation` branch in [PR #1](https://github.com/leenusdarnal/pdf-utils/pull/1). It currently includes:
+The first viewer slice is implemented on the `feat/app-foundation` branch in [PR #1](https://github.com/leenusdarnal/pdf-utils/pull/1). Latest CI passed Svelte/type checks, unit tests, and the production build. Browser-level interaction and accessibility regression checks are still pending. It currently includes:
 
 - Select or drop a local PDF file.
 - Check for a PDF signature in the first 1,024 bytes before parsing.
@@ -23,7 +23,7 @@ The first viewer slice is implemented on the `feat/app-foundation` branch in [PR
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
 - Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
 
-**Not implemented yet:** text selection/search, thumbnails, page sidebar, printing, PDF metadata, annotations, page editing, merging/splitting, compression, watermarking, and conversion. The viewer has not been marked complete until CI and browser interaction checks pass.
+**Not implemented yet:** text selection/search, thumbnails, page sidebar, printing, PDF metadata, annotations, page editing, merging/splitting, compression, watermarking, and conversion. The viewer remains in progress until browser interaction and accessibility regression checks pass.
 
 ## Planned capabilities
 
