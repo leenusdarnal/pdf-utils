@@ -10,7 +10,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 | Priority | Capability | MVP decision | Notes |
 | --- | --- | --- | --- |
-| P0 | PDF viewer | Yes | Local rendering, page navigation, zoom, fit width, virtualized thumbnails, mobile thumbnail toggle, local text search, and a read-only metadata panel are implemented; selectable text and print remain pending |
+| P0 | PDF viewer | Yes | Local rendering, page navigation, zoom, fit width, virtualized thumbnails, mobile thumbnail toggle, local text search, read-only metadata, and native-browser printing are implemented; selectable text remains pending |
 | P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; download/export remains pending |
 | P1 | Page organization | Yes | Merge, split/extract, reorder, rotate, delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
@@ -65,7 +65,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented and covered by Playwright; keyboard-only and cross-browser checks remain |
 | VIEW-04 | Viewer | Thumbnails and page virtualization | in-progress | Thumbnail sidebar supports page selection, virtualization, and mobile collapse/expand; Playwright covers mobile selection and panel behavior; large-document performance checks remain |
 | VIEW-05 | Viewer | Text extraction and document search | in-progress | Local search scans page text, highlights matches in result snippets, and navigates to matching pages; Playwright covers a searchable PDF fixture, while broader real-world coverage remains |
-| VIEW-06 | Viewer | Print and document information | in-progress | Read-only local metadata panel displays common document info, page count, and file size; print action remains pending |
+| VIEW-06 | Viewer | Print and document information | done | Read-only metadata panel shows common info, page count, and size; Print opens the original local PDF in a separate browser-native PDF viewer for whole-document printing |
 | OPS-01 | Page operations | Merge PDFs | not-started | Merge order preview; valid downloadable output |
 | OPS-02 | Page operations | Split and extract pages | not-started | Page ranges validated; each output downloads correctly |
 | OPS-03 | Page operations | Reorder, rotate, and delete pages | not-started | Preview matches exported page order/orientation |
