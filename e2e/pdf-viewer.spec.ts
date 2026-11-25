@@ -1,4 +1,6 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
+import { PDFDocument } from 'pdf-lib';
 
 function createTwoPagePdf(rotation = 0): Buffer {
   const pageTexts = [
@@ -49,6 +51,13 @@ function createTwoPagePdf(rotation = 0): Buffer {
     `startxref\n${crossReferenceOffset}\n%%EOF`;
 
   return Buffer.from(pdf, 'binary');
+}
+
+
+async function createPdfWithPageSizes(pageSizes: Array<[number, number]>): Promise<Buffer> {
+  const document = await PDFDocument.create();
+  for (const [width, height] of pageSizes) document.addPage([width, height]);
+  return Buffer.from(await document.save());
 }
 
 async function visitHome(page: Page) {
@@ -282,6 +291,72 @@ test('scrolls through PDF pages and keeps quick navigation in sync', async ({ pa
   await page.getByRole('button', { name: 'Switch to page tools' }).click();
   await expect(page.locator('[data-page-surface]')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Place note' })).toBeVisible();
+});
+
+test('merges multiple PDFs in the selected order and downloads the combined document', async ({ page }) => {
+  await visitHome(page);
+  await page.getByRole('button', { name: 'Open merge tool' }).click();
+  await expect(page.getByRole('heading', { name: 'Merge PDFs' })).toBeVisible();
+
+  const firstPdf = await createPdfWithPageSizes([
+    [100, 200],
+    [110, 210]
+  ]);
+  const secondPdf = await createPdfWithPageSizes([[300, 400]]);
+
+  await page.locator('#merge-file-input').setInputFiles([
+    {
+      name: 'first.pdf',
+      mimeType: 'application/pdf',
+      buffer: firstPdf
+    },
+    {
+      name: 'second.pdf',
+      mimeType: 'application/pdf',
+      buffer: secondPdf
+    }
+  ]);
+
+  const mergeRows = page.locator('[data-merge-source]');
+  await expect(mergeRows).toHaveCount(2);
+  await page.getByRole('button', { name: 'Move second.pdf up' }).click();
+  await expect(mergeRows.nth(0)).toHaveAttribute('data-merge-source', 'second.pdf');
+  await expect(mergeRows.nth(1)).toHaveAttribute('data-merge-source', 'first.pdf');
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Merge PDFs', exact: true }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('merged-document.pdf');
+
+  const downloadPath = await download.path();
+  expect(downloadPath).not.toBeNull();
+  const merged = await PDFDocument.load(await readFile(downloadPath!));
+  const mergedPages = merged.getPages();
+
+  expect(mergedPages).toHaveLength(3);
+  expect(mergedPages.map((pdfPage) => [pdfPage.getWidth(), pdfPage.getHeight()])).toEqual([
+    [300, 400],
+    [100, 200],
+    [110, 210]
+  ]);
+  await expect(page.locator('[role="status"]').last()).toContainText('started the download');
+});
+
+test('does not allow merging fewer than two PDFs and rejects invalid files', async ({ page }) => {
+  await visitHome(page);
+  await page.getByRole('button', { name: 'Open merge tool' }).click();
+
+  const mergeButton = page.getByRole('button', { name: 'Merge PDFs', exact: true });
+  await expect(mergeButton).toBeDisabled();
+
+  await page.locator('#merge-file-input').setInputFiles({
+    name: 'not-a-pdf.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('This is not a PDF document.')
+  });
+  await expect(page.getByRole('alert')).toContainText('not a valid PDF');
+  await expect(page.locator('[data-merge-source]')).toHaveCount(0);
+  await expect(mergeButton).toBeDisabled();
 });
 
 test('creates, moves, edits, and deletes page-relative text notes', async ({ page }) => {
