@@ -20,11 +20,12 @@ The first viewer slice is implemented on the `feat/app-foundation` branch in [PR
 - Open the document with PDF.js in the browser using its matching, bundled worker.
 - Render one full-size page at a time with previous/next navigation.
 - Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted.
+- Search extracted page text locally, review highlighted snippets, and jump to matching pages.
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
 - Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
 
-**Not implemented yet:** text selection/search, printing, PDF metadata, annotations, page editing, merging/splitting, compression, watermarking, and conversion. The viewer remains in progress until browser interaction and accessibility regression checks pass.
+**Not implemented yet:** selectable text overlay, printing, PDF metadata, annotations, page editing, merging/splitting, compression, watermarking, and conversion. Search result navigation and browser regression checks still need manual verification. The viewer remains in progress until browser interaction and accessibility regression checks pass.
 
 ## Planned capabilities
 
