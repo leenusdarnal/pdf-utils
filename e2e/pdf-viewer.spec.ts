@@ -69,6 +69,18 @@ async function openTestPdf(page: Page) {
   await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
   await expect(page.locator('canvas[aria-label^="Page "]')).toBeVisible();
+  const selectableText = page.locator('.textLayer');
+  await expect(selectableText).toContainText('PDF Utils browser test first page');
+
+  const selectedText = await selectableText.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    return selection?.toString() ?? '';
+  });
+  expect(selectedText).toContain('PDF Utils browser test first page');
 }
 
 test('opens a PDF and supports page navigation, local search, and zoom', async ({ page }) => {

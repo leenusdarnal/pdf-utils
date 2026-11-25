@@ -13,12 +13,12 @@ A lightweight, privacy-first browser workspace for viewing, editing, organizing,
 
 ## Current implementation
 
-The viewer foundation is merged into `main`. CI now runs Svelte/type checks, unit tests, and Playwright Chromium browser regression tests before the production build. Cross-browser and manual accessibility checks remain part of the verification checklist. It currently includes:
+The viewer foundation is merged into `main`. CI now runs Svelte/type checks, unit tests, and Playwright Chromium browser regression tests before the production build, including a selectable-text browser assertion. Cross-browser and manual accessibility checks remain part of the verification checklist. It currently includes:
 
 - Select or drop a local PDF file.
 - Check for a PDF signature in the first 1,024 bytes before parsing.
 - Open the document with PDF.js in the browser using its matching, bundled worker.
-- Render one full-size page at a time with previous/next navigation.
+- Render one full-size page at a time with previous/next navigation and a selectable PDF.js text layer over the canvas.
 - Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted. On mobile, the page rail collapses by default, can be shown on demand, and collapses after page selection.
 - Search extracted page text locally, review highlighted snippets, and jump to matching pages.
 - Inspect local document information including title, author, subject, creator, producer, PDF version, page count, and file size.
@@ -26,7 +26,7 @@ The viewer foundation is merged into `main`. CI now runs Svelte/type checks, uni
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
 - Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
 
-**Not implemented yet:** selectable text overlay, annotations, page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** annotations, page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
