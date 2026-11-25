@@ -75,7 +75,8 @@ export async function exportPdfPagesToImages(
       throw new Error('One or more selected pages are outside the document.');
     }
 
-    const baseName = safeBaseName(source instanceof File ? source.name : 'document.pdf');
+    const sourceName = 'name' in source && typeof source.name === 'string' ? source.name : 'document.pdf';
+    const baseName = safeBaseName(sourceName);
     const extension = options.format === 'jpeg' ? 'jpg' : 'png';
     const mimeType = options.format === 'jpeg' ? 'image/jpeg' : 'image/png';
     const quality = Math.min(1, Math.max(0.1, options.quality ?? 0.9));
