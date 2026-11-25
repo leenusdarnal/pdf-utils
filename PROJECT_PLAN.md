@@ -59,6 +59,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | FND-03 | Foundation | Establish formatting, lint, typecheck, and test scripts | done | Unit tests, Svelte/type checks, and production build pass in latest CI; formatting gate is not currently part of CI |
 | FND-04 | Foundation | Build responsive app shell and design tokens | in-progress | Responsive landing page and viewer shell are implemented; browser/accessibility checks remain pending |
 | FND-05 | Foundation | Add CI workflow and contribution guidance | done | GitHub Actions CI and setup instructions are present; latest full run is green |
+| FND-06 | Foundation | GitHub Pages static deployment | in-progress | Static adapter and project base path are configured; deployment workflow and live verification remain pending |
 | VIEW-01 | Viewer | File picker and drag/drop import | done | Local signature validation and invalid-file feedback are implemented; helper tests pass in CI |
 | VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 adapter and current-page canvas rendering are implemented; browser regression checks are pending |
 | VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented; browser interaction tests are pending |
