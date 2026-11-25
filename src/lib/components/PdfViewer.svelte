@@ -119,7 +119,7 @@
 
       const pageAtDefaultScale = page.getViewport({ scale: 1 });
       if (recalculateFit || fitToWidth) {
-        const availableWidth = Math.max(240, (viewerViewport?.clientWidth ?? pageAtDefaultScale.width) - 40);
+        const availableWidth = Math.max(240, (viewerViewport?.clientWidth ?? pageAtDefaultScale.width) - 52);
         zoom = clampZoom(availableWidth / pageAtDefaultScale.width);
       }
 
