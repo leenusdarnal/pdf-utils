@@ -304,19 +304,22 @@ test('draws rectangle and arrow annotations and supports undo/redo', async ({ pa
   await openTestPdf(page);
 
   const pageSurface = page.locator('[data-page-surface]');
-  await page.getByRole('button', { name: 'Draw rectangle' }).click();
-  await pageSurface.click({ position: { x: 120, y: 150 } }).then(async () => {
-    await page.mouse.move(220, 230, { steps: 4 });
+  const surfaceBounds = await pageSurface.boundingBox();
+  expect(surfaceBounds).not.toBeNull();
+  const draw = async (x1: number, y1: number, x2: number, y2: number) => {
+    await page.mouse.move(surfaceBounds!.x + x1, surfaceBounds!.y + y1);
+    await page.mouse.down();
+    await page.mouse.move(surfaceBounds!.x + x2, surfaceBounds!.y + y2, { steps: 5 });
     await page.mouse.up();
-  });
+  };
+
+  await page.getByRole('button', { name: 'Draw rectangle' }).click();
+  await draw(120, 150, 220, 230);
   const rectangle = page.locator('[data-annotation-type="rectangle"]');
   await expect(rectangle).toBeVisible();
 
   await page.getByRole('button', { name: 'Draw arrow' }).click();
-  await page.mouse.move(260, 280);
-  await page.mouse.down();
-  await page.mouse.move(360, 340, { steps: 5 });
-  await page.mouse.up();
+  await draw(260, 280, 360, 340);
   await expect(page.locator('[data-annotation-type="arrow"]')).toBeVisible();
 
   await page.getByRole('button', { name: 'Undo annotation' }).click();
