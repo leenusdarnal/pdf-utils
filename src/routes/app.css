@@ -110,3 +110,182 @@ footer { display: flex; justify-content: space-between; padding: 20px 0 25px; bo
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+
+/* PDF viewer workspace */
+.upload-error {
+  max-width: 440px;
+  margin: 14px auto 0;
+  color: #b54747;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.dropzone:focus-within {
+  outline: 3px solid rgb(101 88 211 / 18%);
+  outline-offset: 3px;
+}
+h1, h2, h3 { text-wrap: balance; }
+.hero-copy, .local-section p { text-wrap: pretty; }
+
+.viewer-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: min(78vh, 900px);
+  margin: 28px auto 42px;
+  overflow: hidden;
+  border: 1px solid #e4e6ed;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgb(29 35 51 / 5%);
+}
+.viewer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 76px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e9ebf0;
+  background: #fff;
+}
+.viewer-file-info { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.viewer-file-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 42px;
+  border: 1px solid #e5e1fb;
+  border-radius: 8px;
+  color: #6f63d1;
+  background: #f4f2ff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .3px;
+}
+.viewer-file-meta { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+.viewer-file-meta strong {
+  max-width: 260px;
+  overflow: hidden;
+  color: #292d38;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.viewer-file-meta span { color: #8a909c; font-size: 10px; }
+.viewer-controls { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.viewer-control-group { display: flex; align-items: center; gap: 7px; }
+.viewer-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #e4e6ed;
+  border-radius: 7px;
+  color: #454b59;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.viewer-button:hover:not(:disabled) { border-color: #c9c4f2; color: #6257c7; background: #faf9ff; }
+.viewer-button:focus-visible { outline: 3px solid rgb(101 88 211 / 24%); outline-offset: 2px; }
+.viewer-button:disabled { color: #b2b6bf; background: #f8f9fb; cursor: not-allowed; }
+.viewer-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-button { width: 34px; padding: 0; }
+.viewer-page-count { display: flex; align-items: center; gap: 6px; min-width: 52px; justify-content: center; color: #7c8290; font-size: 11px; }
+.viewer-page-count strong { color: #303541; font-variant-numeric: tabular-nums; }
+.viewer-zoom-value { min-width: 43px; color: #6d7380; text-align: center; font-size: 10px; font-variant-numeric: tabular-nums; }
+.viewer-toolbar-divider { width: 1px; height: 24px; background: #e7e9ee; }
+.fit-button { min-height: 30px; padding: 0 9px; font-size: 10px; }
+.fit-button.active { border-color: #d8d3fa; color: #665bd0; background: #f5f3ff; }
+.close-button { flex: 0 0 auto; }
+.viewer-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 35px;
+  border-bottom: 1px solid #e9ebf0;
+  color: #8a909c;
+  background: #fbfbfd;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.viewer-stage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  min-height: 520px;
+  max-height: 78vh;
+  overflow: auto;
+  padding: 26px;
+  background: #eef0f4;
+  overscroll-behavior: contain;
+}
+.viewer-canvas-wrap { flex: 0 0 auto; margin: auto; background: #fff; box-shadow: 0 4px 18px rgb(29 35 51 / 13%); }
+.viewer-canvas { display: block; max-width: none; background: #fff; }
+.viewer-canvas-wrap.rendering { opacity: .8; }
+.viewer-loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 180px;
+  margin: auto;
+  color: #5e6471;
+  text-align: center;
+}
+.viewer-loading-card strong { margin-top: 6px; color: #343946; font-size: 13px; }
+.viewer-loading-card p { margin: 0; color: #89909d; font-size: 11px; }
+.viewer-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid #e3e0fa;
+  border-top-color: #7064d1;
+  border-radius: 50%;
+  animation: viewer-spin .8s linear infinite;
+}
+.viewer-spinner.large { width: 28px; height: 28px; border-width: 3px; }
+@keyframes viewer-spin { to { transform: rotate(360deg); } }
+.viewer-error {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 36px 20px;
+  text-align: center;
+}
+.viewer-error strong { color: #343946; font-size: 14px; }
+.viewer-error p { max-width: 420px; margin: 8px 0 18px; color: #7d8491; font-size: 12px; line-height: 1.6; }
+
+@media (max-width: 760px) {
+  .viewer-shell { margin: 18px auto 30px; min-height: 74vh; }
+  .viewer-toolbar { flex-wrap: wrap; gap: 12px; padding: 12px; }
+  .viewer-file-info { flex: 1 1 calc(100% - 100px); }
+  .viewer-file-meta strong { max-width: min(58vw, 360px); }
+  .viewer-controls { order: 3; justify-content: space-between; width: 100%; padding-top: 10px; border-top: 1px solid #f0f1f4; }
+  .close-button { margin-left: auto; }
+  .viewer-stage { min-height: 460px; max-height: 70vh; padding: 16px; align-items: flex-start; }
+  .viewer-canvas-wrap { margin: auto; }
+}
+@media (max-width: 420px) {
+  .viewer-toolbar { padding: 10px; }
+  .viewer-controls { gap: 7px; }
+  .viewer-control-group { gap: 3px; }
+  .fit-button { padding: 0 7px; }
+  .viewer-stage { min-height: 390px; padding: 10px; }
+  .close-button { min-height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .viewer-spinner { animation-duration: 2s; }
+  .viewer-button { transition: none; }
+}
