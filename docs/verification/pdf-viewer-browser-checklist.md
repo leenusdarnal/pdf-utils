@@ -28,6 +28,7 @@ Use this checklist against a production build or preview server before marking t
 - [ ] Close while a page is rendering; no stale error or canvas appears after returning to the landing page.
 - [ ] Test a large page and high-DPI viewport; rendering stays within the scale cap and the page remains reachable by scrolling.
 - [ ] Test narrow/mobile width; toolbar controls remain reachable and the page does not force the whole app horizontally off-screen.
+- [ ] Use Print and confirm the original full PDF opens in a separate browser-native PDF viewer, with all pages available to the browser's Print control.
 - [ ] On mobile, the thumbnail rail starts collapsed, opens with Show pages, and collapses after selecting a thumbnail.
 
 ## Document information
