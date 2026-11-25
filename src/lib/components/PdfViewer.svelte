@@ -38,6 +38,8 @@
         }
 
         pdfDocument = await loadingTask.promise;
+        // The component may have been closed while PDF.js was resolving the document.
+        // Its loading task is destroyed by onMount cleanup; do not update stale UI.
         if (destroyed) return;
         totalPages = pdfDocument.numPages;
         isLoading = false;
@@ -70,8 +72,12 @@
       resizeObserver?.disconnect();
       renderTask?.cancel();
       if (loadingTask) {
-        void loadingTask.destroy();
+        // Destroying the loading task also releases its resolved document and worker.
+        // Swallow cleanup rejection because the component is already being removed.
+        void loadingTask.destroy().catch(() => undefined);
+        loadingTask = null;
       }
+      pdfDocument = null;
     };
   });
 
