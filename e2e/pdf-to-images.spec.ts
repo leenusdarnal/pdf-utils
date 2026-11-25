@@ -12,7 +12,8 @@ async function createTwoPagePdf(): Promise<Buffer> {
 }
 
 test('exports selected PDF pages as images and creates a ZIP download', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('main')).toHaveAttribute('data-app-ready', 'true');
   await page.getByRole('button', { name: 'Open PDF to images tool' }).click();
 
   await page.locator('#images-file-input').setInputFiles({
@@ -43,7 +44,8 @@ test('exports selected PDF pages as images and creates a ZIP download', async ({
 
 test('persists the selected dark theme after reload', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('pdf-utils-theme', 'light'));
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'networkidle' });
+  await expect(page.locator('main')).toHaveAttribute('data-app-ready', 'true');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 
   await page.getByRole('button', { name: 'Switch to dark mode' }).click();
