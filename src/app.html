@@ -3,8 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f7f8fa" />
+    <script>
+      try {
+        var savedTheme = localStorage.getItem('pdf-utils-theme');
+        var initialTheme = savedTheme === 'dark' || savedTheme === 'light'
+          ? savedTheme
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = initialTheme;
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', initialTheme === 'dark' ? '#10131b' : '#f7f8fa');
+      } catch {
+        document.documentElement.dataset.theme = 'light';
+      }
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">
