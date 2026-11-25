@@ -37,8 +37,8 @@ function canvasToBlob(
 }
 
 function safeBaseName(fileName: string): string {
-  const withoutExtension = fileName.replace(/\\.pdf$/i, '').trim();
-  const safe = withoutExtension.replace(/[\\/:*?"<>|\\x00-\\x1f]/g, '-').replace(/\\s+/g, '-');
+  const withoutExtension = fileName.replace(/\.pdf$/i, '').trim();
+  const safe = withoutExtension.replace(/[^a-z0-9._-]+/gi, '-');
   return safe.slice(0, 80) || 'document';
 }
 
