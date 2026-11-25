@@ -60,7 +60,7 @@ async function visitHome(page: Page) {
   await expect(page.locator('#file-input')).toHaveCount(1);
 }
 
-async function openTestPdf(page: Page, rotation = 0) {
+async function openTestPdf(page: Page, rotation = 0, mode: 'page' | 'scroll' = 'page') {
   await page.locator('#file-input').setInputFiles({
     name: 'pdf-utils-browser-test.pdf',
     mimeType: 'application/pdf',
@@ -68,6 +68,17 @@ async function openTestPdf(page: Page, rotation = 0) {
   });
   await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
+
+  if (mode === 'scroll') {
+    const firstPage = page.locator('[data-pdf-continuous-page="1"]');
+    await expect(firstPage).toBeVisible();
+    await expect(firstPage.locator('canvas[aria-label^="Page "]')).toBeVisible();
+    await expect(firstPage.locator('.textLayer')).toContainText('PDF Utils browser test first page');
+    return;
+  }
+
+  await page.getByRole('button', { name: 'Switch to page tools' }).click();
+  await expect(page.locator('[data-page-surface]')).toBeVisible();
   await expect(page.locator('canvas[aria-label^="Page "]')).toBeVisible();
   const selectableText = page.locator('.textLayer');
   await expect(selectableText).toContainText('PDF Utils browser test first page');
@@ -241,6 +252,36 @@ test('creates, moves, and undoes selectable text highlights', async ({ page }) =
   await expect(highlights).toHaveCount(0);
   await page.getByRole('button', { name: 'Redo annotation' }).click();
   await expect(highlights.first()).toBeVisible();
+});
+
+test('scrolls through PDF pages and keeps quick navigation in sync', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await visitHome(page);
+  await openTestPdf(page, 0, 'scroll');
+
+  const viewport = page.getByRole('region', { name: 'Document page area' });
+  const firstPage = page.locator('[data-pdf-continuous-page="1"]');
+  const secondPage = page.locator('[data-pdf-continuous-page="2"]');
+  await expect(firstPage.locator('canvas[aria-label^="Page "]')).toBeVisible();
+
+  // Scroll the document itself; no Next button interaction is required.
+  await viewport.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+
+  await expect(secondPage).toBeInViewport();
+  await expect(secondPage.locator('canvas[aria-label^="Page "]')).toBeVisible();
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 2 of 2');
+
+  // The existing page controls remain useful as quick jumps in scroll mode.
+  await page.getByRole('button', { name: 'Previous page' }).click();
+  await expect(firstPage).toBeInViewport();
+  await expect(page.locator('[role="status"]').last()).toContainText('Page 1 of 2');
+
+  // Page tools switches back to the annotation-enabled single-page workspace.
+  await page.getByRole('button', { name: 'Switch to page tools' }).click();
+  await expect(page.locator('[data-page-surface]')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Place note' })).toBeVisible();
 });
 
 test('creates, moves, edits, and deletes page-relative text notes', async ({ page }) => {
