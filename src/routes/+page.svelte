@@ -79,6 +79,8 @@
         <div
           class:dragging={isDragging}
           class="dropzone"
+          role="region"
+          aria-label="Choose a PDF to open"
           ondragover={(event) => { event.preventDefault(); isDragging = true; }}
           ondragleave={() => (isDragging = false)}
           ondrop={handleDrop}
