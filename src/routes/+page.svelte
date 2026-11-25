@@ -58,10 +58,12 @@
       </span>
       <span>pdf<span class="brand-light">utils</span></span>
     </a>
-    <nav class="top-nav" aria-label="Main navigation">
-      <a class="nav-active" href="#tools">Tools</a>
-      <a href="#how-it-works">How it works</a>
-    </nav>
+    {#if !selectedFile}
+      <nav class="top-nav" aria-label="Main navigation">
+        <a class="nav-active" href="#tools">Tools</a>
+        <a href="#how-it-works">How it works</a>
+      </nav>
+    {/if}
     <div class="privacy-pill"><span></span> Files stay on your device</div>
   </header>
 
