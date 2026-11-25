@@ -26,6 +26,7 @@
   let isLoading = true;
   let isRendering = false;
   let currentPage = 1;
+  let targetPage = 1;
   let totalPages = 0;
   let zoom = 1;
   let statusText = 'Preparing your document…';
@@ -63,7 +64,7 @@
       if (width && Math.abs(width - lastViewportWidth) > 1) {
         lastViewportWidth = width;
         if (fitToWidth && pdfDocument && !destroyed) {
-          void renderPage(currentPage, true);
+          void renderPage(targetPage, true);
         }
       }
     });
@@ -108,6 +109,8 @@
 
     try {
       const pageNumber = clampPageNumber(requestedPage, totalPages);
+      targetPage = pageNumber;
+      statusText = `Rendering page ${pageNumber} of ${totalPages}…`;
       const page = await document.getPage(pageNumber);
       pageToCleanup = page;
       if (destroyed || sequence !== renderSequence) {
@@ -148,6 +151,7 @@
 
       if (!destroyed && sequence === renderSequence) {
         currentPage = pageNumber;
+        targetPage = pageNumber;
         statusText = `Page ${currentPage} of ${totalPages} · ${Math.round(zoom * 100)}%`;
       }
     } catch (error) {
@@ -166,18 +170,19 @@
   }
 
   function goToPage(pageNumber: number) {
-    void renderPage(clampPageNumber(pageNumber, totalPages));
+    targetPage = clampPageNumber(pageNumber, totalPages);
+    void renderPage(targetPage);
   }
 
   function changeZoom(amount: number) {
     fitToWidth = false;
     zoom = clampZoom(zoom + amount);
-    void renderPage(currentPage);
+    void renderPage(targetPage);
   }
 
   function fitPageToWidth() {
     fitToWidth = true;
-    void renderPage(currentPage, true);
+    void renderPage(targetPage, true);
   }
 
   function formatFileSize(size: number) {
@@ -202,11 +207,11 @@
 
     <div class="viewer-controls" aria-label="PDF controls">
       <div class="viewer-control-group" aria-label="Page navigation">
-        <button type="button" class="viewer-button icon-button" aria-label="Previous page" title="Previous page" disabled={isLoading || currentPage <= 1} onclick={() => goToPage(currentPage - 1)}>
+        <button type="button" class="viewer-button icon-button" aria-label="Previous page" title="Previous page" disabled={isLoading || targetPage <= 1} onclick={() => goToPage(targetPage - 1)}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7" /></svg>
         </button>
         <span class="viewer-page-count"><strong>{totalPages ? currentPage : '—'}</strong><span>/</span>{totalPages || '—'}</span>
-        <button type="button" class="viewer-button icon-button" aria-label="Next page" title="Next page" disabled={isLoading || currentPage >= totalPages} onclick={() => goToPage(currentPage + 1)}>
+        <button type="button" class="viewer-button icon-button" aria-label="Next page" title="Next page" disabled={isLoading || targetPage >= totalPages} onclick={() => goToPage(targetPage + 1)}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7" /></svg>
         </button>
       </div>
@@ -225,7 +230,7 @@
       </div>
     </div>
 
-    <button type="button" class="viewer-button close-button" onclick={onClose}>
+    <button type="button" class="viewer-button close-button" aria-label="Close document" onclick={onClose}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
       <span>Close</span>
     </button>
@@ -245,7 +250,7 @@
       <button type="button" class="viewer-button" onclick={onClose}>Return to tools</button>
     </div>
   {:else}
-    <div class="viewer-stage" bind:this={viewerViewport} role="region" aria-label="Document page area">
+    <div class="viewer-stage" bind:this={viewerViewport} role="region" aria-label="Document page area" tabindex="0">
       {#if isLoading}
         <div class="viewer-loading-card">
           <span class="viewer-spinner large" aria-hidden="true"></span>
