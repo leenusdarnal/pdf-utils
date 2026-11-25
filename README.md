@@ -25,8 +25,9 @@ The viewer foundation is merged into `main`. CI now runs Svelte/type checks, uni
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
 - Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
+- Define validated highlight, text-note, freehand, rectangle, and arrow annotation data with normalized page-relative geometry and bounded in-memory undo/redo history. The model is a foundation only; drawing/editing controls and PDF annotation export are not available yet.
 
-**Not implemented yet:** annotations, page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** annotation drawing/editing UI and PDF annotation export, page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
@@ -51,7 +52,7 @@ The application uses SvelteKit, Svelte 5, TypeScript, Tailwind CSS v4, and Vite.
 - **Thumbnail navigation:** `ThumbnailSidebar.svelte` virtualizes the page list; `PdfThumbnail.svelte` renders only the visible preview canvases.
 - **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature, clamps page/zoom values, and calculates the bounded thumbnail window.
 - **Document operations:** planned service layer around `pdf-lib` for merge, split, page reorder/rotation, metadata, and export.
-- **Annotation model:** planned typed, page-relative annotation data independent of screen pixels.
+- **Annotation model:** `src/lib/annotations/annotations.ts` defines validated highlight, text-note, freehand, rectangle, and arrow types plus a bounded undo/redo history. Coordinates are normalized to the unrotated page bounds and remain independent of screen pixels.
 - **Persistence:** no persistence by default; optional IndexedDB drafts only when the workflow requires recovery and includes clear-data controls.
 - **Workers:** expensive operations should move off the main thread where supported, with progress and cancellation.
 
