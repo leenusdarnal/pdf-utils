@@ -10,7 +10,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 | Priority | Capability | MVP decision | Notes |
 | --- | --- | --- | --- |
-| P0 | PDF viewer | Yes | First slice: local rendering, page navigation, zoom, and fit width. Virtualized thumbnail navigation and local text search are in progress; text selection, metadata, and print remain pending |
+| P0 | PDF viewer | Yes | Local rendering, page navigation, zoom, fit width, virtualized thumbnails, mobile thumbnail toggle, local text search, and a read-only metadata panel are implemented; selectable text and print remain pending |
 | P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; download/export remains pending |
 | P1 | Page organization | Yes | Merge, split/extract, reorder, rotate, delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
@@ -57,15 +57,15 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | FND-01 | Foundation | Confirm app architecture and dependency policy | done | Decisions documented here; no application dependencies added prematurely |
 | FND-02 | Foundation | Create SvelteKit + TypeScript scaffold | done | Scaffold and pinned PDF.js dependency are committed; latest CI clean install and production build passed |
 | FND-03 | Foundation | Establish formatting, lint, typecheck, and test scripts | done | Unit tests, Svelte/type checks, and production build pass in latest CI; formatting gate is not currently part of CI |
-| FND-04 | Foundation | Build responsive app shell and design tokens | in-progress | Responsive landing page and viewer shell are implemented; browser/accessibility checks remain pending |
+| FND-04 | Foundation | Build responsive app shell and design tokens | in-progress | Responsive landing page, viewer shell, Tailwind design tokens, and mobile thumbnail controls are implemented; manual cross-browser accessibility review remains |
 | FND-05 | Foundation | Add CI workflow and contribution guidance | done | GitHub Actions CI and setup instructions are present; latest full run is green |
-| FND-06 | Foundation | GitHub Pages static deployment | in-progress | Static adapter and project base path are configured; deployment workflow and live verification remain pending |
+| FND-06 | Foundation | GitHub Pages static deployment | done | GitHub Actions deployment from main is green and the live app returns HTTP 200 |
 | VIEW-01 | Viewer | File picker and drag/drop import | done | Local signature validation and invalid-file feedback are implemented; helper tests pass in CI |
-| VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 adapter and current-page canvas rendering are implemented; browser regression checks are pending |
-| VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented; browser interaction tests are pending |
-| VIEW-04 | Viewer | Thumbnails and page virtualization | in-progress | Thumbnail sidebar supports page selection; only the visible window plus overscan mounts thumbnail canvases; browser/performance checks remain pending |
-| VIEW-05 | Viewer | Text extraction and document search | in-progress | Local search scans page text, highlights matches in result snippets, and navigates to the matching page; browser checks remain pending |
-| VIEW-06 | Viewer | Print and document information | not-started | Print action works; basic metadata/page count shown |
+| VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 adapter and current-page canvas rendering are implemented; Playwright covers the main Chromium flow, while real-world and cross-browser fixture coverage remains |
+| VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented and covered by Playwright; keyboard-only and cross-browser checks remain |
+| VIEW-04 | Viewer | Thumbnails and page virtualization | in-progress | Thumbnail sidebar supports page selection, virtualization, and mobile collapse/expand; Playwright covers mobile selection and panel behavior; large-document performance checks remain |
+| VIEW-05 | Viewer | Text extraction and document search | in-progress | Local search scans page text, highlights matches in result snippets, and navigates to matching pages; Playwright covers a searchable PDF fixture, while broader real-world coverage remains |
+| VIEW-06 | Viewer | Print and document information | in-progress | Read-only local metadata panel displays common document info, page count, and file size; print action remains pending |
 | OPS-01 | Page operations | Merge PDFs | not-started | Merge order preview; valid downloadable output |
 | OPS-02 | Page operations | Split and extract pages | not-started | Page ranges validated; each output downloads correctly |
 | OPS-03 | Page operations | Reorder, rotate, and delete pages | not-started | Preview matches exported page order/orientation |
