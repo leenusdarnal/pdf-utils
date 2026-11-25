@@ -65,7 +65,7 @@
         <a class="inline-flex h-full items-center text-[13px] font-semibold text-muted no-underline transition-colors hover:text-brand-700 max-[760px]:text-[11px] max-[480px]:hidden" href="#how-it-works">How it works</a>
       </nav>
     {/if}
-    <div class="ml-auto flex items-center gap-2 rounded-full border border-[#e2e5ea] bg-white px-[13px] py-[9px] text-[11px] font-semibold text-[#626977] max-[760px]:px-[10px] max-[760px]:py-2 max-[760px]:text-[0px] max-[480px]:hidden"><span></span> Files stay on your device</div>
+    <div class="ml-auto flex items-center gap-2 rounded-full border border-[#e2e5ea] bg-white px-[13px] py-[9px] text-[11px] font-semibold text-[#626977] max-[760px]:px-[10px] max-[760px]:py-2 max-[760px]:text-[0px] max-[480px]:hidden"><span class="size-1.5 rounded-full bg-success-500 max-[760px]:size-[7px]"></span> Files stay on your device</div>
   </header>
 
   <main>
