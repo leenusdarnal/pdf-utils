@@ -70,3 +70,28 @@ describe('getVisiblePageRange', () => {
     expect(getVisiblePageRange(0, 0, 500)).toEqual({ startPage: 0, endPage: 0 });
   });
 });
+
+
+describe('findTextMatches', () => {
+  it('finds case-insensitive literal matches and provides highlighted snippets', async () => {
+    const { findTextMatches } = await import('./pdf-search');
+    const matches = findTextMatches('The quick brown fox. QUICK fox.', 'quick', 2);
+
+    expect(matches).toHaveLength(2);
+    expect(matches[0]).toMatchObject({
+      pageNumber: 2,
+      index: 4,
+      snippet: 'The quick brown fox. QUICK fox.',
+      matchStart: 4,
+      matchText: 'quick'
+    });
+    expect(matches[1].matchText).toBe('QUICK');
+  });
+
+  it('returns no matches for blank queries and respects the result limit', async () => {
+    const { findTextMatches } = await import('./pdf-search');
+
+    expect(findTextMatches('some text', '  ', 1)).toEqual([]);
+    expect(findTextMatches('a a a a', 'a', 1, 2)).toHaveLength(2);
+  });
+});
