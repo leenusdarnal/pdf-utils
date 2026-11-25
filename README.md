@@ -26,7 +26,7 @@ The viewer foundation is merged into `main`. CI now runs Svelte/type checks, uni
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
 - Bound the canvas backing bitmap to a 16-megapixel budget and a maximum device scale of 2.
 
-**Not implemented yet:** selectable text overlay, printing, annotations, page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** selectable text overlay, annotations, page editing, merging/splitting, compression, watermarking, and conversion. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current canvas or create a modified copy. Playwright covers the main Chromium viewer flows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
