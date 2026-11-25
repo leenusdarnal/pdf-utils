@@ -69,7 +69,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | OPS-01 | Page operations | Merge PDFs | not-started | Merge order preview; valid downloadable output |
 | OPS-02 | Page operations | Split and extract pages | not-started | Page ranges validated; each output downloads correctly |
 | OPS-03 | Page operations | Reorder, rotate, and delete pages | not-started | Preview matches exported page order/orientation |
-| ANN-01 | Annotation | Typed annotation schema and history | not-started | Page-relative coordinates; undo/redo tests |
+| ANN-01 | Annotation | Typed annotation schema and history | done | Validated highlight, text-note, freehand, rectangle, and arrow types use normalized page-relative coordinates; bounded undo/redo history and validation are covered by unit tests |
 | ANN-02 | Annotation | Highlight and text notes | not-started | Add, select, move, edit, delete; zoom/rotation alignment |
 | ANN-03 | Annotation | Freehand and shape tools | not-started | Pointer/touch support; stable alignment through resize |
 | ANN-04 | Annotation | Annotation export | not-started | Text/vector fidelity tested; limitations disclosed |
