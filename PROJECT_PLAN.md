@@ -55,13 +55,13 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | ID | Phase | Deliverable | Status | Acceptance criteria |
 | --- | --- | --- | --- | --- |
 | FND-01 | Foundation | Confirm app architecture and dependency policy | done | Decisions documented here; no application dependencies added prematurely |
-| FND-02 | Foundation | Create SvelteKit + TypeScript scaffold | in-progress | Scaffold and pinned PDF.js dependency are committed; clean install/build verification is pending |
-| FND-03 | Foundation | Establish formatting, lint, typecheck, and test scripts | in-progress | Test and type-check scripts plus CI exist; green verification and formatting gate remain pending |
+| FND-02 | Foundation | Create SvelteKit + TypeScript scaffold | done | Scaffold and pinned PDF.js dependency are committed; latest CI clean install and production build passed |
+| FND-03 | Foundation | Establish formatting, lint, typecheck, and test scripts | done | Unit tests, Svelte/type checks, and production build pass in latest CI; formatting gate is not currently part of CI |
 | FND-04 | Foundation | Build responsive app shell and design tokens | in-progress | Responsive landing page and viewer shell are implemented; browser/accessibility checks remain pending |
-| FND-05 | Foundation | Add CI workflow and contribution guidance | in-progress | GitHub Actions CI and setup instructions are present; latest full run is not yet verified green |
-| VIEW-01 | Viewer | File picker and drag/drop import | in-progress | Local signature validation and invalid-file feedback are implemented; test run is pending |
+| FND-05 | Foundation | Add CI workflow and contribution guidance | done | GitHub Actions CI and setup instructions are present; latest full run is green |
+| VIEW-01 | Viewer | File picker and drag/drop import | done | Local signature validation and invalid-file feedback are implemented; helper tests pass in CI |
 | VIEW-02 | Viewer | PDF.js rendering adapter | in-progress | PDF.js v6.5.438 adapter and current-page canvas rendering are implemented; browser regression checks are pending |
-| VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented; interaction tests are pending |
+| VIEW-03 | Viewer | Navigation and zoom controls | in-progress | Previous/next, 50–300% zoom, fit width, and close controls are implemented; browser interaction tests are pending |
 | VIEW-04 | Viewer | Thumbnails and page virtualization | not-started | Large documents do not mount every full-size page at once |
 | VIEW-05 | Viewer | Text layer and document search | not-started | Search results navigate to matching page and highlight results |
 | VIEW-06 | Viewer | Print and document information | not-started | Print action works; basic metadata/page count shown |
