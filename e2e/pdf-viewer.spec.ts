@@ -26,8 +26,10 @@ function createTwoPagePdf(): Buffer {
     `<< /Type /Pages /Kids [${pageTexts.map((_, index) => `${index + 3} 0 R`).join(' ')}] /Count ${pageCount} >>`,
     ...pageObjects,
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-    ...contentObjects
+    ...contentObjects,
+    '<< /Title (PDF Utils Test Document) /Author (Browser Test Author) /Subject (Metadata panel test) /Creator (PDF Utils Test Suite) /Producer (PDF Utils Browser Fixture) >>'
   ];
+  const infoObjectNumber = objects.length;
 
   let pdf = '%PDF-1.4\n';
   const offsets: number[] = [];
@@ -43,7 +45,7 @@ function createTwoPagePdf(): Buffer {
     pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
   }
   pdf +=
-    `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\n` +
+    `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R /Info ${infoObjectNumber} 0 R >>\n` +
     `startxref\n${crossReferenceOffset}\n%%EOF`;
 
   return Buffer.from(pdf, 'binary');
@@ -72,6 +74,17 @@ async function openTestPdf(page: Page) {
 test('opens a PDF and supports page navigation, local search, and zoom', async ({ page }) => {
   await visitHome(page);
   await openTestPdf(page);
+
+  const infoButton = page.getByRole('button', { name: 'Document info' });
+  await expect(infoButton).toHaveAttribute('aria-expanded', 'false');
+  await infoButton.click();
+  const infoPanel = page.getByRole('region', { name: 'Document information' });
+  await expect(infoPanel).toBeVisible();
+  await expect(infoPanel).toContainText('PDF Utils Test Document');
+  await expect(infoPanel).toContainText('Browser Test Author');
+  await expect(infoPanel).toContainText('Metadata panel test');
+  await infoButton.click();
+  await expect(infoPanel).toBeHidden();
 
   await page.getByRole('button', { name: 'Next page' }).click();
   await expect(page.locator('[role="status"]').last()).toContainText('Page 2 of 2');

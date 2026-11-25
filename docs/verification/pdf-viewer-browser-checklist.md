@@ -1,6 +1,6 @@
 # PDF Viewer Browser Verification
 
-Use this checklist against a production build or preview server before marking the viewer MVP complete. These checks are intentionally manual until a browser automation runner is available; they do not replace unit tests or CI.
+Use this checklist against a production build or preview server before marking the viewer MVP complete. Playwright covers repeatable Chromium workflows; the manual cross-browser, accessibility, privacy, and unusual-file checks below remain necessary.
 
 ## Test setup
 
@@ -28,6 +28,13 @@ Use this checklist against a production build or preview server before marking t
 - [ ] Close while a page is rendering; no stale error or canvas appears after returning to the landing page.
 - [ ] Test a large page and high-DPI viewport; rendering stays within the scale cap and the page remains reachable by scrolling.
 - [ ] Test narrow/mobile width; toolbar controls remain reachable and the page does not force the whole app horizontally off-screen.
+- [ ] On mobile, the thumbnail rail starts collapsed, opens with Show pages, and collapses after selecting a thumbnail.
+
+## Document information
+
+- [ ] Open Document info and verify filename, file size, page count, PDF version, title, author, subject, creator, and producer where present.
+- [ ] Confirm missing optional metadata is described as unavailable/not specified rather than blocking the document from opening.
+- [ ] Close and reopen the information panel; it must not modify document bytes or upload metadata.
 
 ## Accessibility and privacy
 
