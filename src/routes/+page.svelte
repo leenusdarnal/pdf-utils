@@ -55,7 +55,7 @@
   <header class="flex h-[88px] items-center gap-[52px] border-b border-[#e9ebef] max-[760px]:h-[70px] max-[760px]:gap-[22px] max-[480px]:gap-[15px]">
     <a class="inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap font-display text-[22px] font-extrabold leading-none tracking-[-1.1px] no-underline max-[480px]:text-[19px]" href={`${base}/`} aria-label="PDF Utils home">
       <span class="grid size-[34px] shrink-0 place-items-center rounded-[10px] bg-brand-700 text-white max-[480px]:size-[30px]" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 3.75h7l4 4v12.5H6.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 3.75v4h4M8.75 13h6.5M8.75 16h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <svg class="size-[21px]" viewBox="0 0 24 24" fill="none"><path d="M6.5 3.75h7l4 4v12.5H6.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 3.75v4h4M8.75 13h6.5M8.75 16h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </span>
       <span>pdf<span class="font-medium text-[#8c91a0]">utils</span></span>
     </a>
@@ -74,7 +74,7 @@
     {:else}
       <section class="py-[77px] text-center max-[760px]:pb-[54px] max-[760px]:pt-[61px] max-[480px]:pt-[49px]">
         <div class="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[1.7px] text-brand-600 max-[480px]:text-[8px] max-[480px]:tracking-[1.2px]"><span class="h-px w-[22px] bg-brand-300"></span> A calmer way to work with PDFs</div>
-        <h1>Your documents.<br /><span>Handled locally.</span></h1>
+        <h1 class="mx-auto mb-4 mt-5 font-display text-[clamp(42px,5.2vw,66px)] font-extrabold leading-[1.08] tracking-[-3.4px] max-[760px]:tracking-[-2px] max-[480px]:text-[43px]">Your documents.<br /><span class="text-brand-600">Handled locally.</span></h1>
         <p class="mx-auto max-w-[500px] text-[15px] leading-[1.8] text-muted max-[760px]:max-w-[410px] max-[760px]:text-[13px] max-[480px]:text-[12px]">Everything you need to view, organize, and refine PDFs — without sending your files to a server.</p>
 
         <div
@@ -87,7 +87,7 @@
         >
           <input id="file-input" class="sr-only" type="file" accept="application/pdf,.pdf" onchange={handlePick} />
           <div class="mx-auto mb-3 grid size-[43px] place-items-center rounded-xl border border-brand-200 bg-brand-50 text-brand-600" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           {#if isValidating}
             <div class="mb-1.5 text-[15px] font-bold text-[#30333c]">Checking your PDF…</div>
@@ -108,28 +108,28 @@
         <div class="mb-[25px] flex items-end justify-between max-[760px]:items-start max-[760px]:gap-[15px] max-[480px]:flex-col">
           <div>
             <div class="mb-[9px] text-[9px] font-bold uppercase tracking-[1.6px] text-brand-600">THE TOOLKIT</div>
-            <h2>One workspace. Useful tools.</h2>
+            <h2 class="font-display text-[23px] font-bold leading-[1.3] tracking-[-.8px] max-[480px]:text-[21px]">One workspace. Useful tools.</h2>
           </div>
           <span class="rounded-[7px] border border-[#e5e3f7] bg-brand-50 px-[10px] py-[7px] text-[10px] font-semibold text-brand-600 max-[760px]:text-[9px]">Viewer MVP in progress</span>
         </div>
         <div class="grid grid-cols-2 gap-[13px] max-[760px]:grid-cols-1">
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
-            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-brand-100 text-brand-600"><svg viewBox="0 0 24 24" fill="none"><path d="M5 3.5h9l5 5v12H5zM14 3.5v5h5M8 13h8M8 16h6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-brand-100 text-brand-600"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M5 3.5h9l5 5v12H5zM14 3.5v5h5M8 13h8M8 16h6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">View & read</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Open and navigate your documents.</p></div>
             <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Available</span>
           </article>
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
-            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#eaf4ff] text-[#4f8fce]"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5h6v6H4zM14 5.5h6v6h-6zM4 15.5h6v4H4zM14 15.5h6v4h-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#eaf4ff] text-[#4f8fce]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M4 5.5h6v6H4zM14 5.5h6v6h-6zM4 15.5h6v4H4zM14 15.5h6v4h-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Organize pages</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Merge, split, rotate, and reorder pages.</p></div>
             <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Planned</span>
           </article>
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
-            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#fff5e5] text-[#c18a36]"><svg viewBox="0 0 24 24" fill="none"><path d="m4 17 9.8-9.8 3 3L7 20H4zM14.5 6.5l2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#fff5e5] text-[#c18a36]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="m4 17 9.8-9.8 3 3L7 20H4zM14.5 6.5l2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Annotate</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Highlight, add notes, and mark up pages.</p></div>
             <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Planned</span>
           </article>
           <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
-            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#e9f8f1] text-[#39a17d]"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5v11m0 0 4-4m-4 4-4-4M5 15.5v3A2 2 0 0 0 7 20.5h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#e9f8f1] text-[#39a17d]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M12 3.5v11m0 0 4-4m-4 4-4-4M5 15.5v3A2 2 0 0 0 7 20.5h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Convert & export</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Move between PDF and common image formats.</p></div>
             <span class="ml-auto self-start whitespace-nowrap text-[9px] text-[#9a9eaa] max-[480px]:hidden">Planned</span>
           </article>
@@ -137,7 +137,7 @@
       </section>
 
       <section class="mb-[50px] flex items-center gap-[17px] rounded-xl border border-[#e7e8f1] bg-[#f1f0fa] px-6 py-[22px] max-[760px]:flex-wrap max-[760px]:items-start max-[760px]:p-[18px]" id="how-it-works">
-        <div class="grid size-10 shrink-0 place-items-center rounded-[10px] bg-[#e4e1fa] text-brand-600" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+        <div class="grid size-10 shrink-0 place-items-center rounded-[10px] bg-[#e4e1fa] text-brand-600" aria-hidden="true"><svg class="size-[21px]" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
         <div class="min-w-0"><h2 class="mb-1 font-display text-[14px] font-bold">Private by default</h2><p class="mb-0 text-[11px] leading-[1.6] text-[#7f8491]">PDF Utils processes your chosen document in your browser. Files are not uploaded as part of the viewer workflow.</p></div>
         <a class="ml-auto whitespace-nowrap text-[11px] font-bold text-brand-600 no-underline hover:underline max-[760px]:ml-[57px]" href="https://github.com/leenusdarnal/pdf-utils" target="_blank" rel="noreferrer">Explore the code <span class="ml-[5px]">↗</span></a>
       </section>
