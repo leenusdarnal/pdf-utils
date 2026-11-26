@@ -148,8 +148,8 @@ describe('PDF repair input inspection', () => {
   });
 
   it('detects a populated signature byte-range dictionary', () => {
-    const signed = new TextEncoder().encode('%PDF-1.7\\n/ByteRange [0 120 500 80]\\n');
-    const unsigned = new TextEncoder().encode('%PDF-1.7\\n/ByteRange [not a signature]\\n');
+    const signed = new TextEncoder().encode('%PDF-1.7\n/ByteRange [0 120 500 80]\n');
+    const unsigned = new TextEncoder().encode('%PDF-1.7\n/ByteRange [not a signature]\n');
     expect(hasPdfSignatureByteRange(signed)).toBe(true);
     expect(hasPdfSignatureByteRange(unsigned)).toBe(false);
   });
@@ -166,7 +166,7 @@ describe('PDF repair input inspection', () => {
 
 describe('repair preservation helpers', () => {
   it('normalizes whitespace and Unicode compatibility forms', () => {
-    expect(normalizeRepairText('  PDF\\n  repair\\tﬁle  ')).toBe('PDF repair file');
+    expect(normalizeRepairText('  PDF\n  repair\tﬁle  ')).toBe('PDF repair file');
   });
 
   it('calculates the percentage of visibly changed pixels', () => {
