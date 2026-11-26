@@ -36,14 +36,16 @@ function getStrokeWidth(fraction: number, bounds: PageBounds): number {
 }
 
 function safeFontText(value: string, font: PDFFont): string {
-  return Array.from(value, (character) => {
+  return value.replace(/\\r\\n?/g, '\\n').split('\\n').map((line) =>
+    Array.from(line, (character) => {
     try {
       font.encodeText(character);
       return character;
     } catch {
       return '?';
     }
-  }).join('');
+    }).join('')
+  ).join('\\n');
 }
 
 function wrapText(value: string, font: PDFFont, fontSize: number, maxWidth: number): string[] {
@@ -259,7 +261,7 @@ function validateExport(annotations: readonly PdfAnnotation[]): void {
 }
 
 /**
- * Add editable vector/text annotation content to a fresh copy of the source PDF.
+ * Add vector/text annotation overlays to a fresh copy of the source PDF.
  * Page content is not rasterized and the input Blob is never changed.
  *
  * Coordinates use the PDF crop box so annotations remain aligned with the
