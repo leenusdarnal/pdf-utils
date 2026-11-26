@@ -125,7 +125,7 @@ describe('comparePdfFiles service', () => {
     const baselineFile = new Blob(['baseline']);
     const updatedFile = new Blob(['updated']);
     const baselinePages = [
-      createPage({ text: '  INVOICE 100\\n ITEMS ', shade: 255 }),
+      createPage({ text: '  INVOICE 100\n ITEMS ', shade: 255 }),
       createPage({ text: 'TOTAL 100', shade: 255 }),
       createPage({ text: 'UNCHANGED PAGE', shade: 255 })
     ];
