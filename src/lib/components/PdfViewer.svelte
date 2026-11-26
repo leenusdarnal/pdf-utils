@@ -1255,14 +1255,14 @@
         class={"inline-flex min-h-[32px] items-center justify-center rounded-lg border px-3 text-[11px] font-semibold transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] " + (isAddingNote ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-line bg-white text-[#454b59] hover:border-brand-300 hover:bg-brand-50')}
         aria-label="Place note"
         aria-pressed={isAddingNote}
-        disabled={isLoading}
+        disabled={isLoading || isCheckingAnnotationDraft}
         onclick={toggleNotePlacement}
       >{isAddingNote ? 'Click on page…' : 'Place note'}</button>
       <button
         type="button"
         class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]"
         aria-label="Highlight selection"
-        disabled={isLoading || pendingHighlightRects.length === 0}
+        disabled={isLoading || isCheckingAnnotationDraft || pendingHighlightRects.length === 0}
         onclick={addHighlightFromSelection}
       >Highlight selection</button>
       <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw freehand" aria-pressed={drawingTool === 'freehand'} disabled={isLoading || isCheckingAnnotationDraft} onclick={() => toggleDrawingTool('freehand')}>Draw</button>
