@@ -173,9 +173,8 @@ function isStoredDraft(value: unknown): value is StoredAnnotationDraft {
   );
 }
 
-/** Load annotation data for this exact PDF content. PDF bytes are never stored. */
-export async function loadAnnotationDraft(source: Blob): Promise<AnnotationDraft | null> {
-  const fingerprint = await fingerprintPdf(source);
+/** Load annotation data using a previously computed PDF content fingerprint. */
+export async function loadAnnotationDraftByFingerprint(fingerprint: string): Promise<AnnotationDraft | null> {
   const database = await openDatabase();
   const transaction = database.transaction(STORE_NAME, 'readonly');
   const completed = transactionResult(transaction);
@@ -208,7 +207,7 @@ export async function loadAnnotationDraft(source: Blob): Promise<AnnotationDraft
   }
 }
 
-async function deleteAnnotationDraftByFingerprint(fingerprint: string): Promise<void> {
+export async function deleteAnnotationDraftByFingerprint(fingerprint: string): Promise<void> {
   const database = await openDatabase();
   const transaction = database.transaction(STORE_NAME, 'readwrite');
   const completed = transactionResult(transaction);
@@ -220,11 +219,10 @@ async function deleteAnnotationDraftByFingerprint(fingerprint: string): Promise<
  * Save only annotation JSON for this PDF. Empty annotation arrays clear the
  * corresponding draft. Recent drafts are retained up to a fixed count.
  */
-export async function saveAnnotationDraft(
-  source: Blob,
+export async function saveAnnotationDraftByFingerprint(
+  fingerprint: string,
   annotationsValue: readonly PdfAnnotation[]
 ): Promise<void> {
-  const fingerprint = await fingerprintPdf(source);
   const annotations = validateDraftAnnotations(annotationsValue);
 
   if (annotations.length === 0) {
@@ -269,8 +267,21 @@ export async function saveAnnotationDraft(
   await completed;
 }
 
-/** Remove the local annotation draft associated with this PDF's content. */
+/**
+ * Convenience wrapper for callers that have not already fingerprinted the PDF.
+ * Viewer sessions should compute the fingerprint once and use the by-fingerprint API.
+ */
+export async function loadAnnotationDraft(source: Blob): Promise<AnnotationDraft | null> {
+  return loadAnnotationDraftByFingerprint(await fingerprintPdf(source));
+}
+
+export async function saveAnnotationDraft(
+  source: Blob,
+  annotations: readonly PdfAnnotation[]
+): Promise<void> {
+  await saveAnnotationDraftByFingerprint(await fingerprintPdf(source), annotations);
+}
+
 export async function deleteAnnotationDraft(source: Blob): Promise<void> {
-  const fingerprint = await fingerprintPdf(source);
-  await deleteAnnotationDraftByFingerprint(fingerprint);
+  await deleteAnnotationDraftByFingerprint(await fingerprintPdf(source));
 }
