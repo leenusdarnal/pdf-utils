@@ -49,7 +49,7 @@ export async function createAnnotationDraftKey(file: File): Promise<string> {
   ]);
   const metadata = new TextEncoder().encode(
     'pdf-utils-annotation-draft-v1\0' +
-    file.name + '\0' + file.size + '\0' + file.lastModified + '\0'
+    file.name + '\0' + file.size + '\0'
   );
   const sampleLength = sampleBuffers.reduce((total, buffer) => total + buffer.byteLength, 0);
   const fingerprintInput = new Uint8Array(metadata.byteLength + sampleLength);
