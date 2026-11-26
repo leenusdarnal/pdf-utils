@@ -47,7 +47,7 @@ test('adds a text watermark and custom page numbers to selected pages', async ({
   const output = await PDFDocument.load(await readFile(outputPath!));
   expect(output.getPageCount()).toBe(3);
   expect(output.getPage(1).getRotation().angle).toBe(90);
-  expect(output.getPage(0).getSize()).toEqual([300, 400]);
+  expect(output.getPage(0).getSize()).toEqual({ width: 300, height: 400 });
   expect(new Uint8Array(await readFile(outputPath!)).byteLength).toBeGreaterThan(source.byteLength);
 
   await page.getByLabel('Page range').fill('1-4');
