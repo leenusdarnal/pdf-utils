@@ -341,6 +341,7 @@
       pendingHighlightRects = [];
       drawingTool = null;
       drawingStart = null;
+      queueAnnotationDraftSave();
     }
     targetPage = nextPage;
     void renderPage(targetPage);
@@ -740,10 +741,10 @@
       text: ''
     };
     annotationHistory.add(note);
-    refreshAnnotationState();
     selectedAnnotationId = note.id;
     editingNoteId = note.id;
     newNoteId = note.id;
+    refreshAnnotationState();
     noteDraft = '';
     noteError = '';
     isAddingNote = false;
