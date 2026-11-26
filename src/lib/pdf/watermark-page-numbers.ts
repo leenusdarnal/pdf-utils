@@ -58,6 +58,11 @@ export interface OverlayBox {
   height: number;
 }
 
+export interface OverlayOrigin {
+  x: number;
+  y: number;
+}
+
 export const MAX_WATERMARK_IMAGE_BYTES = 15 * 1024 * 1024;
 export const MAX_WATERMARK_TEXT_LENGTH = 120;
 const POINTS_PER_MM = 72 / 25.4;
@@ -141,6 +146,20 @@ export function calculateOverlayBox(
     y: Math.max(0, Math.min(pageHeight - contentHeight, y)),
     width: contentWidth,
     height: contentHeight
+  };
+}
+
+/** Keep rotated text centered on the selected overlay box. */
+export function calculateRotatedTextOrigin(box: OverlayBox, rotation: number): OverlayOrigin {
+  if (!isFiniteNumber(rotation)) throw new Error('Rotation must be a finite number.');
+  const radians = rotation * Math.PI / 180;
+  const cosine = Math.cos(radians);
+  const sine = Math.sin(radians);
+  const centerX = box.x + box.width / 2;
+  const centerY = box.y + box.height / 2;
+  return {
+    x: centerX - (box.width / 2 * cosine - box.height / 2 * sine),
+    y: centerY - (box.width / 2 * sine + box.height / 2 * cosine)
   };
 }
 
@@ -317,17 +336,26 @@ export async function watermarkAndNumberPdf(
       const fontSize = fitTextSize(font, text, settings.fontSize, availableWidth);
       const textWidth = font.widthOfTextAtSize(text, fontSize);
       const textHeight = fontSize * 1.15;
-      const box = calculateOverlayBox(
+      const radians = settings.rotation * Math.PI / 180;
+      const rotatedWidth = Math.abs(textWidth * Math.cos(radians)) +
+        Math.abs(textHeight * Math.sin(radians));
+      const rotatedHeight = Math.abs(textWidth * Math.sin(radians)) +
+        Math.abs(textHeight * Math.cos(radians));
+      const rotatedBox = calculateOverlayBox(
         pageWidth,
         pageHeight,
-        textWidth,
-        textHeight,
+        rotatedWidth,
+        rotatedHeight,
         settings.position,
         margin
       );
+      const origin = calculateRotatedTextOrigin(
+        { x: rotatedBox.x, y: rotatedBox.y, width: textWidth, height: textHeight },
+        settings.rotation
+      );
       page.drawText(text, {
-        x: box.x,
-        y: box.y,
+        x: origin.x,
+        y: origin.y,
         size: fontSize,
         font,
         color: toRgb(settings.color),
