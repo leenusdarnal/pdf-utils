@@ -21,7 +21,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P1 | Compression | Yes | Local raster-based copy with Screen/Balanced/Print presets, first-page quality preview, optional best-effort target size, before/after reporting, explicit loss warning, and untouched original |
 | P1 | Extract images | Yes | Recover supported image XObjects and inline images from PDF content streams; export decoded resources as PNG and report unsupported/skipped objects |
 | P2 | Editing tools | Later | Text/image insertion, signatures, stamps, crop, forms, flattening; distinguish overlays from editing existing content |
-| P2 | Watermark/page numbers | Later | Deterministic placement and preview |
+| P2 | Watermark/page numbers | Yes | Text and PNG/JPEG watermarks, opacity/size/rotation/color, placement and margins, page-number formats/start values, validated page ranges, scaled placement guide, and local PDF export are implemented; cross-viewer visual review remains |
 | P2 | N-up layout | Later | Place 2, 4, 6 or more pages per sheet with print-ready output |
 | P2 | OCR and text extraction | Later | Searchable OCR, PDF-to-text, and PDF-to-Markdown; evaluate browser/local runtimes and language coverage |
 | P2 | Compare and repair | Later | Compare pages/content and attempt safe repair of malformed PDFs |
@@ -40,6 +40,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | Annotation coordinates | Normalized page-relative coordinates | Preserves placement through zoom, rotation, and viewport resize |
 | State | Small typed stores/state modules | Avoid a heavyweight global state library until required |
 | Persistence | Bounded IndexedDB annotation drafts keyed by PDF content fingerprint | Store annotation JSON only (never document bytes), validate restored data, limit draft size/count, and provide explicit clear controls |
+| Overlay placement | PDF-point geometry shared by exporter and preview guide | Keep watermark and page-number anchors deterministic across page sizes; preserve source page order, size, and rotation |
 | Background work | Web Workers for expensive tasks when supported | Keep the UI responsive; expose progress and cancellation |
 | Telemetry | No document content or bytes in telemetry | Privacy-first behavior; make any analytics opt-in and minimal |
 | Hosting | Static/browser-first deployment where possible | Avoid server-side file retention and processing costs |
@@ -90,7 +91,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | EDIT-01 | Editing | Text and image insertion, signatures, stamps | deferred | Add/move/resize overlays with clear distinction from editing original PDF text; preview and export fidelity tested |
 | EDIT-02 | Editing | Crop and page-size adjustment | deferred | Set crop/page boxes and output size with preview; preserve content placement and handle rotation |
 | EDIT-03 | Editing | Forms and flattening | deferred | Fill supported interactive fields; flatten only on explicit user action and explain loss of interactivity |
-| TRN-01 | Transform | Watermark and page numbers | deferred | Preview and exported placement match; support ranges, margins, positioning, and style |
+| TRN-01 | Transform | Watermark and page numbers | in-progress | Add text and PNG/JPEG image watermarks independently or together; page number formats and start value; validate page ranges; control color/opacity/size/rotation/position/margins; produce a new local PDF; unit and Playwright output tests pass; inspect representative outputs in an independent viewer before marking done |
 | TRN-02 | Transform | N-up pages per sheet | deferred | Support 2-up, 4-up, 6-up and configurable layouts with print-ready output and page order tests |
 | OCR-01 | OCR and extraction | Searchable OCR | deferred | OCR scanned pages into searchable text; document supported languages, local processing, accuracy limits, and progress/cancel behavior |
 | OCR-02 | OCR and extraction | PDF to text and Markdown | deferred | Extract text in reading order with page breaks and clearly documented layout limitations |
