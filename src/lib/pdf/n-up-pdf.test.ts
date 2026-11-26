@@ -35,6 +35,12 @@ async function createSourcePdf(pageCount = 5): Promise<Uint8Array> {
   return document.save();
 }
 
+function createPdfBlob(bytes: Uint8Array): Blob {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return new Blob([buffer], { type: 'application/pdf' });
+}
+
 describe('resolveNUpGrid', () => {
   it('resolves 2-up and 6-up to useful rows and columns for each sheet orientation', () => {
     expect(resolveNUpGrid('2-up', 'auto')).toMatchObject({
@@ -131,7 +137,7 @@ describe('resolveNUpPageSequence', () => {
 describe('createNUpPdf', () => {
   it('creates print-ready sheets and leaves the original source untouched', async () => {
     const sourceBytes = await createSourcePdf(5);
-    const source = new Blob([sourceBytes], { type: 'application/pdf' });
+    const source = createPdfBlob(sourceBytes);
     const originalBytes = new Uint8Array(await source.arrayBuffer());
     const result = await createNUpPdf(source, defaultOptions());
 
@@ -149,7 +155,7 @@ describe('createNUpPdf', () => {
   });
 
   it('supports a final partially-filled sheet and a reversed page sequence', async () => {
-    const source = new Blob([await createSourcePdf(5)], { type: 'application/pdf' });
+    const source = createPdfBlob(await createSourcePdf(5));
     const result = await createNUpPdf(source, defaultOptions({
       layout: '2-up',
       orientation: 'landscape',
@@ -165,7 +171,7 @@ describe('createNUpPdf', () => {
   });
 
   it('rejects unsupported page selections and invalid spacing', async () => {
-    const source = new Blob([await createSourcePdf(2)], { type: 'application/pdf' });
+    const source = createPdfBlob(await createSourcePdf(2));
     await expect(createNUpPdf(source, defaultOptions({ pageNumbers: [1, 3] })))
       .rejects.toThrow('outside the document');
     await expect(createNUpPdf(source, defaultOptions({ marginMm: 26 })))
