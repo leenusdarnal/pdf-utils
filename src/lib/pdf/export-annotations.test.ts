@@ -138,7 +138,7 @@ describe('exportAnnotatedPdf', () => {
       );
       expect(markerDistance).toBeLessThan(18);
     } finally {
-      await reopened.destroy();
+      await loadingTask.destroy();
     }
   });
 
