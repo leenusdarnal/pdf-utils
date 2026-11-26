@@ -33,7 +33,7 @@ describe('calculateOverlayBox', () => {
 
   it('keeps overlays inside pages when the requested margin exceeds the available inset', () => {
     expect(calculateOverlayBox(100, 100, 80, 80, 'bottom-right', 30)).toEqual({
-      x: 0, y: 0, width: 80, height: 80
+      x: 0, y: 20, width: 80, height: 80
     });
     expect(() => calculateOverlayBox(100, 100, 110, 20, 'center', 0)).toThrow(
       'does not fit'
