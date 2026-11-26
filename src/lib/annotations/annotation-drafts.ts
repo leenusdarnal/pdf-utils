@@ -198,7 +198,11 @@ export async function saveAnnotationDraft(draft: AnnotationDraft): Promise<void>
       }
     };
     request.onerror = () => {
-      throw request.error ?? new Error('Unable to maintain the local draft limit.');
+      try {
+        request.transaction?.abort();
+      } catch {
+        // The transaction may already be aborting; its handlers report the failure.
+      }
     };
   });
 }
