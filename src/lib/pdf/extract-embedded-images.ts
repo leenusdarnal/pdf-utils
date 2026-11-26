@@ -46,7 +46,7 @@ export const MAX_EMBEDDED_IMAGE_COUNT = 200;
 export const MAX_EMBEDDED_IMAGE_FILE_BYTES = 150 * 1024 * 1024;
 const MAX_IMAGE_SIDE = 20_000;
 const MAX_IMAGE_PIXELS = 40_000_000;
-const MAX_TOTAL_IMAGE_PIXELS = 160_000_000;
+const MAX_TOTAL_IMAGE_PIXELS = 80_000_000;
 const MAX_IMAGE_OBJECT_WAIT_MS = 15_000;
 
 export function safeEmbeddedImageBaseName(value: string): string {
@@ -94,8 +94,22 @@ export function decodePdfImagePixels(
       rgba[targetOffset + 2] = Number(values[sourceOffset + 2]);
       rgba[targetOffset + 3] = 255;
     }
-  } else if (kind === 1 || length === pixelCount) {
-    if (length < pixelCount) throw new Error('The grayscale image data is incomplete.');
+  } else if (kind === 1) {
+    const rowBytes = Math.ceil(width / 8);
+    if (length < rowBytes * height) throw new Error('The 1-bit image data is incomplete.');
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const byte = Number(values[y * rowBytes + Math.floor(x / 8)]);
+        const bit = (byte >> (7 - (x % 8))) & 1;
+        const gray = bit ? 255 : 0;
+        const targetOffset = (y * width + x) * 4;
+        rgba[targetOffset] = gray;
+        rgba[targetOffset + 1] = gray;
+        rgba[targetOffset + 2] = gray;
+        rgba[targetOffset + 3] = 255;
+      }
+    }
+  } else if (length === pixelCount) {
     for (let pixel = 0; pixel < pixelCount; pixel += 1) {
       const gray = Number(values[pixel]);
       const targetOffset = pixel * 4;
@@ -253,7 +267,6 @@ export async function extractEmbeddedImages(
 
     for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
-      let pageImageIndex = 0;
       try {
         const operatorList = await page.getOperatorList();
         for (let index = 0; index < operatorList.fnArray.length; index += 1) {
@@ -302,6 +315,19 @@ export async function extractEmbeddedImages(
           }
 
           try {
+            const candidate = sourceObject as PdfJsImageData | null;
+            const candidateWidth = Number(candidate?.width);
+            const candidateHeight = Number(candidate?.height);
+            if (
+              Number.isFinite(candidateWidth) &&
+              Number.isFinite(candidateHeight) &&
+              candidateWidth > 0 &&
+              candidateHeight > 0 &&
+              totalImagePixels + candidateWidth * candidateHeight > MAX_TOTAL_IMAGE_PIXELS
+            ) {
+              skippedImages += 1;
+              continue;
+            }
             const extracted = await imageObjectToPng(sourceObject);
             const pixelCount = extracted.width * extracted.height;
             if (totalImagePixels + pixelCount > MAX_TOTAL_IMAGE_PIXELS) {
@@ -309,7 +335,6 @@ export async function extractEmbeddedImages(
               continue;
             }
             totalImagePixels += pixelCount;
-            pageImageIndex += 1;
             const imageNumber = images.length + 1;
             const paddedImage = String(imageNumber).padStart(3, '0');
             const paddedPage = String(pageNumber).padStart(String(pageCount).length, '0');
