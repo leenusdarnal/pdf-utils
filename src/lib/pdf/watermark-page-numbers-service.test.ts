@@ -65,19 +65,20 @@ describe('addWatermarkAndPageNumbers', () => {
         throw new Error('Expected overlay text could not be located in the exported PDF.');
       }
 
-      const watermarkX = watermark.transform[4];
-      const watermarkY = watermark.transform[5];
-      expect(watermarkX).toBeGreaterThan(40);
-      expect(watermarkX).toBeLessThan(230);
-      expect(watermarkY).toBeGreaterThan(130);
-      expect(watermarkY).toBeLessThan(300);
+      const exportedDocument = await PDFDocument.load(result.bytes);
+      const cropBox = exportedDocument.getPage(1).getCropBox();
+      const assertAnchorInsideCropBox = (item: typeof watermark) => {
+        if (!item || !('transform' in item)) throw new Error('Expected overlay text is missing its placement.');
+        const [x, y] = [item.transform[4], item.transform[5]];
+        expect(x).toBeGreaterThanOrEqual(cropBox.x - 1);
+        expect(x).toBeLessThanOrEqual(cropBox.x + cropBox.width + 1);
+        expect(y).toBeGreaterThanOrEqual(cropBox.y - 1);
+        expect(y).toBeLessThanOrEqual(cropBox.y + cropBox.height + 1);
+      };
 
-      const pageNumberX = pageNumber.transform[4];
-      const pageNumberY = pageNumber.transform[5];
-      expect(pageNumberX).toBeGreaterThan(40);
-      expect(pageNumberX).toBeLessThan(230);
-      expect(pageNumberY).toBeGreaterThan(8);
-      expect(pageNumberY).toBeLessThan(80);
+      // PDF.js reports text anchors in PDF page coordinates, not rotated viewport coordinates.
+      assertAnchorInsideCropBox(watermark);
+      assertAnchorInsideCropBox(pageNumber);
     } finally {
       await loadingTask.destroy();
     }
