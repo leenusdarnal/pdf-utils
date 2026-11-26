@@ -495,6 +495,48 @@ test('creates, moves, edits, and deletes page-relative text notes', async ({ pag
   await expect(page.locator('[data-annotation-type="text-note"]')).toHaveCount(0);
 });
 
+test('autosaves annotation drafts locally and restores them for the same PDF', async ({ page }) => {
+  await visitHome(page);
+  const sourcePdf = createTwoPagePdf();
+
+  await page.locator('#file-input').setInputFiles({
+    name: 'pdf-utils-draft-recovery.pdf',
+    mimeType: 'application/pdf',
+    buffer: sourcePdf
+  });
+  await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Switch to page tools' }).click();
+  await expect(page.getByRole('button', { name: 'Place note' })).toBeEnabled();
+
+  await page.getByRole('button', { name: 'Place note' }).click();
+  await page.locator('[data-page-surface]').click({ position: { x: 210, y: 220 } });
+  await page.getByRole('textbox', { name: 'Note text' }).fill('Keep this note after reopening');
+  await page.getByRole('button', { name: 'Save note' }).click();
+
+  await expect(page.getByRole('button', { name: 'Note: Keep this note after reopening' })).toBeVisible();
+  await expect(page.getByText('Saved locally on this device.')).toBeVisible({ timeout: 10_000 });
+
+  await page.getByRole('button', { name: 'Close document' }).click();
+  await expect(page.locator('[aria-label="PDF viewer"]')).toBeHidden();
+
+  // Re-select the same file bytes as a fresh File object, as happens after a reload.
+  await page.locator('#file-input').setInputFiles({
+    name: 'pdf-utils-draft-recovery.pdf',
+    mimeType: 'application/pdf',
+    buffer: sourcePdf
+  });
+  await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Switch to page tools' }).click();
+  await expect(page.getByText('Restored 1 annotation(s) from this device.')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('button', { name: 'Note: Keep this note after reopening' })).toBeVisible();
+
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Clear saved annotation draft' }).click();
+  await expect(page.getByText('Local annotation draft cleared.')).toBeVisible();
+  await expect(page.locator('[data-annotation-type="text-note"]')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Clear saved annotation draft' })).toHaveCount(0);
+});
+
 test('draws rectangle and arrow annotations and supports undo/redo', async ({ page }) => {
   await visitHome(page);
   await openTestPdf(page);
