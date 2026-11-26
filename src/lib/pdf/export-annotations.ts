@@ -36,16 +36,20 @@ function getStrokeWidth(fraction: number, bounds: PageBounds): number {
 }
 
 function safeFontText(value: string, font: PDFFont): string {
-  return value.replace(/\\r\\n?/g, '\\n').split('\\n').map((line) =>
-    Array.from(line, (character) => {
-    try {
-      font.encodeText(character);
-      return character;
-    } catch {
-      return '?';
-    }
-    }).join('')
-  ).join('\\n');
+  return value
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) =>
+      Array.from(line, (character) => {
+        try {
+          font.encodeText(character);
+          return character;
+        } catch {
+          return '?';
+        }
+      }).join('')
+    )
+    .join('\n');
 }
 
 function wrapText(value: string, font: PDFFont, fontSize: number, maxWidth: number): string[] {
