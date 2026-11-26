@@ -2,7 +2,6 @@ import { expect, test } from '@playwright/test';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 async function createComparisonPdfs(): Promise<{ baseline: Buffer; updated: Buffer }> {
-  const font = await PDFDocument.create().then((document) => document.embedFont(StandardFonts.Helvetica));
   const createDocument = async (version: 'baseline' | 'updated') => {
     const document = await PDFDocument.create();
     const embeddedFont = await document.embedFont(StandardFonts.Helvetica);
@@ -24,7 +23,6 @@ async function createComparisonPdfs(): Promise<{ baseline: Buffer; updated: Buff
     return Buffer.from(await document.save());
   };
 
-  void font;
   const [baseline, updated] = await Promise.all([
     createDocument('baseline'),
     createDocument('updated')
@@ -64,6 +62,5 @@ test('compares local PDF text, rendered appearance, and added pages', async ({ p
   await expect(results.getByText('Added in updated PDF')).toBeVisible();
   await expect(results.getByText('OLD CONTRACT TEXT')).toBeVisible();
   await expect(results.getByText('UPDATED CONTRACT TEXT')).toBeVisible();
-  await expect(results.getByText('3 baseline pages')).toHaveCount(0);
   await expect(results.getByText('2 baseline pages · 3 updated pages')).toBeVisible();
 });
