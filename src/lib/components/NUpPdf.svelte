@@ -333,7 +333,7 @@
     </aside>
   </div>
 
-  {#if outputPageCount > 0 && outputFileName}
+  {#if statusMessage.includes('arranged across') && outputFileName}
     <div class="mx-6 mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 max-[600px]:mx-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
