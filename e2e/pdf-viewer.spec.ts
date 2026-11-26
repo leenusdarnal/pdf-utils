@@ -159,7 +159,8 @@ test('keeps text highlights aligned on rotated pages and after zooming', async (
     const selection = window.getSelection();
     selection?.removeAllRanges();
     selection?.addRange(range);
-    const rect = range.getBoundingClientRect();
+    const rect = range.getClientRects()[0];
+    if (!rect) throw new Error('The selected PDF text has no client rectangle');
     return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
   });
   expect(selectionRect.width).toBeGreaterThan(0);
