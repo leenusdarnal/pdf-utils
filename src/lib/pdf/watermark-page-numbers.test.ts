@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { degrees, PDFDocument } from 'pdf-lib';
 import {
   calculateOverlayBox,
+  calculateRotatedTextOrigin,
   formatPageNumber,
   MAX_WATERMARK_IMAGE_BYTES,
   watermarkAndNumberPdf
@@ -37,6 +38,31 @@ describe('calculateOverlayBox', () => {
     expect(() => calculateOverlayBox(100, 100, 110, 20, 'center', 0)).toThrow(
       'does not fit'
     );
+  });
+});
+
+describe('calculateRotatedTextOrigin', () => {
+  it('keeps the visual center fixed when PDF text is rotated', () => {
+    const width = 120;
+    const height = 24;
+    const rotation = 35;
+    const radians = rotation * Math.PI / 180;
+    const rotatedWidth = Math.abs(width * Math.cos(radians)) + Math.abs(height * Math.sin(radians));
+    const rotatedHeight = Math.abs(width * Math.sin(radians)) + Math.abs(height * Math.cos(radians));
+    const rotatedBox = calculateOverlayBox(600, 800, rotatedWidth, rotatedHeight, 'center', 0);
+    const origin = calculateRotatedTextOrigin({
+      x: rotatedBox.x + (rotatedWidth - width) / 2,
+      y: rotatedBox.y + (rotatedHeight - height) / 2,
+      width,
+      height
+    }, rotation);
+    const actualCenter = {
+      x: origin.x + width / 2 * Math.cos(radians) - height / 2 * Math.sin(radians),
+      y: origin.y + width / 2 * Math.sin(radians) + height / 2 * Math.cos(radians)
+    };
+
+    expect(actualCenter.x).toBeCloseTo(300, 8);
+    expect(actualCenter.y).toBeCloseTo(400, 8);
   });
 });
 
