@@ -22,7 +22,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P1 | Extract images | Yes | Recover supported image XObjects and inline images from PDF content streams; export decoded resources as PNG and report unsupported/skipped objects |
 | P2 | Editing tools | Later | Text/image insertion, signatures, stamps, crop, forms, flattening; distinguish overlays from editing existing content |
 | P2 | Watermark/page numbers | Yes | Text and PNG/JPEG watermarks, opacity/size/rotation/color, placement and margins, page-number formats/start values, validated page ranges, scaled placement guide, and local PDF export are implemented; cross-viewer visual review remains |
-| P2 | N-up layout | Later | Place 2, 4, 6 or more pages per sheet with print-ready output |
+| P2 | N-up layout | Yes | 1, 2, 4, 6, 9, or 16 pages per sheet; validated page ranges, A4/Letter/Legal, auto/fixed orientation, margins, gutters, row/column reading order, optional borders and original page labels, local vector-form export; independent visual review remains |
 | P2 | OCR and text extraction | Later | Searchable OCR, PDF-to-text, and PDF-to-Markdown; evaluate browser/local runtimes and language coverage |
 | P2 | Compare and repair | Later | Compare pages/content and attempt safe repair of malformed PDFs |
 | P2 | Office conversion | Research only | Assess fidelity, local processing options, licensing, bundle size, and hosting costs before selecting an approach |
@@ -40,7 +40,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | Annotation coordinates | Normalized page-relative coordinates | Preserves placement through zoom, rotation, and viewport resize |
 | State | Small typed stores/state modules | Avoid a heavyweight global state library until required |
 | Persistence | Bounded IndexedDB annotation drafts keyed by PDF content fingerprint | Store annotation JSON only (never document bytes), validate restored data, limit draft size/count, and provide explicit clear controls |
-| Overlay placement | PDF-point geometry shared by exporter and preview guide | Keep watermark and page-number anchors deterministic across page sizes; preserve source page order, size, and rotation |
+| Overlay placement | PDF-point geometry shared by exporter and preview guide | Keep watermark and page-number anchors deterministic across page sizes; preserve source page order, size, and rotation |\n| N-up composition | Embedded source-page forms fitted to a measured sheet grid | Keep page content vector-based, preserve aspect ratios, enforce page/input limits, and disclose that widgets, links, signatures, and interactive annotations may not transfer |
 | Background work | Web Workers for expensive tasks when supported | Keep the UI responsive; expose progress and cancellation |
 | Telemetry | No document content or bytes in telemetry | Privacy-first behavior; make any analytics opt-in and minimal |
 | Hosting | Static/browser-first deployment where possible | Avoid server-side file retention and processing costs |
@@ -92,7 +92,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | EDIT-02 | Editing | Crop and page-size adjustment | deferred | Set crop/page boxes and output size with preview; preserve content placement and handle rotation |
 | EDIT-03 | Editing | Forms and flattening | deferred | Fill supported interactive fields; flatten only on explicit user action and explain loss of interactivity |
 | TRN-01 | Transform | Watermark and page numbers | in-progress | Add text and PNG/JPEG image watermarks independently or together; page number formats and start value; validate page ranges; control color/opacity/size/rotation/position/margins; produce a new local PDF; unit and Playwright output tests pass; inspect representative outputs in an independent viewer before marking done |
-| TRN-02 | Transform | N-up pages per sheet | deferred | Support 2-up, 4-up, 6-up and configurable layouts with print-ready output and page order tests |
+| TRN-02 | Transform | N-up pages per sheet | in-progress | Support 1/2/4/6/9/16-up with custom page ranges, A4/Letter/Legal, auto/fixed orientation, margins/gutters, row/column order, optional borders/labels, 150 MB input and 500 selected-page limits; service and Playwright output tests pass; independent PDF-viewer fidelity review remains |
 | OCR-01 | OCR and extraction | Searchable OCR | deferred | OCR scanned pages into searchable text; document supported languages, local processing, accuracy limits, and progress/cancel behavior |
 | OCR-02 | OCR and extraction | PDF to text and Markdown | deferred | Extract text in reading order with page breaks and clearly documented layout limitations |
 | DOC-01 | Document quality | Compare PDFs | deferred | Compare page count, text and visual differences; show aligned page-level results and avoid claiming semantic equivalence |
@@ -129,7 +129,7 @@ A feature is complete only when:
 5. Add page operations using an isolated PDF operation service.
 6. Add annotation model and editor UI, then export and fidelity tests.
 7. Add PDF-to-images, images-to-PDF, embedded-image extraction, and compression as the next everyday utility set.
-8. Add editing and page-layout tools (text/image overlays, signatures, crop, forms, watermarks, page numbering, N-up).
+8. Add editing and page-layout tools (text/image overlays, signatures, crop, forms, watermarks, and page numbering); N-up page layout is implemented.
 9. Evaluate OCR, text/Markdown extraction, comparison, repair, and Office conversion with local-first and fidelity benchmarks.
 10. Gate AI, redaction, password, and batch workflow features on privacy, security, and correctness reviews.
 
