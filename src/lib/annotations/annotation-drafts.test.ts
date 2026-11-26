@@ -91,5 +91,8 @@ describe('createAnnotationDraftKey', () => {
     const originalKey = await createAnnotationDraftKey(original);
     expect(await createAnnotationDraftKey(changedContent)).not.toBe(originalKey);
     expect(await createAnnotationDraftKey(renamed)).not.toBe(originalKey);
+
+    const copiedFile = new File([originalBytes.buffer as ArrayBuffer], 'report.pdf', { lastModified: 1_800_000_000_000 });
+    expect(await createAnnotationDraftKey(copiedFile)).toBe(originalKey);
   });
 });
