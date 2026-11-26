@@ -35,18 +35,10 @@ test('creates a vector N-up PDF with a final partially filled sheet', async ({ p
   const exportButton = workspace.getByRole('button', { name: 'Create N-up PDF' });
   const status = workspace.getByRole('status');
   await exportButton.click();
-  await expect(status).toContainText(/arranged across 3 sheets|N-up export failed/, { timeout: 15000 });
+  await expect(status).toHaveText('5 source pages arranged across 3 sheets.', { timeout: 15000 });
   expect(await workspace.count(), 'N-up workspace should remain mounted after export').toBe(1);
   expect(pageErrors, 'No browser runtime errors should occur').toEqual([]);
-  const statusText = await status.textContent();
-  const exportError = await page.getByRole('alert').textContent().catch(() => null);
-  expect(statusText, 'N-up export should finish' + (statusText ? ': ' + statusText : '')).toMatch(/arranged across 3 sheets/);
-  expect(exportError, 'N-up export should succeed' + (exportError ? ': ' + exportError : '')).toBeNull();
-  const workspaceText = await workspace.innerText();
-  if (!workspaceText.includes('Your N-up PDF is ready')) {
-    throw new Error('N-up success panel missing after successful status. Workspace text: ' + workspaceText.slice(-2500));
-  }
-  await expect(workspace.getByText('Your N-up PDF is ready')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your N-up PDF is ready' })).toBeVisible();
   await expect(workspace.getByText(/3 sheets/)).toBeVisible();
 
   const [download] = await Promise.all([
