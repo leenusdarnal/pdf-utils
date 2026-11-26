@@ -23,17 +23,29 @@ describe('decodePdfImagePixels', () => {
     expect([...pixels]).toEqual([10, 20, 30, 255, 40, 50, 60, 255]);
   });
 
-  it('expands grayscale pixels into opaque RGB values', () => {
+  it('expands packed 1-bit black-and-white pixels into opaque RGB values', () => {
     const pixels = decodePdfImagePixels(
-      { kind: 1, data: new Uint8Array([0, 127, 255]) },
+      { kind: 1, data: new Uint8Array([0b10100000]) },
       3,
       1
     );
     expect([...pixels]).toEqual([
+      255, 255, 255, 255,
       0, 0, 0, 255,
-      127, 127, 127, 255,
       255, 255, 255, 255
     ]);
+  });
+
+  it('starts each packed grayscale row at a byte boundary', () => {
+    const pixels = decodePdfImagePixels(
+      { kind: 1, data: new Uint8Array([0b10000000, 0b10000000, 0b01000000, 0]) },
+      9,
+      2
+    );
+    expect([...pixels.slice(0, 4)]).toEqual([255, 255, 255, 255]);
+    expect([...pixels.slice((8 * 4), (8 * 4) + 4)]).toEqual([255, 255, 255, 255]);
+    expect([...pixels.slice((9 + 1) * 4, (9 + 1) * 4 + 4)]).toEqual([255, 255, 255, 255]);
+    expect([...pixels.slice((9 + 2) * 4, (9 + 2) * 4 + 4)]).toEqual([0, 0, 0, 255]);
   });
 
   it('accepts ArrayBuffer pixel data', () => {
