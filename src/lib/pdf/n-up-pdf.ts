@@ -320,7 +320,7 @@ export async function createNUpPdf(
   }
   validateSpacing(options.marginMm, options.gutterMm);
 
-  let sourceDocument;
+  let sourceDocument: PDFDocument;
   try {
     sourceDocument = await PDFDocument.load(new Uint8Array(await source.arrayBuffer()));
   } catch {
