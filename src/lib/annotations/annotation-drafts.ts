@@ -93,7 +93,7 @@ function openDatabase(): Promise<IDBDatabase> {
 export async function fingerprintPdf(source: Blob): Promise<string> {
   let firstHash = 0x811c9dc5;
   let secondHash = 0x9747b28c;
-  const chunkSize = 256 * 1024;
+  const chunkSize = 1024 * 1024;
 
   for (let offset = 0; offset < source.size; offset += chunkSize) {
     const chunk = new Uint8Array(
