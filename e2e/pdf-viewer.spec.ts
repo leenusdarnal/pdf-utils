@@ -516,10 +516,11 @@ test('autosaves annotation drafts locally and restores them for the same PDF', a
   await expect(page.getByRole('button', { name: 'Note: Keep this note after reopening' })).toBeVisible();
   await expect(page.getByText('Saved locally on this device.')).toBeVisible({ timeout: 10_000 });
 
-  await page.getByRole('button', { name: 'Close document' }).click();
-  await expect(page.locator('[aria-label="PDF viewer"]')).toBeHidden();
+  // A full reload discards the viewer component while keeping this origin's IndexedDB.
+  await page.reload({ waitUntil: 'networkidle' });
+  await expect(page.locator('#file-input')).toHaveCount(1);
 
-  // Re-select the same file bytes as a fresh File object, as happens after a reload.
+  // Re-select the same file bytes as a fresh File object after the reload.
   await page.locator('#file-input').setInputFiles({
     name: 'pdf-utils-draft-recovery.pdf',
     mimeType: 'application/pdf',
