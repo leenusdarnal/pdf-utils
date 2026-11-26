@@ -21,6 +21,7 @@
     viewportRectToNormalized,
     type PdfViewportTransform
   } from '$lib/annotations/annotation-geometry';
+  import { exportAnnotatedPdf } from '$lib/pdf/export-annotations';
 
   export let file: File;
   export let onClose: () => void;
@@ -81,6 +82,7 @@
   let noteError = '';
   let canUndoAnnotations = false;
   let canRedoAnnotations = false;
+  let isExportingAnnotations = false;
   let unrotatedPageViewport: PdfViewportTransform | null = null;
   let renderedPageViewport: PdfViewportTransform | null = null;
   let dragState: {
@@ -930,6 +932,44 @@
     dragPreview = null;
   }
 
+  async function exportAnnotations() {
+    if (isExportingAnnotations || isLoading || annotations.length === 0) return;
+    if (editingNoteId || newNoteId) {
+      statusText = 'Save or cancel the open note before exporting annotations.';
+      return;
+    }
+
+    isExportingAnnotations = true;
+    errorMessage = '';
+    statusText = 'Adding annotations to a new PDF copy…';
+    try {
+      const bytes = await exportAnnotatedPdf(file, annotations);
+      if (destroyed) return;
+      const buffer = bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength
+      ) as ArrayBuffer;
+      const blob = new Blob([buffer], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      const baseName = file.name.replace(/\.pdf$/i, '') || 'document';
+      anchor.href = url;
+      anchor.download = baseName + '-annotated.pdf';
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+      statusText = 'Exported ' + annotations.length + ' annotation(s) to a new PDF. The original is unchanged.';
+    } catch (error) {
+      errorMessage = error instanceof Error
+        ? error.message
+        : 'The annotated PDF could not be exported. Try a smaller or different document.';
+      statusText = 'Annotation export failed';
+    } finally {
+      isExportingAnnotations = false;
+    }
+  }
+
   function formatFileSize(size: number) {
     if (size < 1_048_576) return `${Math.max(1, Math.round(size / 1_024))} KB`;
     return `${(size / 1_048_576).toFixed(2)} MB`;
@@ -1009,7 +1049,7 @@
       aria-controls="pdf-document-info"
       onclick={() => (isInfoOpen = !isInfoOpen)}
     >Info</button>
-    <button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] max-[760px]:ml-auto max-[420px]:min-h-8" aria-label="Close document" onclick={onClose}>
+    <button type="button" class="inline-flex min-h-[34px] shrink-0 items-center justify-center gap-[7px] rounded-lg border border-line bg-white px-[10px] text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] max-[760px]:ml-auto max-[420px]:min-h-8" aria-label="Close document" disabled={isExportingAnnotations} onclick={onClose}>
       <svg class="size-4 shrink-0 fill-none stroke-current stroke-[1.8] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
       <span>Close</span>
     </button>
@@ -1105,6 +1145,17 @@
       <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw freehand" aria-pressed={drawingTool === 'freehand'} disabled={isLoading} onclick={() => toggleDrawingTool('freehand')}>Draw</button>
       <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw rectangle" aria-pressed={drawingTool === 'rectangle'} disabled={isLoading} onclick={() => toggleDrawingTool('rectangle')}>Rectangle</button>
       <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw arrow" aria-pressed={drawingTool === 'arrow'} disabled={isLoading} onclick={() => toggleDrawingTool('arrow')}>Arrow</button>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2" data-annotation-group="export" role="group" aria-label="Annotation export">
+      <button
+        type="button"
+        class="inline-flex min-h-[32px] items-center justify-center rounded-lg bg-brand-600 px-3 text-[11px] font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#c8c5dc] disabled:text-white"
+        aria-label="Export annotations into a new PDF"
+        disabled={isLoading || isExportingAnnotations || annotations.length === 0 || editingNoteId !== null || newNoteId !== null}
+        onclick={exportAnnotations}
+      >{isExportingAnnotations ? 'Exporting…' : 'Export annotated PDF (' + annotations.length + ')'}</button>
+      <span class="text-[10px] text-[#858b98]">Adds editable vector/text overlays to a new copy; the source PDF is unchanged.</span>
     </div>
 
     {#if isAddingNote}
