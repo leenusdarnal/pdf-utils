@@ -83,7 +83,7 @@ describe('calculateNUpCell', () => {
   });
 
   it('rejects margins and gutters that leave no printable grid', () => {
-    expect(() => calculateNUpCell(paper, grid, 0, 50, 25)).toThrow(
+    expect(() => calculateNUpCell({ width: 100, height: 100 }, grid, 0, 50, 25)).toThrow(
       'The margins and spacing leave no room for the selected page grid.'
     );
     expect(() => calculateNUpCell(paper, grid, 0, 51, 0)).toThrow(
@@ -155,17 +155,18 @@ describe('createNUpPdf', () => {
       'Page 1 appears more than once in this range.'
     );
 
-    const tooMany = Array.from({ length: MAX_N_UP_SELECTED_PAGES + 1 }, (_, index) => String(index + 1)).join(',');
-    await expect(createNUpPdf(source, tooMany, options)).rejects.toThrow(
-      'Page numbers must be between 1 and 3.'
-    );
+    const largeSourceBytes = await makePdf(MAX_N_UP_SELECTED_PAGES + 1);
+    const largeSource = new Blob([largeSourceBytes as BlobPart]);
+    await expect(
+      createNUpPdf(largeSource, '1-' + (MAX_N_UP_SELECTED_PAGES + 1), options)
+    ).rejects.toThrow('Select no more than 500 pages for one N-up export.');
   });
 
   it('rejects unsupported page counts, invalid spacing, and non-PDF input', async () => {
     const sourceBytes = await makePdf(2);
     const source = new Blob([sourceBytes as BlobPart]);
 
-    await expect(createNUpPdf(source, '1-2', { ...options, pagesPerSheet: 3 as 2 })).rejects.toThrow(
+    await expect(createNUpPdf(source, '1-2', { ...options, pagesPerSheet: 3 as NUpPdfOptions['pagesPerSheet'] })).rejects.toThrow(
       'Choose 1, 2, 4, 6, 9, or 16 pages per sheet.'
     );
     await expect(createNUpPdf(source, '1-2', { ...options, gutterMm: 26 })).rejects.toThrow(
