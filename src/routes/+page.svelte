@@ -6,6 +6,7 @@
   import MergePdf from '$lib/components/MergePdf.svelte';
   import SplitPdf from '$lib/components/SplitPdf.svelte';
   import PdfToImages from '$lib/components/PdfToImages.svelte';
+  import ImagesToPdf from '$lib/components/ImagesToPdf.svelte';
   import { hasPdfHeader } from '$lib/pdf/viewer-utils';
 
   let isDragging = false;
@@ -15,6 +16,7 @@
   let mergeMode = false;
   let splitMode = false;
   let imageMode = false;
+  let imagesToPdfMode = false;
   let isDarkMode = false;
   let appReady = false;
   let organizerInput: HTMLInputElement;
@@ -148,7 +150,7 @@
       </span>
       <span>pdf<span class="font-medium text-[#8c91a0]">utils</span></span>
     </a>
-    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode && !imageMode}
+    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode && !imageMode && !imagesToPdfMode}
       <nav class="ml-auto flex h-full items-center gap-[30px] max-[760px]:gap-[17px]" aria-label="Main navigation">
         <a class="relative inline-flex h-full items-center text-[13px] font-semibold text-ink no-underline after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-0.5 after:bg-brand-700 max-[760px]:text-[11px]" href="#tools">Tools</a>
         <a class="inline-flex h-full items-center text-[13px] font-semibold text-muted no-underline transition-colors hover:text-brand-700 max-[760px]:text-[11px] max-[480px]:hidden" href="#how-it-works">How it works</a>
@@ -182,6 +184,8 @@
       <SplitPdf onClose={() => (splitMode = false)} />
     {:else if imageMode}
       <PdfToImages onClose={() => (imageMode = false)} />
+    {:else if imagesToPdfMode}
+      <ImagesToPdf onClose={() => (imagesToPdfMode = false)} />
     {:else}
       <section class="py-[77px] text-center max-[760px]:pb-[54px] max-[760px]:pt-[61px] max-[480px]:pt-[49px]">
         <div class="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[1.7px] text-brand-600 max-[480px]:text-[8px] max-[480px]:tracking-[1.2px]"><span class="h-px w-[22px] bg-brand-300"></span> A calmer way to work with PDFs</div>
@@ -258,6 +262,11 @@
             <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#e9f8f1] text-[#39a17d]"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M12 3.5v11m0 0 4-4m-4 4-4-4M5 15.5v3A2 2 0 0 0 7 20.5h10a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">PDF to images</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Export pages as PNG or JPEG with resolution controls.</p></div>
             <button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open PDF to images tool" onclick={() => (imageMode = true)}>Open tool</button>
+          </article>
+          <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]">
+            <span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#eef4ff] text-[#4f8fce]" aria-hidden="true"><svg class="size-[22px]" viewBox="0 0 24 24" fill="none"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Images to PDF</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Combine JPG, PNG, or WebP images with page layout controls.</p></div>
+            <button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open images to PDF tool" onclick={() => (imagesToPdfMode = true)}>Open tool</button>
           </article>
         </div>
       </section>
