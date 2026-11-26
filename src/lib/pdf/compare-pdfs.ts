@@ -97,7 +97,7 @@ async function renderPagePixels(
     context.fillRect(0, 0, canvasWidth, canvasHeight);
     const viewport = page.getViewport({ scale });
     await page.render({
-      canvasContext: context,
+      canvas,
       viewport,
       background: '#ffffff'
     }).promise;
