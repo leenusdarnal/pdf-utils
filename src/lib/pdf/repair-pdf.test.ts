@@ -274,7 +274,7 @@ describe('repairPdfStructure service', () => {
     const rebuilt = createTask([rebuiltPage]);
     const { repairPdfStructure } = await loadRepairService(original.task, rebuilt.task);
 
-    await expect(repairPdfStructure(source)).rejects.toThrow('Page 1');
+    await expect(repairPdfStructure(source)).rejects.toThrow('synthetic render failure');
 
     expect(originalPage.cleanup).toHaveBeenCalledOnce();
     expect(rebuiltPage.cleanup).toHaveBeenCalledOnce();
