@@ -76,7 +76,7 @@
           for (const item of content.items) {
             if (!('str' in item)) continue;
             const text = item.str.trim();
-            if (text) lines.push(text + (item.hasEOL ? '\\n' : ' '));
+            if (text) lines.push(text + (item.hasEOL ? '\n' : ' '));
           }
           const text = normalizePdfPageText(lines.join(''));
           characters += text.length;
@@ -91,7 +91,7 @@
       if (!pages.some((page) => page.text)) {
         throw new Error('No selectable text was found. This may be a scanned PDF; OCR is not included in this tool.');
       }
-      extractedText = formatPdfTextExport(pages, format, sourceFile.name.replace(/\\.pdf$/i, ''));
+      extractedText = formatPdfTextExport(pages, format, sourceFile.name.replace(/\.pdf$/i, ''));
       outputName = getTextExportFileName(sourceFile.name, format);
       const blob = new Blob([extractedText], { type: format === 'md' ? 'text/markdown;charset=utf-8' : 'text/plain;charset=utf-8' });
       previewUrl = URL.createObjectURL(blob);
