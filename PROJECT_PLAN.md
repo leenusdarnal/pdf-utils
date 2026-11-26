@@ -19,7 +19,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P1 | PDF to images | Yes | Export selected/all pages as PNG/JPEG with 72/150/200/300 DPI, JPEG quality, individual downloads, and local ZIP; render one page canvas at a time |
 | P1 | Images to PDF | Yes | Convert/reorder PNG, JPEG, and WebP locally; supports A4/Letter/Legal or image-sized pages, auto/fixed orientation, margins, and contain/stretch fitting |
 | P1 | Compression | Yes | Local raster-based copy with Screen/Balanced/Print presets, first-page quality preview, optional best-effort target size, before/after reporting, explicit loss warning, and untouched original |
-| P1 | Extract images | Next | Export embedded images separately from page rasterization |
+| P1 | Extract images | Yes | Recover supported image XObjects and inline images from PDF content streams; export decoded resources as PNG and report unsupported/skipped objects |
 | P2 | Editing tools | Later | Text/image insertion, signatures, stamps, crop, forms, flattening; distinguish overlays from editing existing content |
 | P2 | Watermark/page numbers | Later | Deterministic placement and preview |
 | P2 | N-up layout | Later | Place 2, 4, 6 or more pages per sheet with print-ready output |
@@ -86,7 +86,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | OPT-01 | Optimization | Compression workflow | done | Local raster-based copy with Screen/Balanced/Print presets, optional target-size retries, first-page JPEG preview, before/after size report, explicit consent and loss disclosure; original PDF remains untouched |
 | CON-01 | Conversion | Images to PDF | done | Validate PNG/JPEG/WebP signatures; add/remove/reorder images; export one image per page with A4/Letter/Legal or image-sized pages, orientation, 0–50 mm margins, contain/stretch fitting, progress, and output naming; service unit and browser download/page-layout tests pass |
 | CON-02 | Conversion | PDF to images | done | Export selected/all pages as PNG/JPEG at 72/150/200/300 DPI; JPEG quality control; individual downloads and ZIP; render sequentially and release canvases to control memory |
-| CON-03 | Conversion | Extract embedded images | deferred | Export embedded image objects separately from rendered pages; preserve useful format/quality when available |
+| CON-03 | Conversion | Extract embedded images | in-progress | Walk PDF.js image-paint operators, resolve page/document image objects asynchronously, extract inline image data, de-duplicate referenced XObjects, export decoded RGB/RGBA/grayscale pixels as PNG, and report unsupported objects; source format preservation and rare masks/groups remain limitations |
 | EDIT-01 | Editing | Text and image insertion, signatures, stamps | deferred | Add/move/resize overlays with clear distinction from editing original PDF text; preview and export fidelity tested |
 | EDIT-02 | Editing | Crop and page-size adjustment | deferred | Set crop/page boxes and output size with preview; preserve content placement and handle rotation |
 | EDIT-03 | Editing | Forms and flattening | deferred | Fill supported interactive fields; flatten only on explicit user action and explain loss of interactivity |
