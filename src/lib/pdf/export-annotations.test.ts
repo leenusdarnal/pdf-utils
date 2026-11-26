@@ -9,7 +9,9 @@ describe('exportAnnotatedPdf', () => {
     document.addPage([300, 400]);
     const rotatedPage = document.addPage([420, 300]);
     rotatedPage.setRotation(degrees(90));
-    return new Blob([await document.save()], { type: 'application/pdf' });
+    const bytes = await document.save();
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+    return new Blob([buffer], { type: 'application/pdf' });
   }
 
   it('adds every supported annotation type without rasterizing or dropping pages', async () => {
