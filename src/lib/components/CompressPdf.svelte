@@ -87,6 +87,16 @@
     void acceptFile(event.dataTransfer?.files?.[0]);
   }
 
+  function clearSource() {
+    if (isCompressing || isPreviewing) return;
+    sourceFile = null;
+    understoodLossy = false;
+    errorMessage = '';
+    clearPreview();
+    resetResult();
+    statusMessage = 'Choose a PDF to prepare a smaller copy.';
+  }
+
   function changePreset(event: Event) {
     preset = (event.currentTarget as HTMLSelectElement).value as CompressionPreset;
     clearPreview();
@@ -228,7 +238,7 @@
           </div>
           <div class="flex flex-wrap gap-2">
             <button type="button" class="min-h-[32px] rounded-lg border border-line bg-surface px-3 text-[10px] font-semibold text-muted hover:bg-canvas" disabled={isCompressing || isPreviewing} onclick={() => fileInput?.click()}>Choose another</button>
-            <button type="button" class="min-h-[32px] rounded-lg border border-line bg-surface px-3 text-[10px] font-semibold text-muted hover:bg-canvas" disabled={isCompressing || isPreviewing} onclick={() => acceptFile(undefined)}>Remove</button>
+            <button type="button" class="min-h-[32px] rounded-lg border border-line bg-surface px-3 text-[10px] font-semibold text-muted hover:bg-canvas" disabled={isCompressing || isPreviewing} onclick={clearSource}>Remove</button>
           </div>
         </div>
 
