@@ -24,6 +24,7 @@ export interface PdfCompressionResult {
   pageCount: number;
   settings: CompressionSettings;
   attempts: number;
+  previewBlob: Blob;
   targetSizeBytes: number | null;
   targetReached: boolean | null;
 }
@@ -206,6 +207,7 @@ export async function compressPdf(
   const initialSettings = COMPRESSION_PRESETS[preset];
   const candidateSettings = getCompressionAttempts(preset, targetSizeBytes);
   let bestBytes: Uint8Array | null = null;
+  let bestPreviewBlob: Blob | null = null;
   let bestSettings = initialSettings;
   let pageCount = 0;
   let attempts = 0;
@@ -214,6 +216,7 @@ export async function compressPdf(
     const settings = candidateSettings[index];
     const loadingTask = await createPdfDocumentTask(source);
     let bytes: Uint8Array;
+    let attemptPreviewBlob: Blob | null = null;
     try {
       const pdf = await loadingTask.promise;
       pageCount = pdf.numPages;
@@ -228,6 +231,7 @@ export async function compressPdf(
       for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
         const page = await pdf.getPage(pageIndex + 1);
         const rendered = await renderPageToJpeg(page, settings);
+        if (pageIndex === 0) attemptPreviewBlob = rendered.blob;
         const image = await output.embedJpg(new Uint8Array(await rendered.blob.arrayBuffer()));
         const outputPage = output.addPage([rendered.width, rendered.height]);
         outputPage.drawImage(image, {
@@ -255,17 +259,19 @@ export async function compressPdf(
     attempts = index + 1;
     if (bestBytes === null || bytes.length < bestBytes.length) {
       bestBytes = bytes;
+      bestPreviewBlob = attemptPreviewBlob;
       bestSettings = settings;
     }
 
     if (target !== null && bytes.length <= target) {
       bestBytes = bytes;
+      bestPreviewBlob = attemptPreviewBlob;
       bestSettings = settings;
       break;
     }
   }
 
-  if (!bestBytes) throw new Error('The compressed PDF could not be created.');
+  if (!bestBytes || !bestPreviewBlob) throw new Error('The compressed PDF could not be created.');
   return {
     bytes: bestBytes,
     originalSizeBytes: source.size,
@@ -273,6 +279,7 @@ export async function compressPdf(
     pageCount,
     settings: bestSettings,
     attempts,
+    previewBlob: bestPreviewBlob,
     targetSizeBytes: target,
     targetReached: target === null ? null : bestBytes.length <= target
   };
