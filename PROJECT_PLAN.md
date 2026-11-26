@@ -21,9 +21,9 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P1 | Compression | Yes | Local raster-based copy with Screen/Balanced/Print presets, first-page quality preview, optional best-effort target size, before/after reporting, explicit loss warning, and untouched original |
 | P1 | Extract images | Yes | Recover supported image XObjects and inline images from PDF content streams; export decoded resources as PNG and report unsupported/skipped objects |
 | P2 | Editing tools | Later | Text/image insertion, signatures, stamps, crop, forms, flattening; distinguish overlays from editing existing content |
-| P2 | Watermark/page numbers | Later | Deterministic placement and preview |
+| P2 | Watermark/page numbers | In progress | Local visible-text overlays with page ranges, live style preview, margins, and rotation-aware placement |
 | P2 | N-up layout | Later | Place 2, 4, 6 or more pages per sheet with print-ready output |
-| P2 | OCR and text extraction | Later | Searchable OCR, PDF-to-text, and PDF-to-Markdown; evaluate browser/local runtimes and language coverage |
+| P2 | OCR and text extraction | In progress | English searchable OCR and local PDF-to-text/Markdown export are implemented; multilingual OCR and wider fidelity verification remain |
 | P2 | Compare and repair | Later | Compare pages/content and attempt safe repair of malformed PDFs |
 | P2 | Office conversion | Research only | Assess fidelity, local processing options, licensing, bundle size, and hosting costs before selecting an approach |
 | P3 | AI document tools | Research only | Summarization, translation, and Chat with PDF; privacy, cost, consent, and remote processing must be explicit |
@@ -90,10 +90,10 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | EDIT-01 | Editing | Text and image insertion, signatures, stamps | deferred | Add/move/resize overlays with clear distinction from editing original PDF text; preview and export fidelity tested |
 | EDIT-02 | Editing | Crop and page-size adjustment | deferred | Set crop/page boxes and output size with preview; preserve content placement and handle rotation |
 | EDIT-03 | Editing | Forms and flattening | deferred | Fill supported interactive fields; flatten only on explicit user action and explain loss of interactivity |
-| TRN-01 | Transform | Watermark and page numbers | deferred | Preview and exported placement match; support ranges, margins, positioning, and style |
+| TRN-01 | Transform | Watermark and page numbers | in-progress | Add visible text watermarks and page numbers to a new PDF copy; support custom page ranges, horizontal/diagonal watermarks, top/bottom alignment, color, opacity, font size, margins, crop boxes, and rotated pages. Browser export coverage is being added; independent real-document visual review remains |
 | TRN-02 | Transform | N-up pages per sheet | deferred | Support 2-up, 4-up, 6-up and configurable layouts with print-ready output and page order tests |
 | OCR-01 | OCR and extraction | Searchable OCR | in-progress | Browser-local English OCR for scanned pages; self-host the worker, WebAssembly core, and model; add invisible word-positioned text to a new PDF copy; preserve existing text pages; enforce 150 MB / 100-page / canvas limits; report progress and support cancellation. Independent OCR accuracy and PDF text-selection/fidelity verification remain |
-| OCR-02 | OCR and extraction | PDF to text and Markdown | in-progress | Export selectable text as TXT or Markdown with page headings; preserve page boundaries, validate limits, and disclose reading-order and scanned-PDF/OCR limitations |
+| OCR-02 | OCR and extraction | PDF to text and Markdown | done | Export selectable text as TXT or Markdown with page headings; preserve page boundaries, enforce file/page/character limits, and disclose reading-order and scanned-PDF/OCR limitations |
 | DOC-01 | Document quality | Compare PDFs | deferred | Compare page count, text and visual differences; show aligned page-level results and avoid claiming semantic equivalence |
 | DOC-02 | Document quality | Repair malformed PDFs | deferred | Detect supported failure classes, preserve original, and validate repaired output by reopening it |
 | CON-04 | Conversion | Office document conversion | deferred | Research browser/local options, fidelity, licensing, runtime size, and privacy before committing to implementation |
@@ -128,7 +128,7 @@ A feature is complete only when:
 5. Add page operations using an isolated PDF operation service.
 6. Add annotation model and editor UI, then export and fidelity tests.
 7. Add PDF-to-images, images-to-PDF, embedded-image extraction, and compression as the next everyday utility set.
-8. Add editing and page-layout tools (text/image overlays, signatures, crop, forms, watermarks, page numbering, N-up).
+8. Add editing and page-layout tools (text/image overlays, signatures, crop, forms, watermarks, page numbering, N-up); watermark and page-number export is in progress.
 9. Deliver local English OCR for scanned PDFs; continue evaluating multilingual OCR, comparison, repair, and Office conversion with local-first and fidelity benchmarks.
 10. Gate AI, redaction, password, and batch workflow features on privacy, security, and correctness reviews.
 
