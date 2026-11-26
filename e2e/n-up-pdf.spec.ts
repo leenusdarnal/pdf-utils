@@ -39,7 +39,7 @@ test('creates a vector N-up PDF with a final partially filled sheet', async ({ p
   expect(await workspace.count(), 'N-up workspace should remain mounted after export').toBe(1);
   expect(pageErrors, 'No browser runtime errors should occur').toEqual([]);
   await expect(page.getByRole('heading', { name: 'Your N-up PDF is ready' })).toBeVisible();
-  await expect(workspace.getByText(/3 sheets/)).toBeVisible();
+  await expect(workspace.getByText(/^3 sheets ·/)).toBeVisible();
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
