@@ -20,13 +20,23 @@
   let organizerInput: HTMLInputElement;
   let fileError = '';
 
-  function applyTheme(theme: 'light' | 'dark') {
+  let systemThemeQuery: MediaQueryList | null = null;
+
+  function syncSystemTheme(event: MediaQueryListEvent) {
+    applyTheme(event.matches ? 'dark' : 'light', false);
+  }
+
+  function applyTheme(theme: 'light' | 'dark', persist = true) {
     isDarkMode = theme === 'dark';
     document.documentElement.dataset.theme = theme;
-    try {
-      localStorage.setItem('pdf-utils-theme', theme);
-    } catch {
-      // The current session theme still works when storage is unavailable.
+    if (persist) {
+      systemThemeQuery?.removeEventListener('change', syncSystemTheme);
+      systemThemeQuery = null;
+      try {
+        localStorage.setItem('pdf-utils-theme', theme);
+      } catch {
+        // The current session theme still works when storage is unavailable.
+      }
     }
     document.querySelector('meta[name="theme-color"]')?.setAttribute(
       'content',
@@ -35,19 +45,30 @@
   }
 
   onMount(() => {
-    let preferredTheme: 'light' | 'dark' = 'light';
+    let savedTheme: string | null = null;
+    let systemPreference: MediaQueryList | null = null;
     try {
-      const savedTheme = localStorage.getItem('pdf-utils-theme');
-      if (savedTheme === 'light' || savedTheme === 'dark') {
-        preferredTheme = savedTheme;
-      } else if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
-        preferredTheme = 'dark';
-      }
+      savedTheme = localStorage.getItem('pdf-utils-theme');
+      systemPreference = window.matchMedia?.('(prefers-color-scheme: dark)') ?? null;
     } catch {
-      preferredTheme = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      // Continue with the browser default when storage or media queries are unavailable.
     }
-    applyTheme(preferredTheme);
+
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      applyTheme(savedTheme, false);
+    } else {
+      applyTheme(systemPreference?.matches ? 'dark' : 'light', false);
+      if (systemPreference) {
+        systemThemeQuery = systemPreference;
+        systemPreference.addEventListener('change', syncSystemTheme);
+      }
+    }
     appReady = true;
+
+    return () => {
+      systemThemeQuery?.removeEventListener('change', syncSystemTheme);
+      systemThemeQuery = null;
+    };
   });
 
   function toggleTheme() {
