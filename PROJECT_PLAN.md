@@ -102,7 +102,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | SEC-02 | Security | Password protection and authorized unlocking | deferred | Use supported PDF encryption; clearly distinguish opening password from permissions and never bypass unknown credentials |
 | SEC-03 | Security | Metadata and bookmark management | deferred | Inspect/edit metadata and bookmarks; verify changes in reopened output |
 | FLOW-01 | Workflows | Batch processing and reusable workflows | deferred | Queue multiple files, show per-file progress/errors, and allow repeatable local tool sequences without uploading files |
-| QLT-01 | Quality | Accessibility audit | not-started | Keyboard-only core workflow; semantic labels and contrast checks |
+| QLT-01 | Quality | Accessibility audit | in-progress | Fixed Svelte accessibility warnings for the thumbnail region and document-information section; Chromium regression verifies keyboard Tab focus and Enter activation across page-thumbnail buttons. Full keyboard-only workflow, manual screen-reader review, and contrast checks remain outstanding |
 | QLT-02 | Quality | Performance and large-file testing | not-started | Defined fixture set and baseline measurements |
 | QLT-03 | Quality | Browser compatibility matrix | not-started | Current Chromium, Firefox, and Safari tested where available |
 | QLT-04 | Quality | PDF regression fixtures | not-started | Test text, images, rotation, page boxes, encryption, malformed files |
