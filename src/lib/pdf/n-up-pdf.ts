@@ -411,8 +411,9 @@ export async function createNUpPdf(
   let bytes: Uint8Array;
   try {
     bytes = await outputDocument.save();
-  } catch {
-    throw new Error('The arranged PDF could not be saved. Try a smaller document.');
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'Unknown PDF save error';
+    throw new Error('The arranged PDF could not be saved: ' + detail);
   }
 
   return {
