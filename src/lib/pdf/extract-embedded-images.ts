@@ -44,6 +44,7 @@ interface PdfJsObjectStore {
 
 export const MAX_EMBEDDED_IMAGE_COUNT = 200;
 export const MAX_EMBEDDED_IMAGE_FILE_BYTES = 150 * 1024 * 1024;
+export const MAX_EMBEDDED_IMAGE_PAGES = 500;
 const MAX_IMAGE_SIDE = 20_000;
 const MAX_IMAGE_PIXELS = 40_000_000;
 const MAX_TOTAL_IMAGE_PIXELS = 80_000_000;
@@ -264,6 +265,9 @@ export async function extractEmbeddedImages(
     const pdf = await loadingTask.promise;
     pageCount = pdf.numPages;
     if (pageCount < 1) throw new Error('The PDF does not contain any pages.');
+    if (pageCount > MAX_EMBEDDED_IMAGE_PAGES) {
+      throw new Error('This PDF contains more than ' + MAX_EMBEDDED_IMAGE_PAGES + ' pages.');
+    }
 
     for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
       const page = await pdf.getPage(pageNumber);
