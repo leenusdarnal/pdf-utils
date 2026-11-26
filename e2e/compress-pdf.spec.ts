@@ -17,13 +17,15 @@ test('previews and compresses an image-heavy PDF without overwriting the origina
     if (!context) throw new Error('Canvas is not available in this browser.');
 
     const pixels = context.createImageData(width, height);
+    let seed = 0x12345678;
     for (let pixel = 0; pixel < width * height; pixel += 1) {
-      const seed = (pixel * 9301 + 49297) % 233280;
-      const value = Math.floor((seed / 233280) * 256);
+      seed ^= seed << 13;
+      seed ^= seed >>> 17;
+      seed ^= seed << 5;
       const offset = pixel * 4;
-      pixels.data[offset] = value;
-      pixels.data[offset + 1] = (value * 3 + 41) % 256;
-      pixels.data[offset + 2] = (value * 7 + 89) % 256;
+      pixels.data[offset] = seed & 255;
+      pixels.data[offset + 1] = (seed >>> 8) & 255;
+      pixels.data[offset + 2] = (seed >>> 16) & 255;
       pixels.data[offset + 3] = 255;
     }
     context.putImageData(pixels, 0, 0);
