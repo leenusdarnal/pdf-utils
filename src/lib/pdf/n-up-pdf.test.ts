@@ -1,4 +1,5 @@
-import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { degrees, PDFDocument, StandardFonts } from 'pdf-lib';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { describe, expect, it } from 'vitest';
 import {
   calculateNUpCells,
@@ -152,6 +153,69 @@ describe('createNUpPdf', () => {
     expect(output.getPage(0).getWidth()).toBeCloseTo(595.28, 0);
     expect(output.getPage(0).getHeight()).toBeCloseTo(841.89, 0);
     expect(output.getPage(1).getWidth()).toBeCloseTo(595.28, 0);
+  });
+
+  it('reopens N-up sheets with PDF.js and preserves selectable text from rotated crop-box pages', async () => {
+    const sourceDocument = await PDFDocument.create();
+    const font = await sourceDocument.embedFont(StandardFonts.Helvetica);
+    const firstPage = sourceDocument.addPage([612, 792]);
+    firstPage.drawText('N-UP SOURCE PAGE ONE', { x: 50, y: 700, size: 18, font });
+
+    const rotatedPage = sourceDocument.addPage([420, 300]);
+    rotatedPage.drawText('N-UP ROTATED SOURCE PAGE TWO', { x: 50, y: 170, size: 18, font });
+    rotatedPage.setCropBox(20, 20, 360, 260);
+    rotatedPage.setRotation(degrees(90));
+
+    const thirdPage = sourceDocument.addPage([612, 792]);
+    thirdPage.drawText('N-UP SOURCE PAGE THREE', { x: 50, y: 700, size: 18, font });
+
+    const source = createPdfBlob(await sourceDocument.save());
+    const result = await createNUpPdf(source, defaultOptions({
+      layout: '2-up',
+      orientation: 'landscape',
+      pageSize: 'a4',
+      marginMm: 10,
+      gutterMm: 4,
+      pageNumbers: [1, 2, 3]
+    }));
+
+    expect(result.sourcePages).toBe(3);
+    expect(result.outputPages).toBe(2);
+    expect(result.pagesPerSheet).toBe(2);
+
+    const loadingTask = pdfjs.getDocument({ data: result.bytes.slice() });
+    const reopened = await loadingTask.promise;
+
+    try {
+      expect(reopened.numPages).toBe(2);
+
+      for (let sheetNumber = 1; sheetNumber <= reopened.numPages; sheetNumber += 1) {
+        const sheet = await reopened.getPage(sheetNumber);
+        const viewport = sheet.getViewport({ scale: 1 });
+        expect(viewport.width).toBeCloseTo(841.89, 0);
+        expect(viewport.height).toBeCloseTo(595.28, 0);
+
+        const items = (await sheet.getTextContent()).items.filter((item) => 'str' in item);
+        const textItems = items.filter((item) => 'transform' in item);
+        const text = textItems.map((item) => item.str).join(' ');
+
+        if (sheetNumber === 1) {
+          expect(text).toContain('N-UP SOURCE PAGE ONE');
+          expect(text).toContain('N-UP ROTATED SOURCE PAGE TWO');
+        } else {
+          expect(text).toContain('N-UP SOURCE PAGE THREE');
+        }
+
+        for (const item of textItems.filter((entry) => entry.str.startsWith('N-UP'))) {
+          expect(item.transform[4]).toBeGreaterThanOrEqual(0);
+          expect(item.transform[4]).toBeLessThan(viewport.width);
+          expect(item.transform[5]).toBeGreaterThanOrEqual(0);
+          expect(item.transform[5]).toBeLessThan(viewport.height);
+        }
+      }
+    } finally {
+      await loadingTask.destroy();
+    }
   });
 
   it('supports a final partially-filled sheet and a reversed page sequence', async () => {
