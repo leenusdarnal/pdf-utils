@@ -219,7 +219,8 @@
           class="inline-flex min-h-[36px] items-center justify-center rounded-lg bg-brand-700 px-4 text-[10px] font-bold text-white hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2"
           onclick={() => fileInput?.click()}
         >Choose PDF</button>
-        <span class="mt-3 text-[9px] text-subtle">Or drop a PDF here. Limit: 150 MB and 100 pages.</span>
+        <span class="mt-3 text-[9px] text-subtle">English OCR only in this first version; handwriting and poor-quality scans may be inaccurate.</span>
+        <span class="mt-1 text-[9px] text-subtle">Or drop a PDF here. Limit: 150 MB and 100 pages.</span>
       </div>
     {:else if isLoading}
       <div class="flex min-h-[230px] items-center justify-center text-[11px] text-muted">Opening your PDF locally…</div>
