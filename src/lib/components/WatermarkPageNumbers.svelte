@@ -49,7 +49,7 @@
   let showAdvanced = false;
 
   $: previewPageNumber = pageCount > 0 && includePageNumbers
-    ? getPreviewPageNumber()
+    ? getPreviewPageNumber(pageCount, pageNumberFormat, pageNumberStart)
     : '';
   $: previewFontSize = Number.isFinite(watermarkFontSize) ? Math.max(7, watermarkFontSize * 230 / Math.max(1, pageWidth)) : 7;
   $: previewNumberSize = Number.isFinite(pageNumberFontSize) ? Math.max(7, pageNumberFontSize * 230 / Math.max(1, pageWidth)) : 7;
@@ -62,9 +62,13 @@
     return (size / 1_048_576).toFixed(2) + ' MB';
   }
 
-  function getPreviewPageNumber(): string {
+  function getPreviewPageNumber(
+    totalPages: number,
+    format: PageNumberFormat,
+    startNumber: number
+  ): string {
     try {
-      return formatPageNumber(1, pageCount, pageNumberFormat, pageNumberStart);
+      return formatPageNumber(1, totalPages, format, startNumber);
     } catch {
       return '';
     }
