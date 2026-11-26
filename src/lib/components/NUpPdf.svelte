@@ -85,6 +85,7 @@
       sourceFile = file;
       pageCount = count;
       pageSelection = '1-' + count;
+      outputName = file.name.replace(/\.pdf$/i, '') || 'document';
       statusMessage = count + (count === 1 ? ' page ready to arrange.' : ' pages ready to arrange.');
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : 'The PDF could not be opened.';
