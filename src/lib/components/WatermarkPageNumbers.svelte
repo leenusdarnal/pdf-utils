@@ -49,12 +49,12 @@
   let showAdvanced = false;
 
   $: previewPageNumber = pageCount > 0 && includePageNumbers
-    ? formatPageNumber(1, pageCount, pageNumberFormat, pageNumberStart)
+    ? getPreviewPageNumber()
     : '';
-  $: previewFontSize = Math.max(7, watermarkFontSize * 230 / Math.max(1, pageWidth));
-  $: previewNumberSize = Math.max(7, pageNumberFontSize * 230 / Math.max(1, pageWidth));
-  $: previewMarginX = Math.min(18, marginMm * 72 / 25.4 / Math.max(1, pageWidth) * 100);
-  $: previewMarginY = Math.min(18, marginMm * 72 / 25.4 / Math.max(1, pageHeight) * 100);
+  $: previewFontSize = Number.isFinite(watermarkFontSize) ? Math.max(7, watermarkFontSize * 230 / Math.max(1, pageWidth)) : 7;
+  $: previewNumberSize = Number.isFinite(pageNumberFontSize) ? Math.max(7, pageNumberFontSize * 230 / Math.max(1, pageWidth)) : 7;
+  $: previewMarginX = Number.isFinite(marginMm) ? Math.min(18, Math.max(0, marginMm) * 72 / 25.4 / Math.max(1, pageWidth) * 100) : 0;
+  $: previewMarginY = Number.isFinite(marginMm) ? Math.min(18, Math.max(0, marginMm) * 72 / 25.4 / Math.max(1, pageHeight) * 100) : 0;
   $: previewImageWidth = Math.min(80, imageScalePercent);
 
   function formatFileSize(size: number): string {
@@ -62,7 +62,15 @@
     return (size / 1_048_576).toFixed(2) + ' MB';
   }
 
-  function setPreviewPosition(position: OverlayPosition, topOrBottom = true): string {
+  function getPreviewPageNumber(): string {
+    try {
+      return formatPageNumber(1, pageCount, pageNumberFormat, pageNumberStart);
+    } catch {
+      return '';
+    }
+  }
+
+  function setPreviewPosition(position: OverlayPosition): string {
     const x = position.endsWith('left')
       ? 'left:' + previewMarginX + '%;'
       : position.endsWith('right')
@@ -78,7 +86,7 @@
       : position.endsWith('center')
         ? 'translateX(-50%)'
         : 'none';
-    return x + y + 'transform:' + transform + ';' + (topOrBottom ? '' : '');
+    return x + y + 'transform:' + transform + ';';
   }
 
   function safeFileName(name: string): string {
