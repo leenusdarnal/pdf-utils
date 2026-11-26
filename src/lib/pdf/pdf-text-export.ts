@@ -21,7 +21,7 @@ export function formatPdfTextExport(
 ): string {
   const sortedPages = [...pages].sort((a, b) => a.pageNumber - b.pageNumber);
   if (format === 'md') {
-    const safeTitle = title.replace(/[\r\n#]+/g, ' ').trim() || 'Extracted PDF text';
+    const safeTitle = title.replace(/[\r\n#]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Extracted PDF text';
     return [
       '# ' + safeTitle,
       '',
