@@ -118,7 +118,9 @@ function toImageData(
   height: number
 ): void {
   const rgba = decodePdfImagePixels(source, width, height);
-  context.putImageData(new ImageData(rgba, width, height), 0, 0);
+  const canvasPixels = new Uint8ClampedArray(new ArrayBuffer(rgba.byteLength));
+  canvasPixels.set(rgba);
+  context.putImageData(new ImageData(canvasPixels, width, height), 0, 0);
 }
 
 function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
