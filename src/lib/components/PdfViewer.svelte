@@ -22,6 +22,13 @@
     type PdfViewportTransform
   } from '$lib/annotations/annotation-geometry';
   import { exportAnnotatedPdf } from '$lib/pdf/export-annotations';
+  import {
+    createAnnotationDraftKey,
+    deleteAnnotationDraft,
+    loadAnnotationDraft,
+    saveAnnotationDraft,
+    type AnnotationDraft
+  } from '$lib/annotations/annotation-drafts';
 
   export let file: File;
   export let onClose: () => void;
@@ -67,8 +74,16 @@
   let searchError = '';
   let searchSequence = 0;
 
-  const annotationHistory = new AnnotationHistory();
+  let annotationHistory = new AnnotationHistory();
   let annotations: PdfAnnotation[] = [];
+  let annotationDraftKey: string | null = null;
+  let availableAnnotationDraft: AnnotationDraft | null = null;
+  let saveAnnotationDrafts = false;
+  let isCheckingAnnotationDraft = false;
+  let annotationDraftStatus = 'Local draft recovery is off. Enable it to save annotations on this device.';
+  let draftSaveQueue: Promise<void> = Promise.resolve();
+  let draftSaveSequence = 0;
+  let draftLookupSequence = 0;
   let visibleAnnotations: PdfAnnotation[] = [];
   let selectedAnnotationId: string | null = null;
   let pendingHighlightRects: NormalizedRect[] = [];
@@ -120,6 +135,7 @@
         // Its loading task is destroyed by onMount cleanup; do not update stale UI.
         if (destroyed) return;
         totalPages = pdfDocument.numPages;
+        void inspectLocalAnnotationDraft();
 
         try {
           const metadata = await pdfDocument.getMetadata();
@@ -325,6 +341,7 @@
       pendingHighlightRects = [];
       drawingTool = null;
       drawingStart = null;
+      queueAnnotationDraftSave();
     }
     targetPage = nextPage;
     void renderPage(targetPage);
@@ -481,6 +498,126 @@
       noteDraft = '';
       noteError = '';
     }
+    queueAnnotationDraftSave();
+  }
+
+  async function inspectLocalAnnotationDraft() {
+    const sequence = ++draftLookupSequence;
+    isCheckingAnnotationDraft = true;
+    try {
+      const key = await createAnnotationDraftKey(file);
+      if (destroyed || sequence !== draftLookupSequence) return;
+      annotationDraftKey = key;
+      const draft = await loadAnnotationDraft(key);
+      if (destroyed || sequence !== draftLookupSequence) return;
+      availableAnnotationDraft = draft;
+      annotationDraftStatus = draft
+        ? 'A saved annotation draft is available on this device.'
+        : 'Local draft recovery is off. Enable it to save annotations on this device.';
+    } catch (error) {
+      if (destroyed || sequence !== draftLookupSequence) return;
+      annotationDraftStatus = error instanceof Error
+        ? error.message
+        : 'Local annotation drafts are unavailable in this browser.';
+    } finally {
+      if (!destroyed && sequence === draftLookupSequence) isCheckingAnnotationDraft = false;
+    }
+  }
+
+  function queueAnnotationDraftSave() {
+    if (!saveAnnotationDrafts || !annotationDraftKey || destroyed || newNoteId) return;
+    const sequence = ++draftSaveSequence;
+    const snapshot = [...annotationHistory.annotations];
+    const key = annotationDraftKey;
+    draftSaveQueue = draftSaveQueue.catch(() => undefined).then(async () => {
+      if (!saveAnnotationDrafts || destroyed || sequence !== draftSaveSequence) return;
+      if (snapshot.length === 0) {
+        await deleteAnnotationDraft(key);
+        if (!destroyed && sequence === draftSaveSequence) {
+          annotationDraftStatus = 'No annotations to save. Draft recovery remains enabled.';
+        }
+        return;
+      }
+      annotationDraftStatus = 'Saving annotations on this device…';
+      await saveAnnotationDraft({
+        key,
+        fileName: file.name,
+        fileSize: file.size,
+        fileLastModified: file.lastModified,
+        updatedAt: Date.now(),
+        annotations: snapshot
+      });
+      if (!destroyed && sequence === draftSaveSequence) {
+        annotationDraftStatus = 'Saved on this device. The PDF itself is not stored.';
+      }
+    }).catch((error: unknown) => {
+      if (!destroyed && sequence === draftSaveSequence) {
+        saveAnnotationDrafts = false;
+        annotationDraftStatus = error instanceof Error
+          ? error.message
+          : 'The annotation draft could not be saved on this device.';
+      }
+    });
+  }
+
+  function restoreAvailableAnnotationDraft() {
+    if (!availableAnnotationDraft) return;
+    if (availableAnnotationDraft.annotations.some((annotation) => annotation.pageNumber > totalPages)) {
+      annotationDraftStatus = 'The saved draft does not match this document and was not restored.';
+      return;
+    }
+    try {
+      annotationHistory = new AnnotationHistory(availableAnnotationDraft.annotations);
+      availableAnnotationDraft = null;
+      selectedAnnotationId = null;
+      editingNoteId = null;
+      newNoteId = null;
+      noteDraft = '';
+      refreshAnnotationState();
+      saveAnnotationDrafts = true;
+      annotationDraftStatus = 'Draft restored. Future annotation changes will be saved on this device.';
+      queueAnnotationDraftSave();
+    } catch {
+      annotationDraftStatus = 'The saved annotation draft could not be restored.';
+    }
+  }
+
+  async function discardAvailableAnnotationDraft() {
+    const key = annotationDraftKey;
+    availableAnnotationDraft = null;
+    saveAnnotationDrafts = false;
+    draftSaveSequence += 1;
+    await draftSaveQueue.catch(() => undefined);
+    try {
+      if (key) await deleteAnnotationDraft(key);
+      annotationDraftStatus = 'Saved annotation draft discarded from this device.';
+    } catch (error) {
+      annotationDraftStatus = error instanceof Error
+        ? error.message
+        : 'The saved annotation draft could not be discarded.';
+    }
+  }
+
+  async function toggleAnnotationDraftSaving(event: Event) {
+    const enabled = (event.currentTarget as HTMLInputElement).checked;
+    if (enabled) {
+      if (!annotationDraftKey || availableAnnotationDraft) return;
+      saveAnnotationDrafts = true;
+      queueAnnotationDraftSave();
+      return;
+    }
+
+    saveAnnotationDrafts = false;
+    draftSaveSequence += 1;
+    await draftSaveQueue.catch(() => undefined);
+    try {
+      if (annotationDraftKey) await deleteAnnotationDraft(annotationDraftKey);
+      annotationDraftStatus = 'Local draft saving is off. The saved draft was removed from this device.';
+    } catch (error) {
+      annotationDraftStatus = error instanceof Error
+        ? error.message
+        : 'The saved annotation draft could not be removed.';
+    }
   }
 
   function captureHighlightSelection() {
@@ -604,10 +741,10 @@
       text: ''
     };
     annotationHistory.add(note);
-    refreshAnnotationState();
     selectedAnnotationId = note.id;
     editingNoteId = note.id;
     newNoteId = note.id;
+    refreshAnnotationState();
     noteDraft = '';
     noteError = '';
     isAddingNote = false;
@@ -636,6 +773,7 @@
     newNoteId = null;
     editingNoteId = null;
     noteError = '';
+    queueAnnotationDraftSave();
   }
 
   function cancelNoteEditing() {
@@ -648,6 +786,7 @@
     editingNoteId = null;
     noteDraft = '';
     noteError = '';
+    queueAnnotationDraftSave();
   }
 
   function selectAnnotation(annotation: PdfAnnotation) {
@@ -677,6 +816,7 @@
     newNoteId = null;
     noteDraft = '';
     noteError = '';
+    queueAnnotationDraftSave();
   }
 
   function undoAnnotation() {
@@ -687,6 +827,7 @@
       noteDraft = '';
       noteError = '';
     }
+    queueAnnotationDraftSave();
   }
 
   function redoAnnotation() {
@@ -697,6 +838,7 @@
       noteDraft = '';
       noteError = '';
     }
+    queueAnnotationDraftSave();
   }
 
   function getDisplayedAnnotation(annotation: PdfAnnotation): PdfAnnotation {
@@ -1156,6 +1298,30 @@
         onclick={exportAnnotations}
       >{isExportingAnnotations ? 'Exporting…' : 'Export annotated PDF (' + annotations.length + ')'}</button>
       <span class="text-[10px] text-[#858b98]">Adds vector/text overlays to a new copy; the source PDF is unchanged.</span>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2" data-annotation-group="draft-recovery" role="group" aria-label="Local annotation draft recovery">
+      <label class="inline-flex min-h-[32px] items-center gap-2 text-[10px] font-semibold text-[#535a68]" for="pdf-annotation-draft-toggle">
+        <input
+          id="pdf-annotation-draft-toggle"
+          type="checkbox"
+          class="size-4 accent-brand-600 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2"
+          checked={saveAnnotationDrafts}
+          disabled={isLoading || isCheckingAnnotationDraft || !annotationDraftKey || availableAnnotationDraft !== null}
+          onchange={(event) => void toggleAnnotationDraftSaving(event)}
+        />
+        Save annotation drafts on this device
+      </label>
+      {#if isCheckingAnnotationDraft}
+        <span class="text-[10px] text-[#858b98]" role="status">Checking this device for a saved draft…</span>
+      {:else if availableAnnotationDraft}
+        <span class="text-[10px] text-[#858b98]" role="status">A saved draft has {availableAnnotationDraft.annotations.length} annotation(s).</span>
+        <button type="button" class="inline-flex min-h-[30px] items-center rounded-lg border border-brand-200 bg-brand-50 px-3 text-[10px] font-semibold text-brand-700 hover:bg-brand-100 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" onclick={restoreAvailableAnnotationDraft}>Restore saved draft</button>
+        <button type="button" class="inline-flex min-h-[30px] items-center rounded-lg border border-line bg-white px-3 text-[10px] font-semibold text-[#555b68] hover:border-danger-300 hover:text-danger-600 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" onclick={() => void discardAvailableAnnotationDraft()}>Discard saved draft</button>
+      {:else}
+        <span class="text-[10px] text-[#858b98]" role="status">{annotationDraftStatus}</span>
+      {/if}
+      <span class="basis-full text-[9px] text-[#969ba6]">Opt-in storage uses this browser’s local database. Only annotations are saved; your PDF is never stored.</span>
     </div>
 
     {#if isAddingNote}
