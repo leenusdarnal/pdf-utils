@@ -188,7 +188,7 @@ async function embedWatermarkImage(document: PDFDocument, source: Blob): Promise
   throw new Error('Use a PNG or JPEG image for the watermark. WebP and other formats are not supported.');
 }
 
-function fitTextSize(font: ReturnType<PDFDocument['embedFont']> extends Promise<infer T> ? T : never, text: string, requestedSize: number, maxWidth: number): number {
+function fitTextSize(font: { widthOfTextAtSize(text: string, size: number): number }, text: string, requestedSize: number, maxWidth: number): number {
   const available = Math.max(1, maxWidth);
   const measured = font.widthOfTextAtSize(text, requestedSize);
   const size = measured > available ? requestedSize * available / measured : requestedSize;
