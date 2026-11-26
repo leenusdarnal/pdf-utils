@@ -35,7 +35,7 @@ describe('watermark and page-number geometry', () => {
     expect(getPageNumberLabel(3, 12, 'number')).toBe('3');
     expect(getPageNumberLabel(3, 12, 'page')).toBe('Page 3');
     expect(getPageNumberLabel(3, 12, 'page-of-total')).toBe('Page 3 of 12');
-    expect(sanitizePdfOverlayText('  “Draft”—for review\\nnow  ')).toBe('"Draft"-for review now');
+    expect(sanitizePdfOverlayText('  “Draft”—for review' + String.fromCharCode(10) + 'now  ')).toBe('"Draft"-for review now');
     expect(getOverlayFileName('Quarter: 1/2026.pdf')).toBe('Quarter- 1-2026-watermarked.pdf');
   });
 });
