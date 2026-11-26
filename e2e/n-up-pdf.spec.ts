@@ -1,11 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 async function createFivePagePdf(): Promise<Buffer> {
   const document = await PDFDocument.create();
+  const font = await document.embedFont(StandardFonts.Helvetica);
   for (let pageNumber = 1; pageNumber <= 5; pageNumber += 1) {
-    document.addPage([612, 792]);
+    const page = document.addPage([612, 792]);
+    page.drawText('Source page ' + pageNumber, { x: 48, y: 720, size: 18, font });
   }
   return Buffer.from(await document.save());
 }
