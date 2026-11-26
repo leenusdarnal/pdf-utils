@@ -20,7 +20,8 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Open the document with PDF.js in the browser using its matching, bundled worker.
 - Read PDFs in a continuous vertical scroll view by default, with pages loaded near the viewport on demand, a selectable PDF.js text layer, and a live current-page indicator. Previous/next and thumbnail selection remain available as quick jumps. The Page tools switch opens the existing single-page annotation workspace.
 - Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted. On mobile, the page rail collapses by default, can be shown on demand, and collapses after page selection.
-- Search extracted page text locally, review highlighted snippets, and jump to matching pages.\n- Export selectable PDF text as plain TXT or Markdown, with page boundaries and a bounded preview. Text extraction follows PDF.js reading order; scanned pages without a text layer require OCR, which is not included.
+- Search extracted page text locally, review highlighted snippets, and jump to matching pages.
+- Export selectable PDF text as plain TXT or Markdown, with page boundaries and a bounded preview. Text extraction follows PDF.js reading order; scanned pages without a text layer require OCR, which is not included.
 - Inspect local document information including title, author, subject, creator, producer, PDF version, page count, and file size.
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
