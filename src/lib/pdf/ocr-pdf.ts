@@ -250,7 +250,10 @@ export async function createSearchableOcrPdf(
         const recognition = await worker.recognize(canvas, {}, { blocks: true });
         throwIfAborted(options.signal);
 
-        const words = recognition.data.words ?? [];
+        const words = (recognition.data.blocks ?? [])
+          .flatMap((block) => block.paragraphs ?? [])
+          .flatMap((paragraph) => paragraph.lines ?? [])
+          .flatMap((line) => line.words ?? []);
         let pageWordCount = 0;
         if (!font) font = await outputDocument.embedFont(StandardFonts.Helvetica);
         const outputPage = outputDocument.getPage(pageNumber - 1);
