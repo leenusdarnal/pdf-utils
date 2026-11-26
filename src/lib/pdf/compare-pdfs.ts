@@ -184,9 +184,11 @@ export async function comparePdfFiles(
     let visualChangedPages = 0;
 
     for (let pageNumber = 1; pageNumber <= comparedPages; pageNumber += 1) {
-      const baselinePage = await baselineDocument.getPage(pageNumber);
-      const updatedPage = await updatedDocument.getPage(pageNumber);
+      let baselinePageForCleanup: PdfPage | null = null;
+      let updatedPageForCleanup: PdfPage | null = null;
       try {
+        const baselinePage = (baselinePageForCleanup = await baselineDocument.getPage(pageNumber));
+        const updatedPage = (updatedPageForCleanup = await updatedDocument.getPage(pageNumber));
         const [baselineText, updatedText, visual] = await Promise.all([
           extractPageText(baselinePage),
           extractPageText(updatedPage),
@@ -219,8 +221,8 @@ export async function comparePdfFiles(
         const detail = error instanceof Error ? error.message : 'Unknown rendering error';
         throw new Error('Page ' + pageNumber + ' could not be compared: ' + detail);
       } finally {
-        baselinePage.cleanup();
-        updatedPage.cleanup();
+        baselinePageForCleanup?.cleanup();
+        updatedPageForCleanup?.cleanup();
       }
 
       onProgress?.({ completedPages: pageNumber, totalPages, currentPage: pageNumber });
