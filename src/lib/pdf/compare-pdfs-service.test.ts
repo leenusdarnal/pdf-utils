@@ -261,7 +261,7 @@ describe('comparePdfFiles service', () => {
     );
 
     await expect(comparePdfFiles(baselineFile, updatedFile)).rejects.toThrow(
-      'The PDFs could not be compared. They may be damaged, encrypted, or unsupported. synthetic page retrieval failure'
+      'Page 1 could not be compared: synthetic page retrieval failure'
     );
     expect(baselinePage.cleanup).toHaveBeenCalledOnce();
     expect(baseline.task.destroy).toHaveBeenCalledOnce();
