@@ -10,7 +10,8 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 
 | Priority | Capability | MVP decision | Notes |
 | --- | --- | --- | --- |
-| P0 | Appearance | Yes | Light/dark theme toggle, follows system preference until the user chooses, and saves the preference locally |\n| P0 | PDF viewer | Yes | Local rendering, continuous vertical scroll with lazy page rendering, scroll-aware page navigation, zoom, fit width, selectable text, virtualized thumbnails, mobile thumbnail toggle, local text search, read-only metadata, and native-browser printing are implemented; wider browser/accessibility QA remains |
+| P0 | Appearance | Yes | Light/dark theme toggle, follows system preference until the user chooses, and saves the preference locally |
+| P0 | PDF viewer | Yes | Local rendering, continuous vertical scroll with lazy page rendering, scroll-aware page navigation, zoom, fit width, selectable text, virtualized thumbnails, mobile thumbnail toggle, local text search, read-only metadata, and native-browser printing are implemented; wider browser/accessibility QA remains |
 | P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; organized, extracted, merged, and range-split PDF outputs download locally without overwriting source files |
 | P1 | Page organization | Yes | Merge PDFs, split by custom page ranges, extract selected pages, reorder, rotate, duplicate, and delete |
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
