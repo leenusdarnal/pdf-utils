@@ -24,7 +24,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P2 | Watermark/page numbers | In progress | Local visible-text overlays with page ranges, live style preview, margins, and rotation-aware placement |
 | P2 | N-up layout | In progress | Local vector-page embedding with 2/4/6/9/16-up and custom grids, print-ready paper sizes, page ranges/order, margins, and gutters |
 | P2 | OCR and text extraction | In progress | English searchable OCR and local PDF-to-text/Markdown export are implemented; multilingual OCR and wider fidelity verification remain |
-| P2 | Compare and repair | In progress | Local comparison is implemented; conservative structure rebuilding is being added for supported, parseable PDFs, with text/geometry/visual preservation checks and refusal when safety checks fail |
+| P2 | Compare and repair | In progress | Local comparison and conservative structure rebuilding are implemented for supported, parseable PDFs; both tools use explicit limits and bounded fidelity checks, with broader real-document verification remaining |
 | P2 | Office conversion | Research only | Assess fidelity, local processing options, licensing, bundle size, and hosting costs before selecting an approach |
 | P3 | AI document tools | Research only | Summarization, translation, and Chat with PDF; privacy, cost, consent, and remote processing must be explicit |
 | P3 | Secure redaction | Separate security-gated project | Must remove underlying text/image content, sanitize, and independently verify output; no overlay-only redaction |
