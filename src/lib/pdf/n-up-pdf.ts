@@ -89,6 +89,8 @@ export function getNUpGrid(pagesPerSheet: NUpPagesPerSheet): NUpGrid {
       return { columns: 3, rows: 3 };
     case 16:
       return { columns: 4, rows: 4 };
+    default:
+      throw new Error('Choose 1, 2, 4, 6, 9, or 16 pages per sheet.');
   }
 }
 
