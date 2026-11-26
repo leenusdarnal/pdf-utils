@@ -8,6 +8,7 @@ describe('exportAnnotatedPdf', () => {
     const document = await PDFDocument.create();
     document.addPage([300, 400]);
     const rotatedPage = document.addPage([420, 300]);
+    rotatedPage.setCropBox(10, 12, 390, 270);
     rotatedPage.setRotation(degrees(90));
     const bytes = await document.save();
     const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
@@ -37,7 +38,7 @@ describe('exportAnnotatedPdf', () => {
         color: '#2463eb',
         opacity: 1,
         anchor: { x: 0.65, y: 0.24 },
-        text: 'Review this paragraph before approval.'
+        text: 'Review this paragraph before approval.\\nRésumé — notes may contain unsupported glyphs.'
       },
       {
         id: 'freehand-1',
