@@ -88,6 +88,60 @@ describe('exportAnnotatedPdf', () => {
     expect(new Uint8Array(await source.arrayBuffer())).toEqual(sourceBytes);
   });
 
+  it('keeps an exported note anchored to a cropped page after 90-degree rotation', async () => {
+    const source = await createSource();
+    const anchor = { x: 0.25, y: 0.65 };
+    const note: PdfAnnotation = {
+      id: 'rotated-crop-note',
+      type: 'text-note',
+      pageNumber: 2,
+      createdAt: 1,
+      updatedAt: 1,
+      color: '#2463eb',
+      opacity: 1,
+      anchor,
+      text: 'ROTATED CROP NOTE SENTINEL'
+    };
+
+    const output = await exportAnnotatedPdf(source, [note]);
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const loadingTask = pdfjs.getDocument({ data: output.slice() });
+    const reopened = await loadingTask.promise;
+
+    try {
+      const page = await reopened.getPage(2);
+      const viewport = page.getViewport({ scale: 1 });
+      const [left, bottom, right, top] = page.view;
+      const cropWidth = right - left;
+      const cropHeight = top - bottom;
+
+      expect(viewport.width).toBeCloseTo(cropHeight, 1);
+      expect(viewport.height).toBeCloseTo(cropWidth, 1);
+
+      const expected = viewport.convertToViewportPoint(
+        left + anchor.x * cropWidth,
+        bottom + (1 - anchor.y) * cropHeight
+      );
+      const textItems = (await page.getTextContent()).items.filter((item) => 'str' in item);
+      const extractedText = textItems.map((item) => item.str).join(' ');
+      const markerItem = textItems.find((item) => item.str === 'N');
+
+      expect(extractedText).toContain('ROTATED CROP NOTE SENTINEL');
+      expect(markerItem).toBeDefined();
+      if (!markerItem || !('transform' in markerItem)) {
+        throw new Error('The exported note marker could not be located.');
+      }
+
+      const markerDistance = Math.hypot(
+        markerItem.transform[4] - expected[0],
+        markerItem.transform[5] - expected[1]
+      );
+      expect(markerDistance).toBeLessThan(18);
+    } finally {
+      await reopened.destroy();
+    }
+  });
+
   it('rejects exports without annotations', async () => {
     await expect(exportAnnotatedPdf(await createSource(), [])).rejects.toThrow(
       'Add at least one annotation'
