@@ -12,6 +12,7 @@
   import PdfTextExport from '$lib/components/PdfTextExport.svelte';
   import SearchableOcr from '$lib/components/SearchableOcr.svelte';
   import WatermarkPageNumbers from '$lib/components/WatermarkPageNumbers.svelte';
+  import NUpPdf from '$lib/components/NUpPdf.svelte';
   import { hasPdfHeader } from '$lib/pdf/viewer-utils';
 
   let isDragging = false;
@@ -27,6 +28,7 @@
   let textExportMode = false;
   let searchableOcrMode = false;
   let watermarkPageNumbersMode = false;
+  let nUpMode = false;
   let isDarkMode = false;
   let appReady = false;
   let organizerInput: HTMLInputElement;
@@ -160,7 +162,7 @@
       </span>
       <span>pdf<span class="font-medium text-[#8c91a0]">utils</span></span>
     </a>
-    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode && !imageMode && !imagesToPdfMode && !compressMode && !extractImagesMode && !textExportMode && !searchableOcrMode && !watermarkPageNumbersMode}
+    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode && !imageMode && !imagesToPdfMode && !compressMode && !extractImagesMode && !textExportMode && !searchableOcrMode && !watermarkPageNumbersMode && !nUpMode}
       <nav class="ml-auto flex h-full items-center gap-[30px] max-[760px]:gap-[17px]" aria-label="Main navigation">
         <a class="relative inline-flex h-full items-center text-[13px] font-semibold text-ink no-underline after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-0.5 after:bg-brand-700 max-[760px]:text-[11px]" href="#tools">Tools</a>
         <a class="inline-flex h-full items-center text-[13px] font-semibold text-muted no-underline transition-colors hover:text-brand-700 max-[760px]:text-[11px] max-[480px]:hidden" href="#how-it-works">How it works</a>
@@ -206,6 +208,8 @@
       <SearchableOcr onClose={() => (searchableOcrMode = false)} />
     {:else if watermarkPageNumbersMode}
       <WatermarkPageNumbers onClose={() => (watermarkPageNumbersMode = false)} />
+    {:else if nUpMode}
+      <NUpPdf onClose={() => (nUpMode = false)} />
     {:else}
       <section class="py-[77px] text-center max-[760px]:pb-[54px] max-[760px]:pt-[61px] max-[480px]:pt-[49px]">
         <div class="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[1.7px] text-brand-600 max-[480px]:text-[8px] max-[480px]:tracking-[1.2px]"><span class="h-px w-[22px] bg-brand-300"></span> A calmer way to work with PDFs</div>
@@ -301,6 +305,7 @@
 <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]"><span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#eef4ff] text-[#4f8fce]">TXT</span><div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">PDF to Text &amp; Markdown</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Export selectable text with page boundaries as TXT or Markdown.</p></div><button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white" aria-label="Open PDF text export tool" onclick={() => (textExportMode = true)}>Open tool</button></article>
 <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]"><span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#e9f8f1] text-[#39a17d] font-bold text-[11px]">OCR</span><div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Searchable OCR</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Recognize English text in scanned PDFs and add a searchable layer.</p></div><button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open searchable OCR tool" onclick={() => (searchableOcrMode = true)}>Open tool</button></article>
 <article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]"><span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#fff2e9] text-[#c77c4f] text-[11px] font-bold">WM</span><div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Watermark &amp; Page Numbers</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Stamp pages with styled text and page-number formats.</p></div><button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open watermark and page numbers tool" onclick={() => (watermarkPageNumbersMode = true)}>Open tool</button></article>
+<article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]"><span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#eef4ff] text-[#4f8fce] text-[11px] font-bold">N-UP</span><div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">N-up PDF layout</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Arrange 2, 4, 6 or more PDF pages on each print-ready sheet.</p></div><button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open N-up layout tool" onclick={() => (nUpMode = true)}>Open tool</button></article>
         </div>
       </section>
 
