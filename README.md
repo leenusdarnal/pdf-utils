@@ -25,6 +25,7 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Create a searchable PDF copy with browser-local English OCR for scanned pages. It processes at most 150 MB and 100 pages per document, leaves pages with an existing text layer unchanged, and adds invisible word-positioned text to the output. Handwriting, low-resolution scans, and non-English content may be inaccurate or unsupported; editing a signed PDF may invalidate its signature.
 - Add visible text watermarks and page numbers to a new PDF copy. Select page ranges, set text, color, opacity, font size, horizontal/diagonal orientation, page-number format and position, and edge margins. Placement accounts for each page's crop box and display rotation; the original is unchanged.
 - Arrange selected PDF pages into print-ready N-up sheets with 2, 4, 6, 9, 16, or custom 2–16 page grids. Choose A4/A3/Letter/Legal paper, portrait/landscape orientation, margins, page gaps, custom page ranges, and forward/reverse order. Page artwork is embedded as PDF content rather than rasterized; the source file is unchanged.
+- Compare two local PDFs page by page. Detect selectable-text changes, rendered-pixel differences, page-size changes, and pages added or removed; show a per-page report and short text excerpts without uploading or modifying either source file. A comparison is not a semantic equivalence or authenticity check.
 - Inspect local document information including title, author, subject, creator, producer, PDF version, page count, and file size.
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
@@ -62,6 +63,7 @@ The application uses SvelteKit, Svelte 5, TypeScript, Tailwind CSS v4, and Vite.
 - **Searchable OCR:** `src/lib/pdf/ocr-pdf.ts` renders only scanned pages with PDF.js, recognizes English words using Tesseract.js, maps word boxes back into PDF coordinates, and adds an invisible text layer to a new PDF copy. The worker, WebAssembly core, and English language model are copied from pinned npm packages into the static build; document bytes are not sent to an OCR service.
 - **Watermarks and page numbers:** `src/lib/pdf/watermark-page-numbers-service.ts` adds visible text overlays to selected pages in a new PDF copy. Its geometry helper maps displayed-page coordinates through each page's crop box and rotation so overlay placement follows the visual page rather than a fixed media-box coordinate.
 - **N-up layout:** `src/lib/pdf/n-up-pdf.ts` embeds the selected source pages into A4, A3, Letter, or Legal sheets using vector PDF page content. It calculates a contain-fit placement for each cell, applies page rotations, preserves reading order, and supports custom margins and gutters; interactive page annotations and form-level features are not copied.
+- **PDF comparison:** `src/lib/pdf/compare-pdfs.ts` pairs pages by index, extracts selectable text, and compares bounded PDF.js renderings at a shared scale. It reports text, pixel, page-size, added-page, and removed-page changes without sending document bytes to a server; it does not prove semantic equivalence.
 - **Viewer component:** `src/lib/components/PdfViewer.svelte` owns the main page state, canvas rendering, navigation, zoom, local document metadata display, and render cleanup.
 - **Thumbnail navigation:** `ThumbnailSidebar.svelte` virtualizes the page list; `PdfThumbnail.svelte` renders only the visible preview canvases.
 - **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature, clamps page/zoom values, and calculates the bounded thumbnail window.
@@ -102,7 +104,7 @@ npm run check
 npm run build
 ```
 
-End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs regression checks for PDF import/rendering, continuous scrolling, search, zoom, mobile layout, annotations, multi-file merge order, split-range validation, split-output page count/order, and N-up page-layout export before the production build.
+End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs regression checks for PDF import/rendering, continuous scrolling, search, zoom, mobile layout, annotations, multi-file merge order, split-range validation, split-output page count/order, N-up page-layout export, and PDF text/visual comparison before the production build.
 
 Update [PROJECT_PLAN.md](./PROJECT_PLAN.md) with implementation status. The phased viewer design and task plan are under `docs/superpowers/`.
 
