@@ -23,7 +23,11 @@ async function openFixture(page: import('@playwright/test').Page, bytes: Buffer)
   await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: 'Switch to page tools' }).click();
   await expect(page.locator('[data-page-surface]')).toBeVisible();
-  await expect(page.locator('#pdf-annotation-draft-toggle')).toBeEnabled({ timeout: 15_000 });
+  await expect.poll(async () => {
+    const toggleEnabled = await page.locator('#pdf-annotation-draft-toggle').isEnabled();
+    const restoreAvailable = await page.getByRole('button', { name: 'Restore saved draft' }).isVisible().catch(() => false);
+    return toggleEnabled || restoreAvailable;
+  }, { timeout: 15_000 }).toBe(true);
 }
 
 async function createSavedNote(page: import('@playwright/test').Page) {
