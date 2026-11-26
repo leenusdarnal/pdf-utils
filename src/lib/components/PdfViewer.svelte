@@ -21,6 +21,12 @@
     viewportRectToNormalized,
     type PdfViewportTransform
   } from '$lib/annotations/annotation-geometry';
+  import {
+    deleteAnnotationDraftByFingerprint,
+    fingerprintPdf,
+    loadAnnotationDraftByFingerprint,
+    saveAnnotationDraftByFingerprint
+  } from '$lib/annotations/annotation-drafts';
   import { exportAnnotatedPdf } from '$lib/pdf/export-annotations';
 
   export let file: File;
@@ -67,7 +73,15 @@
   let searchError = '';
   let searchSequence = 0;
 
-  const annotationHistory = new AnnotationHistory();
+  let annotationHistory = new AnnotationHistory();
+  let isCheckingAnnotationDraft = true;
+  let annotationDraftReady = false;
+  let annotationDraftFingerprint: string | null = null;
+  let hasSavedAnnotationDraft = false;
+  let draftSaveStatus = 'Checking for saved annotations on this device…';
+  let annotationSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  let annotationDraftDirty = false;
+  let annotationDraftWriteQueue: Promise<void> = Promise.resolve();
   let annotations: PdfAnnotation[] = [];
   let visibleAnnotations: PdfAnnotation[] = [];
   let selectedAnnotationId: string | null = null;
@@ -106,6 +120,14 @@
     };
     syncViewportMode();
     mobileViewport.addEventListener('change', syncViewportMode);
+    const handlePageHide = () => {
+      if (annotationSaveTimer !== null) {
+        clearTimeout(annotationSaveTimer);
+        annotationSaveTimer = null;
+      }
+      flushAnnotationDraftSave();
+    };
+    window.addEventListener('pagehide', handlePageHide);
 
     const loadDocument = async () => {
       try {
@@ -142,6 +164,7 @@
         }
 
         if (destroyed) return;
+        void restoreLocalAnnotationDraft();
         if (continuousMode) {
           await fitContinuousToWidth();
           currentPage = 1;
@@ -176,6 +199,12 @@
 
     return () => {
       mobileViewport.removeEventListener('change', syncViewportMode);
+      window.removeEventListener('pagehide', handlePageHide);
+      if (annotationSaveTimer !== null) {
+        clearTimeout(annotationSaveTimer);
+        annotationSaveTimer = null;
+      }
+      flushAnnotationDraftSave();
       destroyed = true;
       renderSequence += 1;
       searchSequence += 1;
@@ -192,6 +221,113 @@
       pdfDocument = null;
     };
   });
+
+  async function restoreLocalAnnotationDraft() {
+    isCheckingAnnotationDraft = true;
+    draftSaveStatus = 'Checking for saved annotations on this device…';
+    try {
+      const fingerprint = await fingerprintPdf(file);
+      annotationDraftFingerprint = fingerprint;
+      const draft = await loadAnnotationDraftByFingerprint(fingerprint);
+      if (destroyed) return;
+      if (!draft) {
+        draftSaveStatus = 'Annotations auto-save on this device only.';
+        return;
+      }
+
+      if (draft.annotations.some((annotation) => annotation.pageNumber > totalPages)) {
+        await deleteAnnotationDraftByFingerprint(fingerprint);
+        draftSaveStatus = 'An incompatible saved draft was removed.';
+        return;
+      }
+
+      annotationHistory = new AnnotationHistory(draft.annotations);
+      refreshAnnotationState(false);
+      hasSavedAnnotationDraft = draft.annotations.length > 0;
+      draftSaveStatus = 'Restored ' + draft.annotations.length +
+        ' annotation(s) from this device.';
+    } catch {
+      if (!destroyed) {
+        draftSaveStatus = 'Local draft storage is unavailable; annotations will remain in this session.';
+      }
+    } finally {
+      if (!destroyed) {
+        annotationDraftReady = true;
+        isCheckingAnnotationDraft = false;
+      }
+    }
+  }
+
+  function flushAnnotationDraftSave() {
+    if (!annotationDraftReady || !annotationDraftDirty) return;
+    annotationDraftDirty = false;
+    const fingerprint = annotationDraftFingerprint;
+    if (!fingerprint) {
+      draftSaveStatus = 'Local draft storage is unavailable; annotations will remain in this session.';
+      return;
+    }
+    const snapshot = annotations
+      .filter((annotation) => !(annotation.type === 'text-note' && !annotation.text.trim()))
+      .map((annotation) => annotation);
+    draftSaveStatus = snapshot.length > 0 ? 'Saving annotations on this device…' : 'Clearing local annotation draft…';
+
+    annotationDraftWriteQueue = annotationDraftWriteQueue
+      .catch(() => undefined)
+      .then(async () => {
+        await saveAnnotationDraftByFingerprint(fingerprint, snapshot);
+        if (!destroyed) {
+          hasSavedAnnotationDraft = snapshot.length > 0;
+          draftSaveStatus = snapshot.length > 0
+            ? 'Saved locally on this device.'
+            : 'Annotations auto-save on this device only.';
+        }
+      })
+      .catch(() => {
+        if (!destroyed) {
+          draftSaveStatus = 'Could not save this annotation draft. Check browser storage space and permissions.';
+        }
+      });
+  }
+
+  function scheduleAnnotationDraftSave() {
+    if (!annotationDraftReady) return;
+    annotationDraftDirty = true;
+    draftSaveStatus = 'Changes will be saved on this device…';
+    if (annotationSaveTimer !== null) clearTimeout(annotationSaveTimer);
+    annotationSaveTimer = setTimeout(() => {
+      annotationSaveTimer = null;
+      flushAnnotationDraftSave();
+    }, 600);
+  }
+
+  async function clearLocalAnnotationDraft() {
+    if (isCheckingAnnotationDraft || isExportingAnnotations) return;
+    if (!window.confirm('Clear all annotations and the saved local draft for this PDF?')) return;
+
+    if (annotationSaveTimer !== null) {
+      clearTimeout(annotationSaveTimer);
+      annotationSaveTimer = null;
+    }
+    annotationDraftDirty = false;
+    draftSaveStatus = 'Clearing local annotation draft…';
+    const fingerprint = annotationDraftFingerprint;
+    if (!fingerprint) {
+      draftSaveStatus = 'Local annotation draft storage is unavailable.';
+      return;
+    }
+    annotationDraftWriteQueue = annotationDraftWriteQueue
+      .catch(() => undefined)
+      .then(() => deleteAnnotationDraftByFingerprint(fingerprint));
+    try {
+      await annotationDraftWriteQueue;
+      annotationHistory = new AnnotationHistory();
+      refreshAnnotationState(false);
+      hasSavedAnnotationDraft = false;
+      draftSaveStatus = 'Local annotation draft cleared.';
+    } catch {
+      draftSaveStatus = 'The local annotation draft could not be cleared.';
+    }
+  }
 
   async function renderPage(requestedPage: number, recalculateFit = false) {
     const document = pdfDocument;
@@ -465,7 +601,7 @@
     return 'annotation-' + Date.now() + '-' + Math.random().toString(36).slice(2);
   }
 
-  function refreshAnnotationState() {
+  function refreshAnnotationState(saveDraft = true) {
     annotations = [...annotationHistory.annotations];
     canUndoAnnotations = annotationHistory.canUndo;
     canRedoAnnotations = annotationHistory.canRedo;
@@ -481,6 +617,7 @@
       noteDraft = '';
       noteError = '';
     }
+    if (saveDraft) scheduleAnnotationDraftSave();
   }
 
   function captureHighlightSelection() {
@@ -1132,19 +1269,19 @@
         class={"inline-flex min-h-[32px] items-center justify-center rounded-lg border px-3 text-[11px] font-semibold transition-colors focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf] " + (isAddingNote ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-line bg-white text-[#454b59] hover:border-brand-300 hover:bg-brand-50')}
         aria-label="Place note"
         aria-pressed={isAddingNote}
-        disabled={isLoading}
+        disabled={isLoading || isCheckingAnnotationDraft}
         onclick={toggleNotePlacement}
       >{isAddingNote ? 'Click on page…' : 'Place note'}</button>
       <button
         type="button"
         class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] transition-colors hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#f8f9fb] disabled:text-[#b2b6bf]"
         aria-label="Highlight selection"
-        disabled={isLoading || pendingHighlightRects.length === 0}
+        disabled={isLoading || isCheckingAnnotationDraft || pendingHighlightRects.length === 0}
         onclick={addHighlightFromSelection}
       >Highlight selection</button>
-      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw freehand" aria-pressed={drawingTool === 'freehand'} disabled={isLoading} onclick={() => toggleDrawingTool('freehand')}>Draw</button>
-      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw rectangle" aria-pressed={drawingTool === 'rectangle'} disabled={isLoading} onclick={() => toggleDrawingTool('rectangle')}>Rectangle</button>
-      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw arrow" aria-pressed={drawingTool === 'arrow'} disabled={isLoading} onclick={() => toggleDrawingTool('arrow')}>Arrow</button>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw freehand" aria-pressed={drawingTool === 'freehand'} disabled={isLoading || isCheckingAnnotationDraft} onclick={() => toggleDrawingTool('freehand')}>Draw</button>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw rectangle" aria-pressed={drawingTool === 'rectangle'} disabled={isLoading || isCheckingAnnotationDraft} onclick={() => toggleDrawingTool('rectangle')}>Rectangle</button>
+      <button type="button" class="inline-flex min-h-[32px] items-center justify-center rounded-lg border border-line bg-white px-3 text-[11px] font-semibold text-[#454b59] hover:border-brand-300 hover:bg-brand-50 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Draw arrow" aria-pressed={drawingTool === 'arrow'} disabled={isLoading || isCheckingAnnotationDraft} onclick={() => toggleDrawingTool('arrow')}>Arrow</button>
     </div>
 
     <div class="flex flex-wrap items-center gap-2" data-annotation-group="export" role="group" aria-label="Annotation export">
@@ -1152,10 +1289,23 @@
         type="button"
         class="inline-flex min-h-[32px] items-center justify-center rounded-lg bg-brand-600 px-3 text-[11px] font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:bg-[#c8c5dc] disabled:text-white"
         aria-label="Export annotations into a new PDF"
-        disabled={isLoading || isExportingAnnotations || annotations.length === 0 || editingNoteId !== null || newNoteId !== null}
+        disabled={isLoading || isCheckingAnnotationDraft || isExportingAnnotations || annotations.length === 0 || editingNoteId !== null || newNoteId !== null}
         onclick={exportAnnotations}
       >{isExportingAnnotations ? 'Exporting…' : 'Export annotated PDF (' + annotations.length + ')'}</button>
       <span class="text-[10px] text-[#858b98]">Adds vector/text overlays to a new copy; the source PDF is unchanged.</span>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-2" data-annotation-group="draft" role="group" aria-label="Local annotation draft">
+      <span class="text-[10px] text-[#858b98]" role="status" aria-live="polite">{draftSaveStatus}</span>
+      {#if annotations.length > 0 || hasSavedAnnotationDraft}
+        <button
+          type="button"
+          class="inline-flex min-h-[30px] items-center justify-center rounded-lg border border-[#e5e7ed] bg-white px-2.5 text-[10px] font-semibold text-[#a44747] hover:border-[#d9a5a5] hover:bg-[#fff8f8] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Clear saved annotation draft"
+          disabled={isCheckingAnnotationDraft || isExportingAnnotations}
+          onclick={clearLocalAnnotationDraft}
+        >Clear draft</button>
+      {/if}
     </div>
 
     {#if isAddingNote}
