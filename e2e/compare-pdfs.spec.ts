@@ -56,7 +56,7 @@ test('compares local PDF text, rendered appearance, and added pages', async ({ p
   await expect(page.getByRole('status')).toContainText('Comparison complete.', { timeout: 20000 });
   const results = page.locator('[aria-label="PDF comparison results"]');
   await expect(results.getByRole('heading', { name: 'Page-by-page results' })).toBeVisible();
-  await expect(results.getByText('Changed pages')).toBeVisible();
+  await expect(results.getByText('Changed pages', { exact: true })).toBeVisible();
   await expect(results.getByText('No detected change')).toBeVisible();
   await expect(results.getByText('Changed', { exact: true })).toBeVisible();
   await expect(results.getByText('Added in updated PDF')).toBeVisible();
