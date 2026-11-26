@@ -136,7 +136,12 @@ export function getCompressionAttempts(
   targetSizeBytes?: number
 ): CompressionSettings[] {
   const target = validateTargetSize(targetSizeBytes);
-  return createCompressionAttempts(COMPRESSION_PRESETS[preset], target !== null);
+  const selectedPreset = COMPRESSION_PRESETS[preset];
+  const initial: CompressionSettings = {
+    dpi: selectedPreset.dpi,
+    quality: selectedPreset.quality
+  };
+  return createCompressionAttempts(initial, target !== null);
 }
 
 function createCompressionAttempts(initial: CompressionSettings, hasTarget: boolean): CompressionSettings[] {
@@ -204,8 +209,8 @@ export async function compressPdf(
     throw new Error('This PDF is larger than the 150 MB processing limit.');
   }
   const target = validateTargetSize(targetSizeBytes);
-  const initialSettings = COMPRESSION_PRESETS[preset];
   const candidateSettings = getCompressionAttempts(preset, targetSizeBytes);
+  const initialSettings = candidateSettings[0];
   let bestBytes: Uint8Array | null = null;
   let bestPreviewBlob: Blob | null = null;
   let bestSettings: CompressionSettings = initialSettings;
