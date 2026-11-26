@@ -148,10 +148,10 @@ describe('PDF repair input inspection', () => {
   });
 
   it('conservatively detects signature markers with varied whitespace and line breaks', () => {
-    const standard = new TextEncoder().encode('%PDF-1.7\\n/ByteRange [0 120 500 80]\\n');
-    const multiline = new TextEncoder().encode('%PDF-1.7\\n/ByteRange\\n[ 0\\n120 500\\n80 ]\\n');
-    const malformed = new TextEncoder().encode('%PDF-1.7\\n/ByteRange [not a valid range]\\n');
-    const unrelated = new TextEncoder().encode('%PDF-1.7\\n/ByteRanger [0 1 2 3]\\n');
+    const standard = new TextEncoder().encode('%PDF-1.7\n/ByteRange [0 120 500 80]\n');
+    const multiline = new TextEncoder().encode('%PDF-1.7\n/ByteRange\n[ 0\n120 500\n80 ]\n');
+    const malformed = new TextEncoder().encode('%PDF-1.7\n/ByteRange [not a valid range]\n');
+    const unrelated = new TextEncoder().encode('%PDF-1.7\n/ByteRanger [0 1 2 3]\n');
     expect(hasPdfSignatureByteRange(standard)).toBe(true);
     expect(hasPdfSignatureByteRange(multiline)).toBe(true);
     expect(hasPdfSignatureByteRange(malformed)).toBe(true);
