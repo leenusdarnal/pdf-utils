@@ -49,7 +49,7 @@ const MAX_IMAGE_PIXELS = 40_000_000;
 const MAX_TOTAL_IMAGE_PIXELS = 160_000_000;
 const MAX_IMAGE_OBJECT_WAIT_MS = 15_000;
 
-function safeDocumentName(value: string): string {
+export function safeEmbeddedImageBaseName(value: string): string {
   return value
     .replace(/\.pdf$/i, '')
     .trim()
@@ -58,13 +58,15 @@ function safeDocumentName(value: string): string {
     .slice(0, 64) || 'document';
 }
 
-function toImageData(
-  source: PdfJsImageData,
-  context: CanvasRenderingContext2D,
+export function decodePdfImagePixels(
+  source: Pick<PdfJsImageData, 'kind' | 'data'>,
   width: number,
   height: number
-): void {
+): Uint8ClampedArray {
   const pixelCount = width * height;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || pixelCount <= 0) {
+    throw new Error('The PDF image has invalid pixel dimensions.');
+  }
   const sourceData = source.data;
   if (!sourceData) {
     throw new Error('The PDF image has no decoded pixel data.');
@@ -106,6 +108,16 @@ function toImageData(
     throw new Error('The embedded image uses a pixel format that is not supported yet.');
   }
 
+  return rgba;
+}
+
+function toImageData(
+  source: PdfJsImageData,
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number
+): void {
+  const rgba = decodePdfImagePixels(source, width, height);
   context.putImageData(new ImageData(rgba, width, height), 0, 0);
 }
 
@@ -225,7 +237,7 @@ export async function extractEmbeddedImages(
   const loadingTask = await createPdfDocumentTask(source);
   const images: ExtractedPdfImage[] = [];
   const seenObjectIds = new Set<string>();
-  const documentName = safeDocumentName(
+  const documentName = safeEmbeddedImageBaseName(
     'name' in source && typeof source.name === 'string' ? source.name : 'document.pdf'
   );
   let pageCount = 0;
