@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { degrees, PDFDocument } from 'pdf-lib';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { addWatermarkAndPageNumbers } from './watermark-page-numbers-service';
 
 describe('addWatermarkAndPageNumbers', () => {
@@ -32,6 +33,54 @@ describe('addWatermarkAndPageNumbers', () => {
     expect(output.getPage(1).getCropBox()).toEqual(original.getPage(1).getCropBox());
     expect(result.bytes.byteLength).toBeGreaterThan(originalBytes.byteLength);
     expect(new Uint8Array(await source.arrayBuffer())).toEqual(originalBytes);
+  });
+
+  it('reopens output and verifies watermark and page-number placement on a rotated crop box', async () => {
+    const source = await createSource();
+    const result = await addWatermarkAndPageNumbers(source, {
+      pages: [2],
+      watermark: { text: 'ROTATED WATERMARK', color: '#777777', fontSize: 36, opacity: 0.3, angle: 0 },
+      pageNumbers: { format: 'page-of-total', position: 'bottom-center', color: '#333333', fontSize: 10, margin: 24 }
+    });
+    const loadingTask = pdfjs.getDocument({ data: result.bytes.slice() });
+    const reopened = await loadingTask.promise;
+
+    try {
+      const page = await reopened.getPage(2);
+      const viewport = page.getViewport({ scale: 1 });
+      const items = (await page.getTextContent()).items.filter((item) => 'str' in item);
+      const textItems = items.filter((item) => 'transform' in item);
+      const text = textItems.map((item) => item.str).join(' ');
+
+      expect(viewport.width).toBeCloseTo(270, 1);
+      expect(viewport.height).toBeCloseTo(390, 1);
+      expect(text).toContain('ROTATED WATERMARK');
+      expect(text).toContain('Page 2 of 3');
+
+      const watermark = textItems.find((item) => item.str === 'ROTATED WATERMARK');
+      const pageNumber = textItems.find((item) => item.str === 'Page 2 of 3');
+      expect(watermark).toBeDefined();
+      expect(pageNumber).toBeDefined();
+      if (!watermark || !('transform' in watermark) || !pageNumber || !('transform' in pageNumber)) {
+        throw new Error('Expected overlay text could not be located in the exported PDF.');
+      }
+
+      const watermarkX = watermark.transform[4];
+      const watermarkY = watermark.transform[5];
+      expect(watermarkX).toBeGreaterThan(40);
+      expect(watermarkX).toBeLessThan(230);
+      expect(watermarkY).toBeGreaterThan(130);
+      expect(watermarkY).toBeLessThan(300);
+
+      const pageNumberX = pageNumber.transform[4];
+      const pageNumberY = pageNumber.transform[5];
+      expect(pageNumberX).toBeGreaterThan(40);
+      expect(pageNumberX).toBeLessThan(230);
+      expect(pageNumberY).toBeGreaterThan(8);
+      expect(pageNumberY).toBeLessThan(80);
+    } finally {
+      await loadingTask.destroy();
+    }
   });
 
   it('adds page numbers without requiring a watermark', async () => {
