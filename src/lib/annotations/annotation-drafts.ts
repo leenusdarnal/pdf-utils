@@ -121,7 +121,9 @@ export function validateDraftAnnotations(value: unknown): PdfAnnotation[] {
 
   const annotations: PdfAnnotation[] = [];
   const ids = new Set<string>();
+  const encoder = new TextEncoder();
   let freehandPoints = 0;
+  let estimatedBytes = 2;
 
   for (const candidate of value) {
     assertValidAnnotation(candidate);
@@ -141,11 +143,15 @@ export function validateDraftAnnotations(value: unknown): PdfAnnotation[] {
         throw new Error('The saved annotation draft contains too much drawing data.');
       }
     }
+    estimatedBytes += encoder.encode(JSON.stringify(annotation)).byteLength + 1;
+    if (estimatedBytes > MAX_ANNOTATION_DRAFT_BYTES) {
+      throw new Error('This annotation draft is too large for local browser storage.');
+    }
     annotations.push(annotation);
   }
 
   const serialized = JSON.stringify(annotations);
-  const byteLength = new TextEncoder().encode(serialized).byteLength;
+  const byteLength = encoder.encode(serialized).byteLength;
   if (byteLength > MAX_ANNOTATION_DRAFT_BYTES) {
     throw new Error('This annotation draft is too large for local browser storage.');
   }
@@ -178,7 +184,11 @@ export async function loadAnnotationDraft(source: Blob): Promise<AnnotationDraft
   );
   await completed;
 
-  if (!isStoredDraft(stored)) return null;
+  if (!stored) return null;
+  if (!isStoredDraft(stored) || stored.fingerprint !== fingerprint) {
+    await deleteAnnotationDraftByFingerprint(fingerprint);
+    return null;
+  }
 
   try {
     const annotations = validateDraftAnnotations(stored.annotations);
