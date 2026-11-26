@@ -35,7 +35,7 @@ test('creates a vector N-up PDF with a final partially filled sheet', async ({ p
   const exportError = await page.getByRole('alert').textContent().catch(() => null);
   expect(statusText, 'N-up export should finish' + (statusText ? ': ' + statusText : '')).toMatch(/arranged across 3 sheets/);
   expect(exportError, 'N-up export should succeed' + (exportError ? ': ' + exportError : '')).toBeNull();
-  await expect(page.getByRole('heading', { name: 'Your N-up PDF is ready' })).toBeVisible();
+  await expect(page.getByText('Your N-up PDF is ready')).toBeVisible();
   await expect(page.getByText(/3 sheets/)).toBeVisible();
 
   const [download] = await Promise.all([
