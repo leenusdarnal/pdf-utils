@@ -22,6 +22,7 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted. On mobile, the page rail collapses by default, can be shown on demand, and collapses after page selection.
 - Search extracted page text locally, review highlighted snippets, and jump to matching pages.
 - Export selectable PDF text as plain TXT or Markdown, with page boundaries and a bounded preview. Text extraction follows PDF.js reading order; scanned pages without a text layer can be processed with the English Searchable OCR tool.
+- Create a searchable PDF copy with browser-local English OCR for scanned pages. It processes at most 150 MB and 100 pages per document, leaves pages with an existing text layer unchanged, and adds invisible word-positioned text to the output. Handwriting, low-resolution scans, and non-English content may be inaccurate or unsupported; editing a signed PDF may invalidate its signature.
 - Inspect local document information including title, author, subject, creator, producer, PDF version, page count, and file size.
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
