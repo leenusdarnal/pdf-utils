@@ -11,7 +11,9 @@
     "lint": "prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "predev": "node scripts/copy-ocr-assets.mjs",
+    "prebuild": "node scripts/copy-ocr-assets.mjs"
   },
   "devDependencies": {
     "@sveltejs/kit": "^2.20.0",
@@ -30,7 +32,10 @@
   },
   "dependencies": {
     "pdfjs-dist": "6.5.438",
-    "pdf-lib": "^1.17.1"
+    "pdf-lib": "^1.17.1",
+    "@tesseract.js-data/eng": "1.0.0",
+    "tesseract.js": "7.0.0",
+    "tesseract.js-core": "7.0.0"
   },
   "engines": {
     "node": ">=22.13.0"
