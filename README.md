@@ -20,7 +20,7 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Open the document with PDF.js in the browser using its matching, bundled worker.
 - Read PDFs in a continuous vertical scroll view by default, with pages loaded near the viewport on demand, a selectable PDF.js text layer, and a live current-page indicator. Previous/next and thumbnail selection remain available as quick jumps. The Page tools switch opens the existing single-page annotation workspace.
 - Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted. On mobile, the page rail collapses by default, can be shown on demand, and collapses after page selection.
-- Search extracted page text locally, review highlighted snippets, and jump to matching pages.
+- Search extracted page text locally, review highlighted snippets, and jump to matching pages.\n- Export selectable PDF text as plain TXT or Markdown, with page boundaries and a bounded preview. Text extraction follows PDF.js reading order; scanned pages without a text layer require OCR, which is not included.
 - Inspect local document information including title, author, subject, creator, producer, PDF version, page count, and file size.
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
@@ -34,13 +34,13 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Create a smaller, image-based PDF copy locally using Screen, Balanced, or Print presets; preview the first page, optionally request a best-effort target size, and compare original/output sizes. This process is lossy and removes selectable text, links, forms, signatures, and vector content; the original is never modified.
 - Add text highlights from selected PDF text, add/select/move/edit/delete text notes, and draw freehand, rectangle, and arrow annotations. Annotation overlays use normalized page coordinates and map through PDF.js viewport transforms for zoom and page rotation. Undo/redo is available while the document remains open. Export annotations into a new PDF copy as vector/text overlays; the source PDF remains untouched and page count/rotation are preserved. Draft annotations still remain in memory only until exported; recovery after closing the document is not implemented.
 
-**Not implemented yet:** annotation recovery after closing the document, broader rotation/resize regression coverage, watermarking, and page numbering. Annotation export creates content overlays rather than interactive PDF annotation objects. Multi-range PDF splitting is implemented. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current annotations or create an annotated copy. Playwright covers the main Chromium workflows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** annotation recovery after closing the document, broader rotation/resize regression coverage, watermarking, and page numbering. OCR for scanned PDFs is not implemented. Annotation export creates content overlays rather than interactive PDF annotation objects. Multi-range PDF splitting is implemented. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current annotations or create an annotated copy. Playwright covers the main Chromium workflows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
 | Area | Planned scope |
 | --- | --- |
-| View | Text layer, search, page navigation, zoom, fit modes, document info, print |
+| View | Text layer, search, page navigation, zoom, fit modes, document info, print, and local TXT/Markdown text export |
 | Organize | Merge PDFs, split by custom page ranges into separate files, reorder/rotate/duplicate/delete pages, and extract selected pages |
 | Edit | Highlights, notes, freehand/shape drawing, and vector/text export to a new PDF copy are implemented; local draft recovery and editing existing PDF text/images remain planned |
 | Transform | Lossy raster-based compression is implemented with explicit disclosure; watermark and page numbering remain planned |
