@@ -1,4 +1,5 @@
 import { PDFDocument } from 'pdf-lib';
+import type { PDFPageProxy } from 'pdfjs-dist';
 import { createPdfDocumentTask } from './pdfjs-client';
 
 export type CompressionPreset = 'screen' | 'balanced' | 'print';
@@ -98,7 +99,7 @@ function canvasToJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob>
 }
 
 async function renderPageToJpeg(
-  page: Awaited<ReturnType<Awaited<ReturnType<typeof createPdfDocumentTask>>['promise']['getPage']>>,
+  page: PDFPageProxy,
   settings: CompressionSettings
 ): Promise<{ blob: Blob; width: number; height: number }> {
   const baseViewport = page.getViewport({ scale: 1 });
