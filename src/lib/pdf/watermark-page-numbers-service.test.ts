@@ -39,7 +39,7 @@ describe('addWatermarkAndPageNumbers', () => {
     const source = await createSource();
     const result = await addWatermarkAndPageNumbers(source, {
       pages: [2],
-      watermark: { text: 'ROTATED WATERMARK', color: '#777777', fontSize: 36, opacity: 0.3, angle: 0 },
+      watermark: { text: 'ROTATED WATERMARK', color: '#777777', fontSize: 20, opacity: 0.3, angle: 0 },
       pageNumbers: { format: 'page-of-total', position: 'bottom-center', color: '#333333', fontSize: 10, margin: 24 }
     });
     const loadingTask = pdfjs.getDocument({ data: result.bytes.slice() });
