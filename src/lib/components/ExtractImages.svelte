@@ -223,7 +223,7 @@
           disabled={isLoading}
           onclick={() => fileInput?.click()}
         >Choose PDF</button>
-        <span class="mt-3 text-[9px] text-subtle">You can also drop a PDF here. Maximum file size 150 MB.</span>
+        <span class="mt-3 text-[9px] text-subtle">You can also drop a PDF here. Maximum file size 150 MB and 500 pages.</span>
       </div>
     {:else if isLoading}
       <div class="flex min-h-[230px] items-center justify-center text-[11px] text-muted">Checking your PDF locally…</div>
