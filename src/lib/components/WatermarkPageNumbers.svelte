@@ -51,8 +51,8 @@
   $: previewPageNumber = pageCount > 0 && includePageNumbers
     ? formatPageNumber(1, pageCount, pageNumberFormat, pageNumberStart)
     : '';
-  $: previewFontSize = Math.max(7, watermarkFontSize * 250 / Math.max(1, pageWidth));
-  $: previewNumberSize = Math.max(7, pageNumberFontSize * 250 / Math.max(1, pageWidth));
+  $: previewFontSize = Math.max(7, watermarkFontSize * 230 / Math.max(1, pageWidth));
+  $: previewNumberSize = Math.max(7, pageNumberFontSize * 230 / Math.max(1, pageWidth));
   $: previewMarginX = Math.min(18, marginMm * 72 / 25.4 / Math.max(1, pageWidth) * 100);
   $: previewMarginY = Math.min(18, marginMm * 72 / 25.4 / Math.max(1, pageHeight) * 100);
   $: previewImageWidth = Math.min(80, imageScalePercent);
@@ -510,8 +510,8 @@
             <div class="pointer-events-none absolute z-10 whitespace-nowrap font-bold" style={setPreviewPosition(watermarkPosition) + 'font-size:' + previewFontSize + 'px;color:' + watermarkColor + ';opacity:' + (watermarkOpacity / 100) + ';transform:' + (watermarkPosition === 'center' ? 'translate(-50%,-50%)' : watermarkPosition.endsWith('center') ? 'translateX(-50%)' : 'none') + ' rotate(' + watermarkRotation + 'deg);'}>{watermarkText}</div>
           {/if}
           {#if includeImageWatermark && imagePreviewUrl}
-            <div class="pointer-events-none absolute z-10 flex items-center justify-center" style={setPreviewPosition(imagePosition)}>
-              <img src={imagePreviewUrl} alt="" class="block h-auto max-h-[100px] object-contain" style={'width:' + previewImageWidth + '%;opacity:' + (imageOpacity / 100)} />
+            <div class="pointer-events-none absolute z-10 flex items-center justify-center" style={setPreviewPosition(imagePosition) + 'width:' + previewImageWidth + '%;'}>
+              <img src={imagePreviewUrl} alt="" class="block h-auto max-h-[100px] w-full object-contain" style={'opacity:' + (imageOpacity / 100)} />
             </div>
           {/if}
           {#if includePageNumbers && pageCount > 0}
