@@ -278,8 +278,8 @@
           </div>
         </div>
 
-        <div class="rounded-xl border border-[#e6c997] bg-[#fffaf1] p-4 text-[10px] leading-[1.65] text-[#785b2d]" role="note">
-          <strong class="font-bold">Important: this compression is lossy.</strong>
+        <div class="rounded-xl border border-line bg-canvas p-4 text-[10px] leading-[1.65] text-muted" role="note">
+          <strong class="font-bold text-ink">Important: this compression is lossy.</strong>
           Each page is converted into a JPEG image. The output will no longer contain selectable/searchable text, hyperlinks, form fields, digital signatures, or vector content. The original PDF is never changed. Do not use this workflow for signed documents or documents that need accessible/searchable text.
         </div>
 
@@ -297,7 +297,7 @@
           <div class="rounded-xl border border-line bg-surface p-4">
             <div class="mb-2 text-[10px] font-semibold text-ink">{result ? 'Compressed first-page preview' : 'First-page quality preview'}</div>
             <div class="flex min-h-[170px] items-center justify-center rounded-lg bg-canvas p-3">
-              <img src={previewUrl} alt="First page preview using the selected compression settings" class="max-h-[430px] max-w-full rounded border border-line bg-white object-contain shadow-sm" />
+              <img src={previewUrl} alt={result ? "First page preview of compressed PDF" : "First page preview using selected compression settings"} class="max-h-[430px] max-w-full rounded border border-line bg-white object-contain shadow-sm" />
             </div>
             <p class="mb-0 mt-2 text-[9px] text-muted">{result ? 'Preview reflects the final settings used for the output.' : 'This is a JPEG preview at the selected preset. A target-size run may use lower settings if needed.'}</p>
           </div>
