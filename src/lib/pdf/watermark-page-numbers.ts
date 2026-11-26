@@ -188,6 +188,14 @@ async function embedWatermarkImage(document: PDFDocument, source: Blob): Promise
   throw new Error('Use a PNG or JPEG image for the watermark. WebP and other formats are not supported.');
 }
 
+function fitTextSize(font: ReturnType<PDFDocument['embedFont']> extends Promise<infer T> ? T : never, text: string, requestedSize: number, maxWidth: number): number {
+  const available = Math.max(1, maxWidth);
+  const measured = font.widthOfTextAtSize(text, requestedSize);
+  const size = measured > available ? requestedSize * available / measured : requestedSize;
+  if (size < 6) throw new Error('This watermark text is too long to fit on the selected page. Shorten the text or reduce its size.');
+  return size;
+}
+
 function validateOptions(options: WatermarkPageNumbersOptions, pageCount: number): void {
   if (!Array.isArray(options.pages) || options.pages.length === 0) {
     throw new Error('Choose at least one page to modify.');
@@ -305,20 +313,22 @@ export async function watermarkAndNumberPdf(
     if (options.textWatermark) {
       const settings = options.textWatermark;
       const text = settings.text.trim().replace(/\s+/g, ' ');
-      const textWidth = font.widthOfTextAtSize(text, settings.fontSize);
-      const textHeight = settings.fontSize * 1.15;
+      const availableWidth = Math.max(1, pageWidth - Math.min(margin, pageWidth / 2) * 2);
+      const fontSize = fitTextSize(font, text, settings.fontSize, availableWidth);
+      const textWidth = font.widthOfTextAtSize(text, fontSize);
+      const textHeight = fontSize * 1.15;
       const box = calculateOverlayBox(
         pageWidth,
         pageHeight,
-        Math.min(textWidth, pageWidth),
-        Math.min(textHeight, pageHeight),
+        textWidth,
+        textHeight,
         settings.position,
         margin
       );
       page.drawText(text, {
         x: box.x,
         y: box.y,
-        size: settings.fontSize,
+        size: fontSize,
         font,
         color: toRgb(settings.color),
         opacity: settings.opacity,
@@ -356,20 +366,22 @@ export async function watermarkAndNumberPdf(
         settings.format,
         settings.startNumber
       );
-      const textWidth = font.widthOfTextAtSize(label, settings.fontSize);
-      const textHeight = settings.fontSize * 1.15;
+      const availableWidth = Math.max(1, pageWidth - Math.min(margin, pageWidth / 2) * 2);
+      const fontSize = fitTextSize(font, label, settings.fontSize, availableWidth);
+      const textWidth = font.widthOfTextAtSize(label, fontSize);
+      const textHeight = fontSize * 1.15;
       const box = calculateOverlayBox(
         pageWidth,
         pageHeight,
-        Math.min(textWidth, pageWidth),
-        Math.min(textHeight, pageHeight),
+        textWidth,
+        textHeight,
         settings.position,
         margin
       );
       page.drawText(label, {
         x: box.x,
         y: box.y,
-        size: settings.fontSize,
+        size: fontSize,
         font,
         color: toRgb(settings.color),
         opacity: 1
