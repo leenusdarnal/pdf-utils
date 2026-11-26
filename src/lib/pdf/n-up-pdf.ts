@@ -372,6 +372,20 @@ export async function createNUpPdf(
         throw new Error('Page ' + sourcePageNumber + ' has invalid visible dimensions.');
       }
 
+      // A valid blank page may omit /Contents entirely. pdf-lib cannot embed
+      // such a page as an XObject, so preserve its slot as an intentionally
+      // empty cell on the output sheet.
+      if (!sourcePage.node.Contents()) {
+        onProgress?.({
+          completedPages: offset + slot + 1,
+          totalPages: pageSequence.length,
+          currentPage: sourcePageNumber,
+          sheetNumber,
+          totalSheets: outputPageCount
+        });
+        continue;
+      }
+
       try {
         const embeddedPage = await outputDocument.embedPage(sourcePage, {
           left: cropBox.x,
