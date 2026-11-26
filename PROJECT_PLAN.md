@@ -93,7 +93,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | TRN-01 | Transform | Watermark and page numbers | deferred | Preview and exported placement match; support ranges, margins, positioning, and style |
 | TRN-02 | Transform | N-up pages per sheet | deferred | Support 2-up, 4-up, 6-up and configurable layouts with print-ready output and page order tests |
 | OCR-01 | OCR and extraction | Searchable OCR | deferred | OCR scanned pages into searchable text; document supported languages, local processing, accuracy limits, and progress/cancel behavior |
-| OCR-02 | OCR and extraction | PDF to text and Markdown | deferred | Extract text in reading order with page breaks and clearly documented layout limitations |
+| OCR-02 | OCR and extraction | PDF to text and Markdown | in-progress | Export selectable text as TXT or Markdown with page headings; preserve page boundaries, validate limits, and disclose reading-order and scanned-PDF/OCR limitations |
 | DOC-01 | Document quality | Compare PDFs | deferred | Compare page count, text and visual differences; show aligned page-level results and avoid claiming semantic equivalence |
 | DOC-02 | Document quality | Repair malformed PDFs | deferred | Detect supported failure classes, preserve original, and validate repaired output by reopening it |
 | CON-04 | Conversion | Office document conversion | deferred | Research browser/local options, fidelity, licensing, runtime size, and privacy before committing to implementation |
