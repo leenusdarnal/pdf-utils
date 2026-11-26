@@ -6,7 +6,7 @@ export interface OcrBoundingBox {
 }
 
 export interface PdfCoordinateViewport {
-  convertToPdfPoint(x: number, y: number): [number, number];
+  convertToPdfPoint(x: number, y: number): number[];
 }
 
 export interface PdfWordPlacement {
