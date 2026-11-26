@@ -82,7 +82,7 @@ describe('exportAnnotatedPdf', () => {
     const original = await PDFDocument.load(sourceBytes);
 
     expect(reopened.getPageCount()).toBe(2);
-    expect(reopened.getPage(2).getRotation().angle).toBe(90);
+    expect(reopened.getPage(1).getRotation().angle).toBe(90);
     expect(reopened.getPage(1).getSize()).toEqual(original.getPage(1).getSize());
     expect(output.byteLength).toBeGreaterThan(sourceBytes.byteLength);
     expect(new Uint8Array(await source.arrayBuffer())).toEqual(sourceBytes);
