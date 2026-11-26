@@ -11,6 +11,8 @@ async function createFivePagePdf(): Promise<Buffer> {
 }
 
 test('creates a vector N-up PDF with a final partially filled sheet', async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
   await page.goto('/', { waitUntil: 'networkidle' });
   await expect(page.locator('main')).toHaveAttribute('data-app-ready', 'true');
   await page.getByRole('button', { name: 'Open N-up layout tool' }).click();
@@ -26,16 +28,18 @@ test('creates a vector N-up PDF with a final partially filled sheet', async ({ p
   await page.getByLabel('Pages to arrange').fill('1-5');
   await expect(page.getByText('2 columns × 1 rows · landscape')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Create N-up PDF' }).click();
-  const exportButton = page.getByRole('button', { name: 'Create N-up PDF' });
-  await expect(exportButton).toBeEnabled();
-  const status = page.getByRole('status');
+  const workspace = page.locator('section[aria-label="N-up PDF layout workspace"]');
+  await expect(workspace).toBeVisible();
+  const exportButton = workspace.getByRole('button', { name: 'Create N-up PDF' });
+  const status = workspace.getByRole('status');
+  await exportButton.click();
   await expect(status).toContainText(/arranged across 3 sheets|N-up export failed/, { timeout: 15000 });
+  expect(await workspace.count(), 'N-up workspace should remain mounted after export').toBe(1);
+  expect(pageErrors, 'No browser runtime errors should occur').toEqual([]);
   const statusText = await status.textContent();
   const exportError = await page.getByRole('alert').textContent().catch(() => null);
   expect(statusText, 'N-up export should finish' + (statusText ? ': ' + statusText : '')).toMatch(/arranged across 3 sheets/);
   expect(exportError, 'N-up export should succeed' + (exportError ? ': ' + exportError : '')).toBeNull();
-  const workspace = page.locator('[aria-label="N-up PDF layout workspace"]');
   const workspaceText = await workspace.innerText();
   if (!workspaceText.includes('Your N-up PDF is ready')) {
     throw new Error('N-up success panel missing after successful status. Workspace text: ' + workspaceText.slice(-2500));
