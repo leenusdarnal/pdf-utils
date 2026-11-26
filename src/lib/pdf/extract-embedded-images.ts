@@ -261,10 +261,16 @@ export async function extractEmbeddedImages(
           let sourceType: ExtractedPdfImage['source'];
           let objectId: string | null = null;
 
-          if (operation === pdfjs.OPS.paintInlineImageXObject) {
+          if (
+            operation === pdfjs.OPS.paintInlineImageXObject ||
+            operation === pdfjs.OPS.paintInlineImageXObjectGroup
+          ) {
             sourceObject = args?.[0];
             sourceType = 'inline-image';
-          } else if (operation === pdfjs.OPS.paintImageXObject) {
+          } else if (
+            operation === pdfjs.OPS.paintImageXObject ||
+            operation === pdfjs.OPS.paintImageXObjectRepeat
+          ) {
             objectId = typeof args?.[0] === 'string' ? args[0] : null;
             if (!objectId) {
               skippedImages += 1;
@@ -280,6 +286,11 @@ export async function extractEmbeddedImages(
               continue;
             }
           } else {
+            const isImageMaskOperation =
+              operation === pdfjs.OPS.paintImageMaskXObject ||
+              operation === pdfjs.OPS.paintImageMaskXObjectRepeat ||
+              operation === pdfjs.OPS.paintImageMaskXObjectGroup;
+            if (isImageMaskOperation) skippedImages += 1;
             continue;
           }
 
