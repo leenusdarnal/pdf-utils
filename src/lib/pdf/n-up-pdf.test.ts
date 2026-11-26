@@ -170,6 +170,23 @@ describe('createNUpPdf', () => {
     expect(output.getPage(0).getWidth()).toBeGreaterThan(output.getPage(0).getHeight());
   });
 
+  it('preserves valid blank source pages as empty cells', async () => {
+    const blankDocument = await PDFDocument.create();
+    blankDocument.addPage([612, 792]);
+    blankDocument.addPage([612, 792]);
+    blankDocument.addPage([612, 792]);
+    const source = createPdfBlob(await blankDocument.save());
+    const result = await createNUpPdf(
+      source,
+      defaultOptions({ layout: '2-up', orientation: 'landscape', pageNumbers: [1, 2, 3] })
+    );
+    const output = await PDFDocument.load(result.bytes);
+
+    expect(result.sourcePages).toBe(3);
+    expect(result.outputPages).toBe(2);
+    expect(output.getPageCount()).toBe(2);
+  });
+
   it('rejects unsupported page selections and invalid spacing', async () => {
     const source = createPdfBlob(await createSourcePdf(2));
     await expect(createNUpPdf(source, defaultOptions({ pageNumbers: [1, 3] })))
