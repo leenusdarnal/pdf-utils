@@ -226,8 +226,9 @@
     isCheckingAnnotationDraft = true;
     draftSaveStatus = 'Checking for saved annotations on this device…';
     try {
-      annotationDraftFingerprint = await fingerprintPdf(file);
-      const draft = await loadAnnotationDraftByFingerprint(annotationDraftFingerprint);
+      const fingerprint = await fingerprintPdf(file);
+      annotationDraftFingerprint = fingerprint;
+      const draft = await loadAnnotationDraftByFingerprint(fingerprint);
       if (destroyed) return;
       if (!draft) {
         draftSaveStatus = 'Annotations auto-save on this device only.';
@@ -235,7 +236,7 @@
       }
 
       if (draft.annotations.some((annotation) => annotation.pageNumber > totalPages)) {
-        await deleteAnnotationDraftByFingerprint(annotationDraftFingerprint);
+        await deleteAnnotationDraftByFingerprint(fingerprint);
         draftSaveStatus = 'An incompatible saved draft was removed.';
         return;
       }
