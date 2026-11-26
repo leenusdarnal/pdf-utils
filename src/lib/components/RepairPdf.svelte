@@ -90,7 +90,7 @@
       outputFileName = getOutputName(sourceFile.name);
       progress = 100;
       progressLabel = 'Verification passed';
-      statusMessage = 'A structurally rebuilt copy passed all preservation checks and is ready to download.';
+      statusMessage = 'The rebuilt copy passed the supported page checks. This does not prove complete document-feature preservation.';
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : 'The PDF could not be safely rebuilt.';
       statusMessage = 'No repaired file was created. Your original PDF remains unchanged.';
@@ -130,7 +130,7 @@
     <div>
       <p class="mb-1 text-[9px] font-bold uppercase tracking-[1.6px] text-brand-600">PDF WORKSPACE · QUALITY</p>
       <h1 class="m-0 font-display text-[23px] font-bold tracking-[-.7px] text-ink">Repair PDF</h1>
-      <p class="mb-0 mt-1 text-[11px] leading-[1.6] text-muted">Rebuild supported PDF structure and verify that page content is preserved before download.</p>
+      <p class="mb-0 mt-1 text-[11px] leading-[1.6] text-muted">Rebuild supported, parseable PDF structure and compare page text, geometry, and a bounded rendering. This is not general recovery or a guarantee that every document feature is preserved.</p>
     </div>
     <button type="button" class="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-line bg-surface px-3 text-[11px] font-semibold text-muted hover:border-brand-300 hover:bg-brand-50" onclick={onClose}>← Back to tools</button>
   </header>
@@ -149,7 +149,8 @@
       <ul class="mb-0 space-y-1.5 pl-4 text-[10px] leading-5 text-muted">
         <li>Rebuild the PDF cross-reference table and trailer using a local PDF parser.</li>
         <li>Reopen the rebuilt file and compare page count, dimensions, rotation, selectable text, and rendered appearance.</li>
-        <li>Reject signed files and discard output whenever preservation checks fail.</li>
+        <li>Conservatively refuse files containing a signature byte-range marker. This check is not cryptographic signature validation.</li>
+        <li>These checks do not verify links, bookmarks, forms, attachments, metadata, or accessibility structure.</li>
       </ul>
     </div>
 
