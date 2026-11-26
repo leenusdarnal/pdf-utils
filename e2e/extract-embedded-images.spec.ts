@@ -31,7 +31,7 @@ test('extracts an embedded image resource rather than a rendered page screenshot
     mimeType: 'application/pdf',
     buffer: Buffer.from(originalPdf)
   });
-  await expect(page.getByText('embedded-photo.pdf', { exact: true })).toBeVisible();
+  await expect(page.getByTitle('embedded-photo.pdf')).toBeVisible();
   await page.getByRole('button', { name: 'Extract images' }).click();
 
   await expect(page.getByRole('heading', { name: '1 extracted image' })).toBeVisible({
