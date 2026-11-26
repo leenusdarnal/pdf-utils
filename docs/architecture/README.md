@@ -9,6 +9,8 @@ User interface (SvelteKit routes and components)
   │     └── PDF.js
   ├── Document operation services
   │     └── pdf-lib
+  ├── Local OCR service
+  │     └── Tesseract.js + self-hosted WebAssembly/model assets
   ├── Annotation model and tools
   ├── Local draft repository (optional IndexedDB)
   └── Export/download pipeline
@@ -18,7 +20,7 @@ UI components should coordinate workflows, not own PDF parsing or binary manipul
 
 ## Core modules
 
-- `lib/pdf/`: PDF.js browser adapter (`pdfjs-client.ts`), file-signature/control helpers, and future metadata/page models.
+- `lib/pdf/`: PDF.js browser adapter (`pdfjs-client.ts`), OCR helpers/service (`ocr-helpers.ts`, `ocr-pdf.ts`), file-signature/control helpers, and PDF operation services. OCR renders scanned pages locally and writes word-positioned text overlays to a new copy.
 - `lib/operations/`: merge, split, extract, reorder, rotate, delete, metadata, export.
 - `lib/annotations/`: `annotations.ts` defines validated annotation types and bounded in-memory history; `annotation-geometry.ts` maps normalized points/rectangles through PDF.js viewport transforms. The viewer renders text highlights and text-note overlays; PDF serialization/export remains pending.
 - `lib/storage/`: optional local draft persistence and quota/error handling.

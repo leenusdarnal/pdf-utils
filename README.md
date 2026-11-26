@@ -21,7 +21,8 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Read PDFs in a continuous vertical scroll view by default, with pages loaded near the viewport on demand, a selectable PDF.js text layer, and a live current-page indicator. Previous/next and thumbnail selection remain available as quick jumps. The Page tools switch opens the existing single-page annotation workspace.
 - Navigate with a virtualized page-thumbnail sidebar; only nearby thumbnail canvases are mounted. On mobile, the page rail collapses by default, can be shown on demand, and collapses after page selection.
 - Search extracted page text locally, review highlighted snippets, and jump to matching pages.
-- Export selectable PDF text as plain TXT or Markdown, with page boundaries and a bounded preview. Text extraction follows PDF.js reading order; scanned pages without a text layer require OCR, which is not included.
+- Export selectable PDF text as plain TXT or Markdown, with page boundaries and a bounded preview. Text extraction follows PDF.js reading order; scanned pages without a text layer can be processed with the English Searchable OCR tool.
+- Create a searchable PDF copy with browser-local English OCR for scanned pages. It processes at most 150 MB and 100 pages per document, leaves pages with an existing text layer unchanged, and adds invisible word-positioned text to the output. Handwriting, low-resolution scans, and non-English content may be inaccurate or unsupported; editing a signed PDF may invalidate its signature.
 - Inspect local document information including title, author, subject, creator, producer, PDF version, page count, and file size.
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
@@ -35,7 +36,7 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Create a smaller, image-based PDF copy locally using Screen, Balanced, or Print presets; preview the first page, optionally request a best-effort target size, and compare original/output sizes. This process is lossy and removes selectable text, links, forms, signatures, and vector content; the original is never modified.
 - Add text highlights from selected PDF text, add/select/move/edit/delete text notes, and draw freehand, rectangle, and arrow annotations. Annotation overlays use normalized page coordinates and map through PDF.js viewport transforms for zoom and page rotation. Undo/redo is available while the document remains open. Export annotations into a new PDF copy as vector/text overlays; the source PDF remains untouched and page count/rotation are preserved. Draft annotations still remain in memory only until exported; recovery after closing the document is not implemented.
 
-**Not implemented yet:** annotation recovery after closing the document, broader rotation/resize regression coverage, watermarking, and page numbering. OCR for scanned PDFs is not implemented. Annotation export creates content overlays rather than interactive PDF annotation objects. Multi-range PDF splitting is implemented. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current annotations or create an annotated copy. Playwright covers the main Chromium workflows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** annotation recovery after closing the document, broader rotation/resize regression coverage, multilingual OCR, watermarking, and page numbering. Annotation export creates content overlays rather than interactive PDF annotation objects. Multi-range PDF splitting is implemented. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current annotations or create an annotated copy. Playwright covers the main Chromium workflows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
@@ -56,6 +57,7 @@ Redaction must never be implemented as a visual overlay. Features will be gated 
 The application uses SvelteKit, Svelte 5, TypeScript, Tailwind CSS v4, and Vite. Tailwind is integrated through `@tailwindcss/vite`; shared palette and typography tokens live in `src/routes/app.css`, while component styling uses utility classes. The visual system follows the principles in *Refactoring UI*: clear hierarchy, deliberate spacing, restrained color, readable type, and minimal decorative borders.
 
 - **PDF.js adapter:** `src/lib/pdf/pdfjs-client.ts` loads PDF.js only in the browser and configures the worker from the same pinned package.
+- **Searchable OCR:** `src/lib/pdf/ocr-pdf.ts` renders only scanned pages with PDF.js, recognizes English words using Tesseract.js, maps word boxes back into PDF coordinates, and adds an invisible text layer to a new PDF copy. The worker, WebAssembly core, and English language model are copied from pinned npm packages into the static build; document bytes are not sent to an OCR service.
 - **Viewer component:** `src/lib/components/PdfViewer.svelte` owns the main page state, canvas rendering, navigation, zoom, local document metadata display, and render cleanup.
 - **Thumbnail navigation:** `ThumbnailSidebar.svelte` virtualizes the page list; `PdfThumbnail.svelte` renders only the visible preview canvases.
 - **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature, clamps page/zoom values, and calculates the bounded thumbnail window.
@@ -110,4 +112,4 @@ GitHub Actions builds the app as a static SvelteKit site and deploys it from `ma
 
 ## License
 
-The project license is not selected yet. Do not assume the repository is licensed for reuse. The `pdfjs-dist` dependency is distributed under Apache-2.0; retain its notices when distributing it.
+The project license is not selected yet. Do not assume the repository is licensed for reuse. The `pdfjs-dist` dependency is distributed under Apache-2.0; retain its notices when distributing it. Tesseract.js and tesseract.js-core are Apache-2.0; the English trained-data package is MIT.
