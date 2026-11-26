@@ -60,6 +60,7 @@ test('compares local PDF text, rendered appearance, and added pages', async ({ p
   await expect(results.getByText('No detected change')).toBeVisible();
   await expect(results.getByText('Changed', { exact: true })).toBeVisible();
   await expect(results.getByText('Added in updated PDF')).toBeVisible();
+  await results.getByText('Show text excerpts').click();
   await expect(results.getByText('OLD CONTRACT TEXT')).toBeVisible();
   await expect(results.getByText('UPDATED CONTRACT TEXT')).toBeVisible();
   await expect(results.getByText('2 baseline pages · 3 updated pages')).toBeVisible();
