@@ -185,7 +185,7 @@ async function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
 }
 
 async function embedWebpAsPng(
-  document: PDFDocument,
+  pdf: PDFDocument,
   file: File
 ): Promise<Awaited<ReturnType<PDFDocument['embedPng']>>> {
   if (typeof createImageBitmap !== 'function') {
@@ -215,7 +215,7 @@ async function embedWebpAsPng(
     if (!context) throw new Error('Canvas image conversion is not available in this browser.');
     context.drawImage(bitmap, 0, 0);
     const pngBlob = await canvasToPng(canvas);
-    return await document.embedPng(new Uint8Array(await pngBlob.arrayBuffer()));
+    return await pdf.embedPng(new Uint8Array(await pngBlob.arrayBuffer()));
   } finally {
     bitmap.close();
     canvas.width = 0;
