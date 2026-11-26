@@ -35,8 +35,13 @@ test('creates a vector N-up PDF with a final partially filled sheet', async ({ p
   const exportError = await page.getByRole('alert').textContent().catch(() => null);
   expect(statusText, 'N-up export should finish' + (statusText ? ': ' + statusText : '')).toMatch(/arranged across 3 sheets/);
   expect(exportError, 'N-up export should succeed' + (exportError ? ': ' + exportError : '')).toBeNull();
-  await expect(page.getByText('Your N-up PDF is ready')).toBeVisible();
-  await expect(page.getByText(/3 sheets/)).toBeVisible();
+  const workspace = page.locator('[aria-label="N-up PDF layout workspace"]');
+  const workspaceText = await workspace.innerText();
+  if (!workspaceText.includes('Your N-up PDF is ready')) {
+    throw new Error('N-up success panel missing after successful status. Workspace text: ' + workspaceText.slice(-2500));
+  }
+  await expect(workspace.getByText('Your N-up PDF is ready')).toBeVisible();
+  await expect(workspace.getByText(/3 sheets/)).toBeVisible();
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
