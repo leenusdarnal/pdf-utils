@@ -38,7 +38,7 @@ describe('exportAnnotatedPdf', () => {
         color: '#2463eb',
         opacity: 1,
         anchor: { x: 0.65, y: 0.24 },
-        text: 'Review this paragraph before approval.\\nRésumé — notes may contain unsupported glyphs.'
+        text: 'Review this paragraph before approval.\nRésumé — notes may contain unsupported glyphs.'
       },
       {
         id: 'freehand-1',
