@@ -14,7 +14,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P0 | PDF viewer | Yes | Local rendering, continuous vertical scroll with lazy page rendering, scroll-aware page navigation, zoom, fit width, selectable text, virtualized thumbnails, mobile thumbnail toggle, local text search, read-only metadata, and native-browser printing are implemented; wider browser/accessibility QA remains |
 | P0 | File import/export | Yes | Local file picker/drop and signature validation are implemented; organized, extracted, merged, and range-split PDF outputs download locally without overwriting source files |
 | P1 | Page organization | Yes | Merge PDFs, split by custom page ranges, extract selected pages, reorder, rotate, duplicate, and delete |
-| P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; editable during the viewer session; local draft recovery remains pending |
+| P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; editable during the viewer session and autosaved/recovered locally through IndexedDB; only annotation data is stored |
 | P1 | Annotation export | Yes | Vector/text overlays for all current annotation types are implemented in a new local PDF copy; verify fidelity and disclose that overlays are page content, not interactive PDF annotation objects |
 | P1 | PDF to images | Yes | Export selected/all pages as PNG/JPEG with 72/150/200/300 DPI, JPEG quality, individual downloads, and local ZIP; render one page canvas at a time |
 | P1 | Images to PDF | Yes | Convert/reorder PNG, JPEG, and WebP locally; supports A4/Letter/Legal or image-sized pages, auto/fixed orientation, margins, and contain/stretch fitting |
@@ -39,7 +39,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | PDF manipulation | pdf-lib behind operation services | Use for supported structural edits and document generation |
 | Annotation coordinates | Normalized page-relative coordinates | Preserves placement through zoom, rotation, and viewport resize |
 | State | Small typed stores/state modules | Avoid a heavyweight global state library until required |
-| Persistence | No persistence by default; optional IndexedDB drafts | Explicit local recovery with quota handling and clear-data controls |
+| Persistence | Bounded IndexedDB annotation drafts keyed by PDF content fingerprint | Store annotation JSON only (never document bytes), validate restored data, limit draft size/count, and provide explicit clear controls |
 | Background work | Web Workers for expensive tasks when supported | Keep the UI responsive; expose progress and cancellation |
 | Telemetry | No document content or bytes in telemetry | Privacy-first behavior; make any analytics opt-in and minimal |
 | Hosting | Static/browser-first deployment where possible | Avoid server-side file retention and processing costs |
@@ -81,7 +81,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | OPS-03 | Page operations | Reorder, rotate, duplicate, and delete pages | in-progress | Page operations, selection, undo/redo, and export are implemented in the organizer; browser-level export fidelity checks remain |
 | ANN-01 | Annotation | Typed annotation schema and history | done | Validated highlight, text-note, freehand, rectangle, and arrow types use normalized page-relative coordinates; bounded undo/redo history and validation are covered by unit tests |
 | ANN-02 | Annotation | Highlight and text notes | done | UI supports selection-based highlights and add/select/move/edit/delete text notes; normalized viewport transforms and Playwright zoom/rotation coverage pass |
-| ANN-03 | Annotation | Freehand and shape tools | in-progress | Freehand, rectangle, and arrow drawing plus shape movement are available with normalized coordinates and undo/redo; local draft recovery after closing the document and broader rotation/resize checks remain; export is tracked separately in ANN-04 |
+| ANN-03 | Annotation | Freehand and shape tools | in-progress | Freehand, rectangle, and arrow drawing plus shape movement are available with normalized coordinates and undo/redo; IndexedDB autosave/recovery for the same PDF content and explicit clear action are implemented with size/count limits; broader rotation/resize checks remain |
 | ANN-04 | Annotation | Annotation export | in-progress | Export highlight, note, freehand, rectangle, and arrow overlays as vector/text content into a new PDF copy; preserve page count/rotation and source bytes; service unit tests cover validation and reopening; independent visual/fidelity checks remain |
 | OPT-01 | Optimization | Compression workflow | done | Local raster-based copy with Screen/Balanced/Print presets, optional target-size retries, first-page JPEG preview, before/after size report, explicit consent and loss disclosure; original PDF remains untouched |
 | CON-01 | Conversion | Images to PDF | done | Validate PNG/JPEG/WebP signatures; add/remove/reorder images; export one image per page with A4/Letter/Legal or image-sized pages, orientation, 0–50 mm margins, contain/stretch fitting, progress, and output naming; service unit and browser download/page-layout tests pass |
