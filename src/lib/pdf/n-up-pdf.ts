@@ -300,6 +300,8 @@ export function getNUpFileName(sourceName: string): string {
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-')
     .trim()
     .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
     .slice(0, 100);
   return (baseName || 'document') + '-n-up.pdf';
 }
