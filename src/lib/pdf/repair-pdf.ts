@@ -40,15 +40,17 @@ export function hasPdfRepairHeader(bytes: Uint8Array): boolean {
   return false;
 }
 
-/** Detect a populated PDF signature byte-range dictionary before rewriting anything. */
+/**
+ * Conservatively detect a PDF signature marker before rewriting.
+ *
+ * This intentionally rejects any raw /ByteRange token, even when its value is
+ * malformed or unusually formatted. It can produce false positives when that
+ * token appears in unrelated stream data; it is not cryptographic signature
+ * validation and cannot guarantee detection of every signature representation.
+ */
 export function hasPdfSignatureByteRange(bytes: Uint8Array): boolean {
-  for (let offset = 0; offset <= bytes.length - BYTE_RANGE_MARKER.length; offset += 1) {
-    if (!BYTE_RANGE_MARKER.every((byte, index) => bytes[offset + index] === byte)) continue;
-    const end = Math.min(bytes.length, offset + 256);
-    const snippet = new TextDecoder('ascii').decode(bytes.subarray(offset, end));
-    if (/^\/ByteRange\s*\[\s*\d+\s+\d+\s+\d+\s+\d+\s*\]/.test(snippet)) return true;
-  }
-  return false;
+  const source = new TextDecoder('latin1').decode(bytes);
+  return /\\/ByteRange\\b/.test(source);
 }
 
 /** Ignore whitespace and Unicode compatibility differences, but not actual text changes. */
