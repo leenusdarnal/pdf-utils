@@ -1202,7 +1202,6 @@
       id="pdf-document-info"
       class="border-b border-[#e9ebf0] bg-[#fbfbfd] px-4 py-4 max-[480px]:px-[10px]"
       aria-label="Document information"
-      role="region"
     >
       <div class="mb-3 flex items-center justify-between gap-3">
         <h2 class="m-0 text-[12px] font-bold text-[#343946]">Document information</h2>
