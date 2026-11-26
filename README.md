@@ -24,6 +24,7 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Export selectable PDF text as plain TXT or Markdown, with page boundaries and a bounded preview. Text extraction follows PDF.js reading order; scanned pages without a text layer can be processed with the English Searchable OCR tool.
 - Create a searchable PDF copy with browser-local English OCR for scanned pages. It processes at most 150 MB and 100 pages per document, leaves pages with an existing text layer unchanged, and adds invisible word-positioned text to the output. Handwriting, low-resolution scans, and non-English content may be inaccurate or unsupported; editing a signed PDF may invalidate its signature.
 - Add visible text watermarks and page numbers to a new PDF copy. Select page ranges, set text, color, opacity, font size, horizontal/diagonal orientation, page-number format and position, and edge margins. Placement accounts for each page's crop box and display rotation; the original is unchanged.
+- Arrange selected PDF pages into print-ready N-up sheets with 2, 4, 6, 9, 16, or custom 2–16 page grids. Choose A4/A3/Letter/Legal paper, portrait/landscape orientation, margins, page gaps, custom page ranges, and forward/reverse order. Page artwork is embedded as PDF content rather than rasterized; the source file is unchanged.
 - Inspect local document information including title, author, subject, creator, producer, PDF version, page count, and file size.
 - Zoom from 50% to 300%, fit to width, and close the document.
 - Show loading and readable error states; cancel and clean up PDF.js work on close.
@@ -37,7 +38,7 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 - Create a smaller, image-based PDF copy locally using Screen, Balanced, or Print presets; preview the first page, optionally request a best-effort target size, and compare original/output sizes. This process is lossy and removes selectable text, links, forms, signatures, and vector content; the original is never modified.
 - Add text highlights from selected PDF text, add/select/move/edit/delete text notes, and draw freehand, rectangle, and arrow annotations. Annotation overlays use normalized page coordinates and map through PDF.js viewport transforms for zoom and page rotation. Undo/redo is available while the document remains open. Export annotations into a new PDF copy as vector/text overlays; the source PDF remains untouched and page count/rotation are preserved. Draft annotations still remain in memory only until exported; recovery after closing the document is not implemented.
 
-**Not implemented yet:** annotation recovery after closing the document, broader rotation/resize regression coverage, multilingual OCR, N-up layout, and other advanced editing features. Annotation export creates content overlays rather than interactive PDF annotation objects. Multi-range PDF splitting is implemented. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current annotations or create an annotated copy. Playwright covers the main Chromium workflows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
+**Not implemented yet:** annotation recovery after closing the document, broader rotation/resize regression coverage, multilingual OCR, and other advanced editing features. Annotation export creates content overlays rather than interactive PDF annotation objects. Multi-range PDF splitting is implemented. The document-information panel reads metadata locally but does not edit it. Printing opens the original PDF in the browser’s native PDF viewer; it does not print the current annotations or create an annotated copy. Playwright covers the main Chromium workflows; cross-browser, manual accessibility, large-file, and malformed-PDF checks remain.
 
 ## Planned capabilities
 
@@ -46,7 +47,7 @@ The PDF workspace is browser-first and runs its document operations locally. CI 
 | View | Text layer, search, page navigation, zoom, fit modes, document info, print, and local TXT/Markdown text export |
 | Organize | Merge PDFs, split by custom page ranges into separate files, reorder/rotate/duplicate/delete pages, and extract selected pages |
 | Edit | Highlights, notes, freehand/shape drawing, and vector/text export to a new PDF copy are implemented; local draft recovery and editing existing PDF text/images remain planned |
-| Transform | Lossy raster-based compression and visible watermark/page-number overlays are implemented locally; N-up page layout remains planned |
+| Transform | Lossy raster-based compression and visible watermark/page-number overlays and vector-based N-up sheet layouts are implemented locally |
 | Convert | Images to PDF, PDF pages to PNG/JPEG, and supported embedded-image object extraction are implemented locally; assess office-document conversion later |
 | Secure | Password handling where browser libraries support it; redaction only with true content removal and verification |
 | Quality | Validate PDFs, inspect metadata, compare file size, optimize output |
@@ -60,6 +61,7 @@ The application uses SvelteKit, Svelte 5, TypeScript, Tailwind CSS v4, and Vite.
 - **PDF.js adapter:** `src/lib/pdf/pdfjs-client.ts` loads PDF.js only in the browser and configures the worker from the same pinned package.
 - **Searchable OCR:** `src/lib/pdf/ocr-pdf.ts` renders only scanned pages with PDF.js, recognizes English words using Tesseract.js, maps word boxes back into PDF coordinates, and adds an invisible text layer to a new PDF copy. The worker, WebAssembly core, and English language model are copied from pinned npm packages into the static build; document bytes are not sent to an OCR service.
 - **Watermarks and page numbers:** `src/lib/pdf/watermark-page-numbers-service.ts` adds visible text overlays to selected pages in a new PDF copy. Its geometry helper maps displayed-page coordinates through each page's crop box and rotation so overlay placement follows the visual page rather than a fixed media-box coordinate.
+- **N-up layout:** `src/lib/pdf/n-up-pdf.ts` embeds the selected source pages into A4, A3, Letter, or Legal sheets using vector PDF page content. It calculates a contain-fit placement for each cell, applies page rotations, preserves reading order, and supports custom margins and gutters; interactive page annotations and form-level features are not copied.
 - **Viewer component:** `src/lib/components/PdfViewer.svelte` owns the main page state, canvas rendering, navigation, zoom, local document metadata display, and render cleanup.
 - **Thumbnail navigation:** `ThumbnailSidebar.svelte` virtualizes the page list; `PdfThumbnail.svelte` renders only the visible preview canvases.
 - **Validation and control helpers:** `src/lib/pdf/viewer-utils.ts` checks the PDF signature, clamps page/zoom values, and calculates the bounded thumbnail window.
@@ -100,7 +102,7 @@ npm run check
 npm run build
 ```
 
-End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs regression checks for PDF import/rendering, continuous scrolling, search, zoom, mobile layout, annotations, multi-file merge order, split-range validation, and split-output page count/order before the production build.
+End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs regression checks for PDF import/rendering, continuous scrolling, search, zoom, mobile layout, annotations, multi-file merge order, split-range validation, split-output page count/order, and N-up page-layout export before the production build.
 
 Update [PROJECT_PLAN.md](./PROJECT_PLAN.md) with implementation status. The phased viewer design and task plan are under `docs/superpowers/`.
 
