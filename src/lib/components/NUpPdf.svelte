@@ -333,14 +333,14 @@
     </aside>
   </div>
 
-  {#if outputBlob}
+  {#if outputPageCount > 0 && outputFileName}
     <div class="mx-6 mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 max-[600px]:mx-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 class="mb-1 text-[13px] font-bold text-emerald-900">Your N-up PDF is ready</h2>
           <p class="mb-0 text-[10px] text-emerald-800">{outputPageCount} sheets · {formatSize(outputSize)} · {outputFileName}</p>
         </div>
-        <button type="button" onclick={downloadOutput} class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-emerald-700 px-4 text-[11px] font-bold text-white transition-colors hover:bg-emerald-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-emerald-200 focus-visible:outline-offset-2">Download PDF</button>
+        <button type="button" onclick={downloadOutput} disabled={!outputBlob} class="inline-flex min-h-[38px] items-center justify-center rounded-lg bg-emerald-700 px-4 text-[11px] font-bold text-white transition-colors hover:bg-emerald-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-emerald-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50">Download PDF</button>
       </div>
     </div>
   {/if}
