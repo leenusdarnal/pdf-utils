@@ -3,7 +3,7 @@ import { formatPdfTextExport, getTextExportFileName, normalizePdfPageText } from
 
 describe('PDF text export formatting', () => {
   it('normalizes whitespace without collapsing meaningful line breaks', () => {
-    expect(normalizePdfPageText('  Hello\tworld  \n\n\n next  ')).toBe('Hello world\n\n next');
+    expect(normalizePdfPageText('  Hello\tworld  \n\n\n next  ')).toBe('Hello world\n\nnext');
   });
 
   it('sorts pages and labels page boundaries in plain text', () => {
