@@ -208,7 +208,7 @@ export async function compressPdf(
   const candidateSettings = getCompressionAttempts(preset, targetSizeBytes);
   let bestBytes: Uint8Array | null = null;
   let bestPreviewBlob: Blob | null = null;
-  let bestSettings = initialSettings;
+  let bestSettings: CompressionSettings = initialSettings;
   let pageCount = 0;
   let attempts = 0;
 
