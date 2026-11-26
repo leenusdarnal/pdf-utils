@@ -9,6 +9,7 @@
   import ImagesToPdf from '$lib/components/ImagesToPdf.svelte';
   import CompressPdf from '$lib/components/CompressPdf.svelte';
   import ExtractImages from '$lib/components/ExtractImages.svelte';
+  import PdfTextExport from '$lib/components/PdfTextExport.svelte';
   import { hasPdfHeader } from '$lib/pdf/viewer-utils';
 
   let isDragging = false;
@@ -21,6 +22,7 @@
   let imagesToPdfMode = false;
   let compressMode = false;
   let extractImagesMode = false;
+  let textExportMode = false;
   let isDarkMode = false;
   let appReady = false;
   let organizerInput: HTMLInputElement;
@@ -154,7 +156,7 @@
       </span>
       <span>pdf<span class="font-medium text-[#8c91a0]">utils</span></span>
     </a>
-    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode && !imageMode && !imagesToPdfMode && !compressMode && !extractImagesMode}
+    {#if !selectedFile && !organizeFile && !mergeMode && !splitMode && !imageMode && !imagesToPdfMode && !compressMode && !extractImagesMode && !textExportMode}
       <nav class="ml-auto flex h-full items-center gap-[30px] max-[760px]:gap-[17px]" aria-label="Main navigation">
         <a class="relative inline-flex h-full items-center text-[13px] font-semibold text-ink no-underline after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-0.5 after:bg-brand-700 max-[760px]:text-[11px]" href="#tools">Tools</a>
         <a class="inline-flex h-full items-center text-[13px] font-semibold text-muted no-underline transition-colors hover:text-brand-700 max-[760px]:text-[11px] max-[480px]:hidden" href="#how-it-works">How it works</a>
@@ -194,6 +196,8 @@
       <CompressPdf onClose={() => (compressMode = false)} />
     {:else if extractImagesMode}
       <ExtractImages onClose={() => (extractImagesMode = false)} />
+    {:else if textExportMode}
+      <PdfTextExport onClose={() => (textExportMode = false)} />
     {:else}
       <section class="py-[77px] text-center max-[760px]:pb-[54px] max-[760px]:pt-[61px] max-[480px]:pt-[49px]">
         <div class="inline-flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[1.7px] text-brand-600 max-[480px]:text-[8px] max-[480px]:tracking-[1.2px]"><span class="h-px w-[22px] bg-brand-300"></span> A calmer way to work with PDFs</div>
@@ -286,6 +290,7 @@
             <div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">Extract embedded images</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Recover image objects from PDF content, not page screenshots.</p></div>
             <button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2" aria-label="Open extract embedded images tool" onclick={() => (extractImagesMode = true)}>Open tool</button>
           </article>
+<article class="flex min-h-[102px] items-center gap-[14px] rounded-[11px] border border-[#e8eaf0] bg-white p-[19px] max-[480px]:gap-3 max-[480px]:p-[15px]"><span class="grid size-[42px] shrink-0 place-items-center rounded-[11px] bg-[#eef4ff] text-[#4f8fce]">TXT</span><div class="min-w-0"><h3 class="mb-[5px] text-[13px] font-bold">PDF to Text &amp; Markdown</h3><p class="mb-0 text-[11px] leading-[1.5] text-[#878d99]">Export selectable text with page boundaries as TXT or Markdown.</p></div><button type="button" class="ml-auto shrink-0 rounded-lg bg-brand-700 px-3 py-2 text-[10px] font-bold text-white" aria-label="Open PDF text export tool" onclick={() => (textExportMode = true)}>Open tool</button></article>
         </div>
       </section>
 
