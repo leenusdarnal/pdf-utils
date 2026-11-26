@@ -30,7 +30,7 @@ export const PDF_REPAIR_LIMITS = {
 } as const;
 
 const PDF_HEADER = [0x25, 0x50, 0x44, 0x46, 0x2d] as const;
-const BYTE_RANGE_MARKER = [0x2f, 0x42, 0x79, 0x74, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65] as const;
+const BYTE_RANGE_MARKER = '/ByteRange';
 
 export function hasPdfRepairHeader(bytes: Uint8Array): boolean {
   const limit = Math.min(bytes.length, 1_024);
@@ -186,7 +186,7 @@ export async function repairPdfStructure(
     throw new Error('This file does not contain a valid PDF header.');
   }
   if (hasPdfSignatureByteRange(sourceBytes)) {
-    throw new Error('Digitally signed PDFs are not rebuilt because rewriting them would invalidate their signatures.');
+    throw new Error('This PDF contains a signature byte-range marker and was not rebuilt. The check is conservative and is not cryptographic signature validation.');
   }
 
   let originalLoadingTask: Awaited<ReturnType<typeof createPdfDocumentTask>> | null = null;
