@@ -50,7 +50,7 @@ export function hasPdfRepairHeader(bytes: Uint8Array): boolean {
  */
 export function hasPdfSignatureByteRange(bytes: Uint8Array): boolean {
   const source = new TextDecoder('latin1').decode(bytes);
-  return /\\/ByteRange\\b/.test(source);
+  return /\/ByteRange\b/.test(source);
 }
 
 /** Ignore whitespace and Unicode compatibility differences, but not actual text changes. */
