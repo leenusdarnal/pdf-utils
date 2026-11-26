@@ -130,6 +130,14 @@ async function renderPageToJpeg(
   }
 }
 
+export function getCompressionAttempts(
+  preset: CompressionPreset,
+  targetSizeBytes?: number
+): CompressionSettings[] {
+  const target = validateTargetSize(targetSizeBytes);
+  return createCompressionAttempts(COMPRESSION_PRESETS[preset], target !== null);
+}
+
 function createCompressionAttempts(initial: CompressionSettings, hasTarget: boolean): CompressionSettings[] {
   if (!hasTarget) return [initial];
   const attempts: CompressionSettings[] = [initial];
@@ -196,7 +204,7 @@ export async function compressPdf(
   }
   const target = validateTargetSize(targetSizeBytes);
   const initialSettings = COMPRESSION_PRESETS[preset];
-  const candidateSettings = createCompressionAttempts(initialSettings, target !== null);
+  const candidateSettings = getCompressionAttempts(preset, targetSizeBytes);
   let bestBytes: Uint8Array | null = null;
   let bestSettings = initialSettings;
   let pageCount = 0;
