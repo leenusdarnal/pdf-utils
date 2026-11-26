@@ -69,7 +69,7 @@ describe('validateDraftAnnotations', () => {
       x: (index % 100) / 100,
       y: Math.floor(index / 100) / 100
     }));
-    const drawings: PdfAnnotation[] = Array.from({ length: 10 }, (_, index) => ({
+    const drawings: PdfAnnotation[] = Array.from({ length: 11 }, (_, index) => ({
       type: 'freehand',
       id: 'drawing-' + index,
       pageNumber: 1,
