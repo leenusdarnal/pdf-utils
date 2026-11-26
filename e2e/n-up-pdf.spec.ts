@@ -29,7 +29,11 @@ test('creates a vector N-up PDF with a final partially filled sheet', async ({ p
   await page.getByRole('button', { name: 'Create N-up PDF' }).click();
   const exportButton = page.getByRole('button', { name: 'Create N-up PDF' });
   await expect(exportButton).toBeEnabled();
+  const status = page.getByRole('status');
+  await expect(status).toContainText(/arranged across 3 sheets|N-up export failed/, { timeout: 15000 });
+  const statusText = await status.textContent();
   const exportError = await page.getByRole('alert').textContent().catch(() => null);
+  expect(statusText, 'N-up export should finish' + (statusText ? ': ' + statusText : '')).toMatch(/arranged across 3 sheets/);
   expect(exportError, 'N-up export should succeed' + (exportError ? ': ' + exportError : '')).toBeNull();
   await expect(page.getByRole('heading', { name: 'Your N-up PDF is ready' })).toBeVisible();
   await expect(page.getByText(/3 sheets/)).toBeVisible();
