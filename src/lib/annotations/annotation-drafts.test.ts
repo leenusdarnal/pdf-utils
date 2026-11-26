@@ -72,7 +72,7 @@ describe('createAnnotationDraftKey', () => {
   it('creates a repeatable key for the same file and metadata', async () => {
     const bytes = new Uint8Array(120_000).fill(0x31);
     const first = new File([bytes.buffer as ArrayBuffer], 'report.pdf', { lastModified: 1_700_000_000_000 });
-    const second = new File([bytes], 'report.pdf', { lastModified: 1_700_000_000_000 });
+    const second = new File([bytes.buffer as ArrayBuffer], 'report.pdf', { lastModified: 1_700_000_000_000 });
 
     await expect(createAnnotationDraftKey(first)).resolves.toBe(
       await createAnnotationDraftKey(second)
