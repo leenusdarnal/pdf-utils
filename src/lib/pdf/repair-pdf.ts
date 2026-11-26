@@ -264,8 +264,10 @@ export async function repairPdfStructure(
       });
 
       const originalPage = await originalRenderDocument.getPage(pageNumber);
-      const rebuiltPage = await rebuiltRenderDocument.getPage(pageNumber);
+      let rebuiltPageForCleanup: PdfPage | null = null;
       try {
+        const rebuiltPage = await rebuiltRenderDocument.getPage(pageNumber);
+        rebuiltPageForCleanup = rebuiltPage;
         const [originalText, rebuiltText] = await Promise.all([
           extractComparableText(originalPage),
           extractComparableText(rebuiltPage)
@@ -303,7 +305,7 @@ export async function repairPdfStructure(
         }
       } finally {
         originalPage.cleanup();
-        rebuiltPage.cleanup();
+        rebuiltPageForCleanup?.cleanup();
       }
 
       completedPages += 1;
