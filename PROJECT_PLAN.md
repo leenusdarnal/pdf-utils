@@ -17,7 +17,7 @@ Build a lightweight, privacy-first PDF workspace that handles everyday viewing, 
 | P1 | Basic annotations | Yes | Highlight, text note, freehand, rectangle/arrow; persisted as editable app state before export |
 | P1 | Annotation export | Yes | Prefer vector/native content; test fidelity and clearly disclose limitations |
 | P1 | PDF to images | Yes | Export selected/all pages as PNG/JPEG with 72/150/200/300 DPI, JPEG quality, individual downloads, and local ZIP; render one page canvas at a time |
-| P1 | Images to PDF | Next | Combine/reorder images; configure page size, orientation, margins, and predictable image fitting |
+| P1 | Images to PDF | Yes | Convert/reorder PNG, JPEG, and WebP locally; supports A4/Letter/Legal or image-sized pages, auto/fixed orientation, margins, and contain/stretch fitting |
 | P1 | Compression | Next | Screen/balanced/print presets and best-effort target size; benchmark quality/size tradeoffs and avoid destructive defaults |
 | P1 | Extract images | Next | Export embedded images separately from page rasterization |
 | P2 | Editing tools | Later | Text/image insertion, signatures, stamps, crop, forms, flattening; distinguish overlays from editing existing content |
@@ -84,7 +84,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | ANN-03 | Annotation | Freehand and shape tools | in-progress | Freehand, rectangle, and arrow drawing plus shape movement are available with normalized coordinates and undo/redo; persistence, export, and broader rotation/resize checks remain |
 | ANN-04 | Annotation | Annotation export | not-started | Text/vector fidelity tested; limitations disclosed |
 | OPT-01 | Optimization | Compression workflow | deferred | Benchmark file size and visual quality before setting defaults |
-| CON-01 | Conversion | Images to PDF | not-started | Accept JPG/PNG/WebP; reorder/remove images; choose page size, orientation, margins, and fit behavior; mixed dimensions produce predictable pages |
+| CON-01 | Conversion | Images to PDF | done | Validate PNG/JPEG/WebP signatures; add/remove/reorder images; export one image per page with A4/Letter/Legal or image-sized pages, orientation, 0–50 mm margins, contain/stretch fitting, progress, and output naming; service unit and browser download/page-layout tests pass |
 | CON-02 | Conversion | PDF to images | done | Export selected/all pages as PNG/JPEG at 72/150/200/300 DPI; JPEG quality control; individual downloads and ZIP; render sequentially and release canvases to control memory |
 | CON-03 | Conversion | Extract embedded images | deferred | Export embedded image objects separately from rendered pages; preserve useful format/quality when available |
 | OPT-01 | Optimization | Compression | not-started | Screen/balanced/print presets, best-effort target size, achieved-size report, quality preview, and non-destructive defaults; benchmark representative files |
