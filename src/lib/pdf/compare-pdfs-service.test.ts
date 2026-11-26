@@ -246,6 +246,28 @@ describe('comparePdfFiles service', () => {
     expect(updated.task.destroy).toHaveBeenCalledOnce();
   });
 
+  it('cleans up the first page if fetching the matching page from the second PDF fails', async () => {
+    const baselineFile = new Blob(['baseline']);
+    const updatedFile = new Blob(['updated']);
+    const baselinePage = createPage({ text: 'PAGE' });
+    const baseline = createTask([baselinePage]);
+    const updated = createTask([createPage({ text: 'PAGE' })]);
+    updated.document.getPage.mockRejectedValue(new Error('synthetic page retrieval failure'));
+    const { comparePdfFiles } = await loadComparator(
+      baselineFile,
+      updatedFile,
+      baseline.task,
+      updated.task
+    );
+
+    await expect(comparePdfFiles(baselineFile, updatedFile)).rejects.toThrow(
+      'The PDFs could not be compared. They may be damaged, encrypted, or unsupported. synthetic page retrieval failure'
+    );
+    expect(baselinePage.cleanup).toHaveBeenCalledOnce();
+    expect(baseline.task.destroy).toHaveBeenCalledOnce();
+    expect(updated.task.destroy).toHaveBeenCalledOnce();
+  });
+
   it('rejects empty input before opening either PDF', async () => {
     const emptyFile = new Blob([]);
     const updatedFile = new Blob(['updated']);
