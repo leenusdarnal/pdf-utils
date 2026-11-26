@@ -1155,7 +1155,7 @@
         disabled={isLoading || isExportingAnnotations || annotations.length === 0 || editingNoteId !== null || newNoteId !== null}
         onclick={exportAnnotations}
       >{isExportingAnnotations ? 'Exporting…' : 'Export annotated PDF (' + annotations.length + ')'}</button>
-      <span class="text-[10px] text-[#858b98]">Adds editable vector/text overlays to a new copy; the source PDF is unchanged.</span>
+      <span class="text-[10px] text-[#858b98]">Adds vector/text overlays to a new copy; the source PDF is unchanged.</span>
     </div>
 
     {#if isAddingNote}
