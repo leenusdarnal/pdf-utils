@@ -106,6 +106,13 @@
       : 'Choose a PDF to prepare a smaller copy.';
   }
 
+  function changeTargetSize(event: Event) {
+    targetSizeMb = (event.currentTarget as HTMLInputElement).value;
+    clearPreview();
+    resetResult();
+    statusMessage = 'Target size updated. Preview the first page before compressing.';
+  }
+
   async function createPreview() {
     if (!sourceFile || isPreviewing || isCompressing) return;
     isPreviewing = true;
@@ -255,7 +262,7 @@
           </label>
           <label class="grid gap-1.5 text-[10px] font-semibold text-ink">
             Target size (MB, optional)
-            <input aria-label="Target size in MB" type="number" min="0.1" max="500" step="0.1" value={targetSizeMb} oninput={(event) => { targetSizeMb = (event.currentTarget as HTMLInputElement).value; resetResult(); }} disabled={isCompressing || isPreviewing} placeholder="Best effort, no target" class="min-h-[36px] rounded-lg border border-line bg-surface px-3 text-[11px] font-normal text-ink" />
+            <input aria-label="Target size in MB" type="number" min="0.1" max="500" step="0.1" value={targetSizeMb} oninput={changeTargetSize} disabled={isCompressing || isPreviewing} placeholder="Best effort, no target" class="min-h-[36px] rounded-lg border border-line bg-surface px-3 text-[11px] font-normal text-ink" />
           </label>
           <div class="col-span-2 grid gap-2 max-[640px]:col-span-1">
             <p class="mb-0 text-[10px] font-semibold text-ink">Preset guidance</p>
