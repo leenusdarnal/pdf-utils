@@ -350,7 +350,12 @@ export async function watermarkAndNumberPdf(
         margin
       );
       const origin = calculateRotatedTextOrigin(
-        { x: rotatedBox.x, y: rotatedBox.y, width: textWidth, height: textHeight },
+        {
+          x: rotatedBox.x + (rotatedWidth - textWidth) / 2,
+          y: rotatedBox.y + (rotatedHeight - textHeight) / 2,
+          width: textWidth,
+          height: textHeight
+        },
         settings.rotation
       );
       page.drawText(text, {
