@@ -51,9 +51,14 @@
     { length: Math.min(previewGrid.pagesPerSheet, 16) },
     (_, index) => index + 1
   );
-  $: estimatedSheets = pageCount > 0
-    ? Math.ceil((pageSelection.trim() ? pageSelection.split(',').length : pageCount) / previewGrid.pagesPerSheet)
-    : 0;
+  $: estimatedSheets = (() => {
+    if (!pageCount) return 0;
+    try {
+      return Math.ceil(parsePageRange(pageSelection, pageCount).length / previewGrid.pagesPerSheet);
+    } catch {
+      return 0;
+    }
+  })();
 
   function resetOutput() {
     outputBlob = null;
@@ -293,14 +298,6 @@
         </div>
       </div>
 
-      <div class="rounded-xl border border-line bg-surface-muted p-3">
-        <label class="flex items-center gap-2 text-[11px] font-semibold text-ink">
-          <input type="checkbox" bind:checked={reverseOrder} onchange={updateSetting} disabled={isExporting} class="size-4 accent-brand-600" />
-          Reverse the selected page order
-        </label>
-        <p class="mb-0 mt-1 pl-6 text-[10px] leading-4 text-muted">Pages are placed left-to-right, then top-to-bottom on each sheet.</p>
-      </div>
-
       {#if errorMessage}
         <p class="m-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] leading-5 text-red-700" role="alert">{errorMessage}</p>
       {/if}
@@ -322,7 +319,7 @@
         <h2 class="mb-0 text-[15px] font-bold text-ink">{previewGrid.pagesPerSheet} pages per sheet</h2>
         <p class="mb-0 mt-1 text-[10px] text-muted">{previewGrid.columns} columns × {previewGrid.rows} rows · {previewGrid.orientation}</p>
       </div>
-      <div class="mx-auto grid aspect-[.72] w-full max-w-[290px] gap-1.5 rounded-lg border border-line bg-surface p-3 shadow-sm" style={'grid-template-columns:repeat(' + previewGrid.columns + ',minmax(0,1fr));grid-template-rows:repeat(' + previewGrid.rows + ',minmax(0,1fr))'}>
+      <div class="mx-auto grid w-full max-w-[290px] gap-1.5 rounded-lg border border-line bg-surface p-3 shadow-sm" style={'aspect-ratio:' + (previewGrid.orientation === 'landscape' ? '1.414' : '0.707') + ';grid-template-columns:repeat(' + previewGrid.columns + ',minmax(0,1fr));grid-template-rows:repeat(' + previewGrid.rows + ',minmax(0,1fr))'}>
         {#each previewCells as cell}
           <div class="grid min-h-0 place-items-center rounded border border-brand-200 bg-brand-50 text-[10px] font-semibold text-brand-700">{cell}</div>
         {/each}
