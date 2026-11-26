@@ -22,9 +22,10 @@
     type PdfViewportTransform
   } from '$lib/annotations/annotation-geometry';
   import {
-    deleteAnnotationDraft,
-    loadAnnotationDraft,
-    saveAnnotationDraft
+    deleteAnnotationDraftByFingerprint,
+    fingerprintPdf,
+    loadAnnotationDraftByFingerprint,
+    saveAnnotationDraftByFingerprint
   } from '$lib/annotations/annotation-drafts';
   import { exportAnnotatedPdf } from '$lib/pdf/export-annotations';
 
@@ -75,6 +76,7 @@
   let annotationHistory = new AnnotationHistory();
   let isCheckingAnnotationDraft = true;
   let annotationDraftReady = false;
+  let annotationDraftFingerprint: string | null = null;
   let hasSavedAnnotationDraft = false;
   let draftSaveStatus = 'Checking for saved annotations on this device…';
   let annotationSaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -224,7 +226,8 @@
     isCheckingAnnotationDraft = true;
     draftSaveStatus = 'Checking for saved annotations on this device…';
     try {
-      const draft = await loadAnnotationDraft(file);
+      annotationDraftFingerprint = await fingerprintPdf(file);
+      const draft = await loadAnnotationDraftByFingerprint(annotationDraftFingerprint);
       if (destroyed) return;
       if (!draft) {
         draftSaveStatus = 'Annotations auto-save on this device only.';
@@ -232,7 +235,7 @@
       }
 
       if (draft.annotations.some((annotation) => annotation.pageNumber > totalPages)) {
-        await deleteAnnotationDraft(file);
+        await deleteAnnotationDraftByFingerprint(annotationDraftFingerprint);
         draftSaveStatus = 'An incompatible saved draft was removed.';
         return;
       }
@@ -257,6 +260,11 @@
   function flushAnnotationDraftSave() {
     if (!annotationDraftReady || !annotationDraftDirty) return;
     annotationDraftDirty = false;
+    const fingerprint = annotationDraftFingerprint;
+    if (!fingerprint) {
+      draftSaveStatus = 'Local draft storage is unavailable; annotations will remain in this session.';
+      return;
+    }
     const snapshot = annotations
       .filter((annotation) => !(annotation.type === 'text-note' && !annotation.text.trim()))
       .map((annotation) => annotation);
@@ -265,7 +273,7 @@
     annotationDraftWriteQueue = annotationDraftWriteQueue
       .catch(() => undefined)
       .then(async () => {
-        await saveAnnotationDraft(file, snapshot);
+        await saveAnnotationDraftByFingerprint(fingerprint, snapshot);
         if (!destroyed) {
           hasSavedAnnotationDraft = snapshot.length > 0;
           draftSaveStatus = snapshot.length > 0
@@ -301,9 +309,14 @@
     }
     annotationDraftDirty = false;
     draftSaveStatus = 'Clearing local annotation draft…';
+    const fingerprint = annotationDraftFingerprint;
+    if (!fingerprint) {
+      draftSaveStatus = 'Local annotation draft storage is unavailable.';
+      return;
+    }
     annotationDraftWriteQueue = annotationDraftWriteQueue
       .catch(() => undefined)
-      .then(() => deleteAnnotationDraft(file));
+      .then(() => deleteAnnotationDraftByFingerprint(fingerprint));
     try {
       await annotationDraftWriteQueue;
       annotationHistory = new AnnotationHistory();
