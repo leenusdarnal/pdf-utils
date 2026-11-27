@@ -159,6 +159,7 @@
 </svelte:head>
 
 <div class="mx-auto w-full max-w-[1440px] px-[7.1%] max-[760px]:px-[5%]">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="flex h-[88px] items-center gap-[52px] border-b border-[#e9ebef] max-[760px]:h-[70px] max-[760px]:gap-[22px] max-[480px]:gap-[15px]">
     <a class="inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap font-display text-[22px] font-extrabold leading-none tracking-[-1.1px] no-underline max-[480px]:text-[19px]" href={`${base}/`} aria-label="PDF Utils home">
       <span class="grid size-[34px] shrink-0 place-items-center rounded-[10px] bg-brand-700 text-white max-[480px]:size-[30px]" aria-hidden="true">
@@ -189,7 +190,7 @@
     </button>
   </header>
 
-  <main data-app-ready={appReady}>
+  <main id="main-content" tabindex="-1" data-app-ready={appReady}>
     {#if selectedFile}
       <PdfViewer file={selectedFile} onClose={closeDocument} />
     {:else if organizeFile}

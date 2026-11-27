@@ -52,6 +52,7 @@ Use this checklist against a production build or preview server before marking t
 
 ## Accessibility and privacy
 
+- [ ] From a fresh page load, the first Tab stop is the visible-on-focus “Skip to main content” link; activating it moves focus to the main landmark.
 - [ ] Complete file selection and all viewer controls using keyboard only; focus is visible.
 - [ ] Screen-reader labels identify the file input, page controls, zoom controls, and close action.
 - [ ] Loading and error states are announced or exposed through appropriate status/alert semantics.

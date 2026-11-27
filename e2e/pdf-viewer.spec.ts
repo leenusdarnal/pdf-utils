@@ -103,6 +103,18 @@ async function openTestPdf(page: Page, rotation = 0, mode: 'page' | 'scroll' = '
   expect(selectedText).toContain('PDF Utils browser test first page');
 }
 
+test('offers a keyboard skip link to the main content landmark', async ({ page }) => {
+  await visitHome(page);
+
+  const skipLink = page.getByRole('link', { name: 'Skip to main content' });
+  await page.keyboard.press('Tab');
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeInViewport();
+
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#main-content')).toBeFocused();
+});
+
 test('opens a PDF and supports page navigation, local search, and zoom', async ({ page }) => {
   await visitHome(page);
   await openTestPdf(page);
