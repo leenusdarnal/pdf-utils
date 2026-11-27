@@ -33,6 +33,13 @@ Use this checklist against a production build or preview server before marking t
 - [ ] Use Print and confirm the original full PDF opens in a separate browser-native PDF viewer, with all pages available to the browser's Print control.
 - [ ] On mobile, the thumbnail rail starts collapsed, opens with Show pages, and collapses after selecting a thumbnail.
 
+## Performance and large documents
+
+- [ ] Run the synthetic 120-page fixture in Chromium; confirm the first and final pages render when brought near the viewport.
+- [ ] Confirm no more than six page canvases remain active near either end of the document and off-screen canvases are released.
+- [ ] Record fixture size, upload-to-first-render time, distant-page render time, viewport, browser version, and CI run link; compare timings only against the same runner class.
+- [ ] Repeat with representative real PDFs and inspect browser memory during long scroll sessions.
+
 ## Annotation tools
 
 - [ ] Select PDF text and create a highlight; verify multi-line selections retain each line rectangle.
