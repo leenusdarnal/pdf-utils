@@ -39,7 +39,7 @@ function validatePercent(value: number, label: string): void {
 }
 
 function parseColor(value: string) {
-  if (!/^#[\\da-f]{6}$/i.test(value)) {
+  if (!/^#[0-9a-f]{6}$/i.test(value)) {
     throw new Error('Choose a six-digit hex color such as #c62828.');
   }
   const color = Number.parseInt(value.slice(1), 16);
