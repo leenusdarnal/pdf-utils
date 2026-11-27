@@ -147,13 +147,16 @@ describe('PDF repair input inspection', () => {
     expect(hasPdfRepairHeader(new Uint8Array([0x25, 0x50, 0x44, 0x58, 0x2d]))).toBe(false);
   });
 
-  it('detects a populated signature byte-range dictionary', () => {
-    const signed = new TextEncoder().encode('%PDF-1.7\n/ByteRange [0 120 500 80]\n');
-    const unsigned = new TextEncoder().encode('%PDF-1.7\n/ByteRange [not a signature]\n');
-    expect(hasPdfSignatureByteRange(signed)).toBe(true);
-    expect(hasPdfSignatureByteRange(unsigned)).toBe(false);
+  it('conservatively detects signature markers with varied whitespace and line breaks', () => {
+    const standard = new TextEncoder().encode('%PDF-1.7\n/ByteRange [0 120 500 80]\n');
+    const multiline = new TextEncoder().encode('%PDF-1.7\n/ByteRange\n[ 0\n120 500\n80 ]\n');
+    const malformed = new TextEncoder().encode('%PDF-1.7\n/ByteRange [not a valid range]\n');
+    const unrelated = new TextEncoder().encode('%PDF-1.7\n/ByteRanger [0 1 2 3]\n');
+    expect(hasPdfSignatureByteRange(standard)).toBe(true);
+    expect(hasPdfSignatureByteRange(multiline)).toBe(true);
+    expect(hasPdfSignatureByteRange(malformed)).toBe(true);
+    expect(hasPdfSignatureByteRange(unrelated)).toBe(false);
   });
-
   it('publishes conservative file, page, output, and rendering limits', () => {
     expect(PDF_REPAIR_LIMITS).toMatchObject({
       maxFileBytes: 75 * 1024 * 1024,

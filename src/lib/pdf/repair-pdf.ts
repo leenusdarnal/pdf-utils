@@ -30,7 +30,7 @@ export const PDF_REPAIR_LIMITS = {
 } as const;
 
 const PDF_HEADER = [0x25, 0x50, 0x44, 0x46, 0x2d] as const;
-const BYTE_RANGE_MARKER = [0x2f, 0x42, 0x79, 0x74, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65] as const;
+const BYTE_RANGE_MARKER = '/ByteRange';
 
 export function hasPdfRepairHeader(bytes: Uint8Array): boolean {
   const limit = Math.min(bytes.length, 1_024);
@@ -40,15 +40,17 @@ export function hasPdfRepairHeader(bytes: Uint8Array): boolean {
   return false;
 }
 
-/** Detect a populated PDF signature byte-range dictionary before rewriting anything. */
+/**
+ * Conservatively detect a PDF signature marker before rewriting.
+ *
+ * This intentionally rejects any raw /ByteRange token, even when its value is
+ * malformed or unusually formatted. It can produce false positives when that
+ * token appears in unrelated stream data; it is not cryptographic signature
+ * validation and cannot guarantee detection of every signature representation.
+ */
 export function hasPdfSignatureByteRange(bytes: Uint8Array): boolean {
-  for (let offset = 0; offset <= bytes.length - BYTE_RANGE_MARKER.length; offset += 1) {
-    if (!BYTE_RANGE_MARKER.every((byte, index) => bytes[offset + index] === byte)) continue;
-    const end = Math.min(bytes.length, offset + 256);
-    const snippet = new TextDecoder('ascii').decode(bytes.subarray(offset, end));
-    if (/^\/ByteRange\s*\[\s*\d+\s+\d+\s+\d+\s+\d+\s*\]/.test(snippet)) return true;
-  }
-  return false;
+  const source = new TextDecoder('latin1').decode(bytes);
+  return /\/ByteRange\b/.test(source);
 }
 
 /** Ignore whitespace and Unicode compatibility differences, but not actual text changes. */
@@ -186,7 +188,7 @@ export async function repairPdfStructure(
     throw new Error('This file does not contain a valid PDF header.');
   }
   if (hasPdfSignatureByteRange(sourceBytes)) {
-    throw new Error('Digitally signed PDFs are not rebuilt because rewriting them would invalidate their signatures.');
+    throw new Error('This PDF contains a signature byte-range marker and was not rebuilt. The check is conservative and is not cryptographic signature validation.');
   }
 
   let originalLoadingTask: Awaited<ReturnType<typeof createPdfDocumentTask>> | null = null;

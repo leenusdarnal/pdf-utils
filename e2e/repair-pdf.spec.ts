@@ -61,6 +61,6 @@ test('refuses to rewrite a digitally signed PDF', async ({ page }) => {
   });
   await page.getByRole('button', { name: 'Repair & verify' }).click();
 
-  await expect(page.getByRole('alert')).toContainText('Digitally signed PDFs are not rebuilt');
+  await expect(page.getByRole('alert')).toContainText('signature byte-range marker');
   await expect(page.getByText('No repaired file was created. Your original PDF remains unchanged.')).toBeVisible();
 });
