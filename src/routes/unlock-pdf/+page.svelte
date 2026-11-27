@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import { PDFDocument } from 'pdf-lib';
   import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
@@ -106,7 +107,7 @@
 </svelte:head>
 
 <main class="mx-auto w-full max-w-3xl px-5 py-12">
-  <a class="text-sm font-semibold text-brand-700 hover:underline" href="../">← All PDF tools</a>
+  <a class="text-sm font-semibold text-brand-700 hover:underline" href={`${base}/`}>← All PDF tools</a>
   <section class="mt-6 rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-9" aria-labelledby="unlock-title">
     <p class="text-xs font-bold uppercase tracking-widest text-brand-600">PDF SECURITY</p>
     <h1 id="unlock-title" class="mt-2 text-3xl font-bold tracking-tight text-ink">Unlock PDF</h1>
