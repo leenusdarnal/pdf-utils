@@ -171,3 +171,26 @@ html[data-theme='dark'] ::selection {
   color: #ffffff;
   background: #5b50bc;
 }
+
+
+/* Keep the skip target available without adding a tab stop to the page flow. */
+.skip-link {
+  position: absolute;
+  z-index: 1000;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-160%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 3px solid var(--color-brand-300);
+  outline-offset: 3px;
+}
