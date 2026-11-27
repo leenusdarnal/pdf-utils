@@ -19,6 +19,22 @@ export default defineConfig({
         browserName: 'chromium',
         viewport: { width: 1365, height: 900 }
       }
+    },
+    {
+      name: 'firefox',
+      testMatch: '**/browser-compatibility.spec.ts',
+      use: {
+        browserName: 'firefox',
+        viewport: { width: 1365, height: 900 }
+      }
+    },
+    {
+      name: 'webkit',
+      testMatch: '**/browser-compatibility.spec.ts',
+      use: {
+        browserName: 'webkit',
+        viewport: { width: 1365, height: 900 }
+      }
     }
   ],
   webServer: {

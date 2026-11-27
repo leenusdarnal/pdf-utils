@@ -13,7 +13,7 @@ A lightweight, privacy-first browser workspace for viewing, editing, organizing,
 
 ## Current implementation
 
-The PDF workspace is browser-first and runs its document operations locally. CI runs Svelte/type checks, unit tests, and Playwright Chromium browser regression tests before the production build. The viewer suite verifies a first-Tab skip link to the main content landmark, keyboard Tab focus and Enter activation for page thumbnails, and on-demand rendering for a synthetic 120-page PDF with timing and active-canvas measurements; full keyboard-only, manual screen-reader, contrast, and cross-browser checks remain part of the verification checklist. It currently includes:
+The PDF workspace is browser-first and runs its document operations locally. CI runs Svelte/type checks, unit tests, the full Playwright browser regression suite in Chromium, and a focused compatibility smoke suite in Firefox and Playwright WebKit before the production build. The viewer suite verifies a first-Tab skip link to the main content landmark, keyboard Tab focus and Enter activation for page thumbnails, and on-demand rendering for a synthetic 120-page PDF with timing and active-canvas measurements. Playwright WebKit is an engine smoke check, not a substitute for testing real Safari; full keyboard-only, manual screen-reader, contrast, and cross-browser checks remain part of the verification checklist. It currently includes:
 
 - Select or drop a local PDF file.
 - Check for a PDF signature in the first 1,024 bytes before parsing.
@@ -107,7 +107,7 @@ npm run check
 npm run build
 ```
 
-End-to-end browser coverage uses Playwright with Chromium. CI installs the browser and runs regression checks for PDF import/rendering, continuous scrolling, search, zoom, mobile layout, annotations, multi-file merge order, split-range validation, split-output page count/order, N-up page-layout export, and PDF text/visual comparison before the production build.
+End-to-end browser coverage uses Playwright with Chromium, Firefox, and WebKit. CI runs the full existing regression suite in Chromium and a focused compatibility smoke suite in Firefox and WebKit. The Chromium suite covers PDF import/rendering, continuous scrolling, search, zoom, mobile layout, annotations, multi-file merge order, split-range validation, split-output page count/order, N-up page-layout export, and PDF text/visual comparison. Firefox and WebKit exercise keyboard skip navigation, theme persistence, local PDF import, selectable text, and continuous-page navigation. Real Firefox and Safari desktop/mobile verification remains in the manual browser matrix.
 
 Update [PROJECT_PLAN.md](./PROJECT_PLAN.md) with implementation status. The phased viewer design and task plan are under `docs/superpowers/`.
 
