@@ -58,6 +58,16 @@ Use this checklist against a production build or preview server before marking t
 - [ ] On mobile Chrome and Safari, verify touch targets, thumbnail open/close behavior, portrait/landscape rotation, and absence of horizontal overflow.
 - [ ] Record exact browser/OS versions, viewport or device, pass/fail, and issue links. Do not mark the matrix complete from CI smoke results alone.
 
+## Text and image content overlays
+
+- [ ] Open an unrotated source PDF and confirm the page preview is rendered locally.
+- [ ] Add text, change its position, size, and color, then export a new copy; reopen it and confirm both original and inserted text are present.
+- [ ] Add PNG and JPEG images; verify preview sizing/aspect ratio and confirm embedded pixels in the exported PDF.
+- [ ] Try positions and sizes near every page edge; content outside the visible crop box must be rejected without changing the source.
+- [ ] Select a rotated page; confirm the tool explains that rotation is not yet supported and blocks export.
+- [ ] Confirm the source PDF bytes remain unchanged and no document/image bytes are sent over the network.
+- [ ] Inspect exported text and image placement in an independent desktop PDF reader, including a page with a non-zero crop-box origin.
+
 ## Annotation tools
 
 - [ ] Select PDF text and create a highlight; verify multi-line selections retain each line rectangle.
