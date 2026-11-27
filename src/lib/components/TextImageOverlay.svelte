@@ -229,7 +229,8 @@
     void loadFile(event.dataTransfer?.files?.[0]);
   }
 
-  async function changePage() {
+  async function changePage(event: Event) {
+    pageNumber = Number((event.currentTarget as HTMLSelectElement).value);
     resetOutput();
     await renderPreview();
   }
@@ -403,7 +404,7 @@
           </div>
           <label class="flex items-center gap-2 text-[10px] font-semibold text-muted">
             Page
-            <select class="h-8 rounded-lg border border-line bg-surface px-2 text-ink" aria-label="Preview page" bind:value={pageNumber} onchange={changePage} disabled={isExporting}>
+            <select class="h-8 rounded-lg border border-line bg-surface px-2 text-ink" aria-label="Preview page" value={pageNumber} onchange={changePage} disabled={isExporting}>
               {#each pageInfos as info, index}
                 <option value={index + 1}>Page {index + 1}</option>
               {/each}
