@@ -1,6 +1,6 @@
 # Project Plan and Implementation Tracker
 
-Last updated: 2026-11-26
+Last updated: 2026-11-27
 
 ## Product goal
 
@@ -103,7 +103,7 @@ Status values: `not-started`, `in-progress`, `blocked`, `done`, `deferred`.
 | SEC-03 | Security | Metadata and bookmark management | deferred | Inspect/edit metadata and bookmarks; verify changes in reopened output |
 | FLOW-01 | Workflows | Batch processing and reusable workflows | deferred | Queue multiple files, show per-file progress/errors, and allow repeatable local tool sequences without uploading files |
 | QLT-01 | Quality | Accessibility audit | in-progress | Fixed Svelte accessibility warnings for the thumbnail region and document-information section; the app shell provides a visible-on-focus skip link to a programmatically focusable main landmark, with a Chromium first-Tab/Enter regression; page-thumbnail Tab focus and Enter activation are also covered. Full keyboard-only workflow, manual screen-reader review, and contrast checks remain outstanding |
-| QLT-02 | Quality | Performance and large-file testing | not-started | Defined fixture set and baseline measurements |
+| QLT-02 | Quality | Performance and large-file testing | in-progress | Playwright generates a synthetic 120-page letter-size PDF, verifies that only nearby pages render at the start and end of the document (no more than six active canvases), confirms off-screen canvases are released, and logs upload-to-first-render and distant-page render timings. Repeatable Chromium baseline is being established; representative real PDFs, memory profiling, and broader device coverage remain |
 | QLT-03 | Quality | Browser compatibility matrix | not-started | Current Chromium, Firefox, and Safari tested where available |
 | QLT-04 | Quality | PDF regression fixtures | not-started | Test text, images, rotation, page boxes, encryption, malformed files |
 
