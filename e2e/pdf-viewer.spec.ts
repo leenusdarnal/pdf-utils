@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 function createTwoPagePdf(rotation = 0): Buffer {
@@ -351,7 +351,7 @@ test('renders a 120-page PDF on demand and releases off-screen canvases', async 
 
   const firstPage = page.locator('[data-pdf-continuous-page="1"]');
   const firstCanvas = firstPage.locator('canvas');
-  const isCanvasRendered = (canvas: ReturnType<typeof page.locator>) =>
+  const isCanvasRendered = (canvas: Locator) =>
     canvas.evaluate((element) => {
       const width = (element as HTMLCanvasElement).style.width;
       return width.length > 0 && width !== '0px';
