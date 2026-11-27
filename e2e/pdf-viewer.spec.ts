@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 function createTwoPagePdf(rotation = 0): Buffer {
   const pageTexts = [
@@ -57,6 +57,24 @@ function createTwoPagePdf(rotation = 0): Buffer {
 async function createPdfWithPageSizes(pageSizes: Array<[number, number]>): Promise<Buffer> {
   const document = await PDFDocument.create();
   for (const [width, height] of pageSizes) document.addPage([width, height]);
+  return Buffer.from(await document.save());
+}
+
+
+async function createLargePdf(pageCount: number): Promise<Buffer> {
+  const document = await PDFDocument.create();
+  const font = await document.embedFont(StandardFonts.Helvetica);
+
+  for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
+    const page = document.addPage([612, 792]);
+    page.drawText(`Performance fixture page ${pageNumber}`, {
+      x: 72,
+      y: 720,
+      size: 18,
+      font
+    });
+  }
+
   return Buffer.from(await document.save());
 }
 
@@ -311,6 +329,80 @@ test('scrolls through PDF pages and keeps quick navigation in sync', async ({ pa
   await page.getByRole('button', { name: 'Switch to page tools' }).click();
   await expect(page.locator('[data-page-surface]')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Place note' })).toBeVisible();
+});
+
+test('renders a 120-page PDF on demand and releases off-screen canvases', async ({ page }) => {
+  const pageCount = 120;
+  await page.setViewportSize({ width: 1365, height: 900 });
+  await visitHome(page);
+
+  const fixture = await createLargePdf(pageCount);
+  const importStartedAt = Date.now();
+  await page.locator('#file-input').setInputFiles({
+    name: 'pdf-utils-performance-120-pages.pdf',
+    mimeType: 'application/pdf',
+    buffer: fixture
+  });
+
+  await expect(page.locator('[aria-label="PDF viewer"]')).toBeVisible({ timeout: 15_000 });
+  const viewport = page.getByRole('region', { name: 'Document page area' });
+  const pages = page.locator('[data-pdf-continuous-page]');
+  await expect(pages).toHaveCount(pageCount);
+
+  const firstPage = page.locator('[data-pdf-continuous-page="1"]');
+  const firstCanvas = firstPage.locator('canvas');
+  const isCanvasRendered = (canvas: ReturnType<typeof page.locator>) =>
+    canvas.evaluate((element) => {
+      const width = (element as HTMLCanvasElement).style.width;
+      return width.length > 0 && width !== '0px';
+    });
+
+  await expect.poll(() => isCanvasRendered(firstCanvas), { timeout: 15_000 }).toBe(true);
+  const firstPageRenderMs = Date.now() - importStartedAt;
+  const initialRenderedCanvases = await viewport.locator('canvas').evaluateAll((canvases) =>
+    canvases.filter((canvas) => {
+      const width = (canvas as HTMLCanvasElement).style.width;
+      return width.length > 0 && width !== '0px';
+    }).length
+  );
+  expect(initialRenderedCanvases).toBeGreaterThan(0);
+  expect(initialRenderedCanvases).toBeLessThanOrEqual(6);
+
+  const lastPage = page.locator(`[data-pdf-continuous-page="${pageCount}"]`);
+  const lastCanvas = lastPage.locator('canvas');
+  const scrollStartedAt = Date.now();
+  await viewport.evaluate((root, targetPage) => {
+    const target = root.querySelector<HTMLElement>(
+      `[data-pdf-continuous-page="${targetPage}"]`
+    );
+    if (!target) throw new Error('The final page fixture element is missing.');
+    root.scrollTop =
+      target.getBoundingClientRect().top -
+      root.getBoundingClientRect().top +
+      root.scrollTop;
+  }, pageCount);
+
+  await expect(lastPage).toBeInViewport();
+  await expect.poll(() => isCanvasRendered(lastCanvas), { timeout: 15_000 }).toBe(true);
+  await expect.poll(() => firstCanvas.evaluate((canvas) =>
+    (canvas as HTMLCanvasElement).style.width
+  ), { timeout: 15_000 }).toBe('0px');
+
+  const lastPageRenderMs = Date.now() - scrollStartedAt;
+  const finalRenderedCanvases = await viewport.locator('canvas').evaluateAll((canvases) =>
+    canvases.filter((canvas) => {
+      const width = (canvas as HTMLCanvasElement).style.width;
+      return width.length > 0 && width !== '0px';
+    }).length
+  );
+  expect(finalRenderedCanvases).toBeGreaterThan(0);
+  expect(finalRenderedCanvases).toBeLessThanOrEqual(6);
+
+  console.log(
+    `[pdf-performance-baseline] fixture_pages=${pageCount} fixture_bytes=${fixture.length} ` +
+      `upload_to_first_render_ms=${firstPageRenderMs} initial_rendered_canvases=${initialRenderedCanvases} ` +
+      `scroll_to_last_render_ms=${lastPageRenderMs} final_rendered_canvases=${finalRenderedCanvases}`
+  );
 });
 
 test('splits a PDF into separate page-range downloads', async ({ page }) => {
