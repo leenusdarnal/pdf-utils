@@ -124,14 +124,15 @@ export async function addPdfContentOverlay(
 
   if (overlay.type === 'text') {
     const font = await document.embedFont(StandardFonts.Helvetica);
-    let text = overlay.text.replace(/\\r\\n?/g, '\\n');
+    const text = overlay.text.replace(/\\r\\n?/g, '\\n');
+    const lines = text.split('\\n');
     try {
-      font.encodeText(text);
+      for (const line of lines) font.encodeText(line);
     } catch {
       throw new Error('Text insertion currently supports standard Latin characters. Use a compatible font or simplify the text.');
     }
 
-    const lines = text.split('\\n');
+
     const widestLine = Math.max(...lines.map((line) => font.widthOfTextAtSize(line, overlay.fontSize)));
     const blockHeight = overlay.fontSize * Math.max(1, lines.length) * 1.2;
     if (x + widestLine > crop.x + crop.width || y + blockHeight > crop.y + crop.height) {
