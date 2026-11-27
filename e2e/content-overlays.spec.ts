@@ -102,7 +102,7 @@ test('previews and exports an embedded PNG image on a new PDF copy', async ({ pa
     mimeType: 'image/png',
     buffer: imageBytes
   });
-  await expect(page.getByAltText('Image overlay preview')).toBeVisible();
+  await expect(page.getByAltText('Selected overlay preview')).toBeVisible();
   await page.getByLabel('Image width (% of page)').fill('20');
   await page.getByLabel('X from left (%)').fill('10');
   await page.getByLabel('Y from bottom (%)').fill('10');
