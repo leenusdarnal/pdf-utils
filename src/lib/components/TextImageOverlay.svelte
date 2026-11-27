@@ -51,6 +51,7 @@
   let outputSize = 0;
   let errorMessage = '';
   let statusMessage = 'Choose a PDF to place a text or image overlay on a new copy.';
+  let queuedOverlays: PdfContentOverlay[] = [];
 
   $: selectedPageInfo = pageInfos[pageNumber - 1];
   $: isRotatedPage = Boolean(selectedPageInfo && selectedPageInfo.rotation !== 0);
@@ -170,6 +171,7 @@
     isLoading = true;
     resetOutput();
     sourceFile = null;
+    queuedOverlays = [];
     pageInfos = [];
     pageNumber = 1;
     await disposePreview();
@@ -275,6 +277,37 @@
   function markOverlayChanged() {
     resetOutput();
   }
+  function addOverlayToQueue() {
+    if (!sourceFile || !canExport) return;
+    const overlay: PdfContentOverlay = overlayType === 'text'
+      ? { type: 'text', pageNumber, xPercent, yPercent, text, fontSize, color: textColor }
+      : {
+          type: 'image',
+          pageNumber,
+          xPercent,
+          yPercent,
+          widthPercent: imageWidthPercent,
+          imageType: imageType!,
+          imageBytes: new Uint8Array(imageFile ? imageFile.size : 0)
+        };
+    if (overlay.type === 'image' && imageFile) {
+      void imageFile.arrayBuffer().then((bytes) => {
+        queuedOverlays = [...queuedOverlays, { ...overlay, imageBytes: new Uint8Array(bytes) }];
+        resetOutput();
+        statusMessage = queuedOverlays.length + ' overlay' + (queuedOverlays.length === 1 ? '' : 's') + ' queued for export.';
+      });
+    } else {
+      queuedOverlays = [...queuedOverlays, overlay];
+      resetOutput();
+      statusMessage = queuedOverlays.length + ' overlay' + (queuedOverlays.length === 1 ? '' : 's') + ' queued for export.';
+    }
+  }
+
+  function removeLastOverlay() {
+    queuedOverlays = queuedOverlays.slice(0, -1);
+    resetOutput();
+    statusMessage = queuedOverlays.length + ' overlay' + (queuedOverlays.length === 1 ? '' : 's') + ' queued for export.';
+  }
 
   async function exportPdf() {
     if (!sourceFile || !canExport) return;
@@ -283,31 +316,15 @@
     statusMessage = 'Adding a new content layer to a PDF copy locally…';
 
     try {
-      let overlay: PdfContentOverlay;
-      if (overlayType === 'text') {
-        overlay = {
-          type: 'text',
-          pageNumber,
-          xPercent,
-          yPercent,
-          text,
-          fontSize,
-          color: textColor
-        };
-      } else {
-        if (!imageFile || !imageType) throw new Error('Choose a PNG or JPEG image first.');
-        overlay = {
-          type: 'image',
-          pageNumber,
-          xPercent,
-          yPercent,
-          widthPercent: imageWidthPercent,
-          imageType,
-          imageBytes: new Uint8Array(await imageFile.arrayBuffer())
-        };
+      if (queuedOverlays.length === 0) throw new Error('Add at least one overlay to the export queue first.');
+      let workingPdf: Blob = sourceFile;
+      let result: Awaited<ReturnType<typeof addPdfContentOverlay>> | null = null;
+      for (const overlay of queuedOverlays) {
+        result = await addPdfContentOverlay(workingPdf, overlay);
+        workingPdf = new Blob([result.bytes], { type: 'application/pdf' });
       }
+      if (!result) throw new Error('No overlays were queued.');
 
-      const result = await addPdfContentOverlay(sourceFile, overlay);
       const bytes = new Uint8Array(result.bytes.byteLength);
       bytes.set(result.bytes);
       outputBlob = new Blob([bytes.buffer], { type: 'application/pdf' });
@@ -316,9 +333,9 @@
         .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-')
         .trim()
         .slice(0, 100) || 'document';
-      outputName = baseName + '-with-overlay.pdf';
+      outputName = baseName + '-with-overlays.pdf';
       outputSize = result.fileSize;
-      statusMessage = 'Overlay exported to a new PDF. Your original file is unchanged.';
+      statusMessage = queuedOverlays.length + ' overlays exported to a new PDF. Your original file is unchanged.';
     } catch (error) {
       errorMessage = error instanceof Error ? error.message : 'The PDF could not be exported.';
       statusMessage = 'Export failed.';
@@ -496,10 +513,27 @@
 
       <button
         type="button"
-        class="mt-1 inline-flex min-h-10 items-center justify-center rounded-lg bg-brand-700 px-4 text-[11px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
+        class="inline-flex min-h-9 items-center justify-center rounded-lg border border-brand-300 bg-brand-50 px-3 text-[10px] font-semibold text-brand-800 disabled:opacity-45"
         disabled={!canExport}
+        onclick={addOverlayToQueue}
+      >Add current overlay</button>
+      {#if queuedOverlays.length > 0}
+        <div class="rounded-lg border border-line bg-surface-muted p-3">
+          <p class="mb-2 text-[10px] font-semibold text-ink">{queuedOverlays.length} overlay{queuedOverlays.length === 1 ? '' : 's'} queued</p>
+          <ul class="mb-2 list-inside list-disc space-y-1 text-[9px] text-muted">
+            {#each queuedOverlays as overlay, index}
+              <li>#{index + 1} · Page {overlay.pageNumber} · {overlay.type === 'text' ? 'Text' : 'Image'}</li>
+            {/each}
+          </ul>
+          <button type="button" class="text-[9px] font-semibold text-brand-700 underline" onclick={removeLastOverlay}>Remove last overlay</button>
+        </div>
+      {/if}
+      <button
+        type="button"
+        class="mt-1 inline-flex min-h-10 items-center justify-center rounded-lg bg-brand-700 px-4 text-[11px] font-bold text-white transition-colors hover:bg-brand-800 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-200 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-45"
+        disabled={!sourceFile || queuedOverlays.length === 0 || isLoading || isRendering || isExporting}
         onclick={exportPdf}
-      >{isExporting ? 'Exporting…' : 'Export new PDF copy'}</button>
+      >{isExporting ? 'Exporting…' : 'Export PDF with queued overlays'}</button>
 
       <p class="m-0 text-[9px] leading-[1.6] text-muted">This inserts a new content layer. It does not edit or replace existing PDF text. Your source PDF remains unchanged.</p>
     </aside>
