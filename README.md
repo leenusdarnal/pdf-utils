@@ -13,7 +13,7 @@ A lightweight, privacy-first browser workspace for viewing, editing, organizing,
 
 ## Current implementation
 
-The PDF workspace is browser-first and runs its document operations locally. CI runs Svelte/type checks, unit tests, and Playwright Chromium browser regression tests before the production build. Cross-browser and manual accessibility checks remain part of the verification checklist. It currently includes:
+The PDF workspace is browser-first and runs its document operations locally. CI runs Svelte/type checks, unit tests, and Playwright Chromium browser regression tests before the production build. The viewer suite verifies keyboard Tab focus and Enter activation for page thumbnails; full keyboard-only, manual screen-reader, contrast, and cross-browser checks remain part of the verification checklist. It currently includes:
 
 - Select or drop a local PDF file.
 - Check for a PDF signature in the first 1,024 bytes before parsing.

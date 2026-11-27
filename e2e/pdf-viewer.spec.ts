@@ -621,7 +621,15 @@ test('keeps the viewer usable and lets mobile users collapse page thumbnails', a
   expect(expandedSidebarWidth).toBeLessThanOrEqual(90);
   expect(expandedSidebarWidth).toBeGreaterThan(0);
 
-  await page.getByRole('button', { name: 'Go to page 2' }).click();
+  // Page thumbnails are native buttons in the tab order; the scroll region itself
+  // is not an extra focus stop. Verify keyboard focus and Enter activation.
+  const firstPageButton = page.getByRole('button', { name: 'Go to page 1' });
+  const secondPageButton = page.getByRole('button', { name: 'Go to page 2' });
+  await firstPageButton.focus();
+  await expect(firstPageButton).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(secondPageButton).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(page.locator('[role="status"]').last()).toContainText('Page 2 of 2');
   await expect(page.getByRole('button', { name: 'Show pages' })).toBeVisible();
   await expect(thumbnails).toBeHidden();

@@ -68,7 +68,6 @@
     class="relative min-h-0 flex-1 overflow-auto overscroll-contain [scrollbar-gutter:stable]"
     bind:this={viewport}
     role="region"
-    tabindex="0"
     aria-label="PDF page thumbnails"
   >
     <div class="relative w-full" style={`height: ${totalPages * ITEM_HEIGHT}px`}>
