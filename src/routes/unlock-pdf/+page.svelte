@@ -52,7 +52,7 @@
         canvas.height = Math.max(1, Math.ceil(viewport.height));
         const context = canvas.getContext('2d');
         if (!context) throw new Error('This browser could not create a canvas for PDF rendering.');
-        await page.render({ canvasContext: context, viewport }).promise;
+        await page.render({ canvas, canvasContext: context, viewport }).promise;
         const png = await new Promise<Uint8Array>((resolve, reject) => {
           canvas.toBlob(async (blob) => {
             if (!blob) return reject(new Error('Could not render a PDF page.'));
@@ -75,7 +75,6 @@
       output = new Blob([bytes as BlobPart], { type: 'application/pdf' });
       outputName = sourceFile.name.replace(/\.pdf$/i, '') + '-unlocked.pdf';
       progress = 'Unlocked copy ready. Note: pages are flattened images.';
-      await source.destroy();
     } catch (reason) {
       const exception = reason as { name?: string; message?: string };
       if (exception?.name === 'PasswordException') {
