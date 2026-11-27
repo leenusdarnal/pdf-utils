@@ -19,6 +19,20 @@ Each CI run prints one `[pdf-performance-baseline]` line containing fixture page
 
 Timing is environment-dependent. Compare runs on the same GitHub-hosted runner class and keep the fixture, viewport, browser project, and code path constant. The measurements are a trend baseline, not a claim about performance on every user's device.
 
+## First CI baseline
+
+Recorded from [GitHub Actions run 45932075817](https://github.com/leenusdarnal/pdf-utils/actions/runs/45932075817) on the `ubuntu-latest` Chromium job at a 1365 × 900 viewport:
+
+| Measurement | Result |
+| --- | ---: |
+| Fixture | 120 pages, 27,051 bytes |
+| Upload to first-page render | 1,096 ms |
+| Active canvases at first page | 2 |
+| Scroll to final-page render | 139 ms |
+| Active canvases at final page | 2 |
+
+This is the first recorded run, not a statistical performance guarantee. Use repeated runs on the same runner class to establish normal variance before setting tighter timing thresholds.
+
 ## Remaining verification
 
 This synthetic regression does not replace tests with real, image-heavy, encrypted, malformed, or unusually large PDFs. Browser memory profiling, mobile-device measurements, and Firefox/Safari coverage remain open under QLT-02 and QLT-03.
