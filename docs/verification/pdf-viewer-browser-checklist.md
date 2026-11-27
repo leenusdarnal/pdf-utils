@@ -40,6 +40,15 @@ Use this checklist against a production build or preview server before marking t
 - [ ] Record fixture size, upload-to-first-render time, distant-page render time, viewport, browser version, and CI run link; compare timings only against the same runner class.
 - [ ] Repeat with representative real PDFs and inspect browser memory during long scroll sessions.
 
+## Cross-browser compatibility
+
+- [ ] Run the full Playwright regression suite in current Chromium.
+- [ ] Run the compatibility smoke suite in current Firefox; then manually verify file import, keyboard navigation, search, zoom, and printing in desktop Firefox.
+- [ ] Run the compatibility smoke suite in Playwright WebKit. Treat this as WebKit-engine coverage only, not as proof that Safari works.
+- [ ] Open the deployed or production-preview build in actual Safari on macOS and iOS; verify PDF import, selectable text, continuous scrolling, search, zoom, printing, and theme persistence.
+- [ ] On mobile Chrome and Safari, verify touch targets, thumbnail open/close behavior, portrait/landscape rotation, and absence of horizontal overflow.
+- [ ] Record exact browser/OS versions, viewport or device, pass/fail, and issue links. Do not mark the matrix complete from CI smoke results alone.
+
 ## Annotation tools
 
 - [ ] Select PDF text and create a highlight; verify multi-line selections retain each line rectangle.
