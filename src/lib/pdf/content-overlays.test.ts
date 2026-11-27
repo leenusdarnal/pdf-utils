@@ -6,12 +6,13 @@ import {
   type PdfContentOverlay
 } from './content-overlays';
 
-const ONE_PIXEL_PNG = Uint8Array.from(
-  Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC',
-    'base64'
-  )
-);
+const ONE_PIXEL_PNG = new Uint8Array([
+  137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
+  0, 0, 0, 1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 144, 119, 83, 222,
+  0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 248, 207, 192, 0, 0,
+  3, 1, 1, 0, 201, 254, 146, 239, 0, 0, 0, 0, 73, 69, 78, 68,
+  174, 66, 96, 130
+]);
 
 async function createSourcePdf(rotated = false): Promise<Blob> {
   const document = await PDFDocument.create();
@@ -19,7 +20,9 @@ async function createSourcePdf(rotated = false): Promise<Blob> {
   page.setCropBox(24, 30, 560, 720);
   if (rotated) page.setRotation(degrees(90));
   const bytes = await document.save();
-  return new Blob([bytes], { type: 'application/pdf' });
+  const blobBuffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(blobBuffer).set(bytes);
+  return new Blob([blobBuffer], { type: 'application/pdf' });
 }
 
 describe('addPdfContentOverlay', () => {
