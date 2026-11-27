@@ -243,7 +243,7 @@
     resetOutput();
     revokeImagePreview();
 
-    if (file.size === 0 || file.size > MAX_IMAGE_BYTES) {
+    if (file.size === 0 || file.size > MAX_CONTENT_OVERLAY_IMAGE_BYTES) {
       imageFile = null;
       imageType = null;
       errorMessage = 'Choose a non-empty PNG or JPEG image under 25 MB.';
@@ -423,7 +423,7 @@
             {:else if overlayType === 'image' && imagePreviewUrl && !isRotatedPage}
               <img
                 src={imagePreviewUrl}
-                alt="Image overlay preview"
+                alt="Selected overlay preview"
                 class="pointer-events-none absolute h-auto object-contain"
                 style={'left:' + xPercent + '%;bottom:' + yPercent + '%;width:' + imageWidthPercent + '%;'}
               />
