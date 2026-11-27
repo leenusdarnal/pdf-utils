@@ -40,6 +40,15 @@ Use this checklist against a production build or preview server before marking t
 - [ ] Record fixture size, upload-to-first-render time, distant-page render time, viewport, browser version, and CI run link; compare timings only against the same runner class.
 - [ ] Repeat with representative real PDFs and inspect browser memory during long scroll sessions.
 
+## PDF regression fixture coverage
+
+- [ ] Generate a valid multi-page PDF with selectable text and an embedded PNG; verify the image is rendered and text remains selectable.
+- [ ] Verify a page rotated 90° with a non-default crop box renders with the expected rotated aspect ratio and searchable text.
+- [ ] Verify a valid password-protected PDF produces a clear, safe error when no password prompt/authorized unlock workflow is implemented.
+- [ ] Verify a PDF with a valid header but truncated/missing page objects produces a recoverable error and the user can return to tools.
+- [ ] Keep generated fixtures deterministic and record the expected page geometry, rotation, and text in the fixture guide.
+- [ ] Repeat relevant cases with representative PDFs from independent sources; synthetic fixtures do not replace real-world coverage.
+
 ## Cross-browser compatibility
 
 - [ ] Run the full Playwright regression suite in current Chromium.
